@@ -6,14 +6,27 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="shortcut icon" href="{{ asset('storage/recursos/imagenes/favicon.png') }}" type="image/x-icon">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+        <style>
+            /* colores personalizados */
+            .bg-gris {
+                background-color: rgb(234, 246, 244)
+            }
+            .bg-azul {
+                background-color: rgb(36, 177, 174);
+            }
+            .text-azul {
+                color:rgb(36, 177, 174)
+            }
+        </style>
         <!-- Styles -->
         @livewireStyles
     </head>
