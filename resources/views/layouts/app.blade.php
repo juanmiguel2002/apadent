@@ -16,24 +16,15 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>
-            /* colores personalizados */
-            .bg-gris {
-                background-color: rgb(234, 246, 244)
-            }
-            .bg-azul {
-                background-color: rgb(36, 177, 174);
-            }
-            .text-azul {
-                color:rgb(36, 177, 174)
-            }
+            
         </style>
         <!-- Styles -->
         @livewireStyles
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased ">
         <x-banner />
 
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-white">
             @livewire('navigation-menu')
 
             <!-- Page Heading -->
@@ -46,7 +37,7 @@
             @endif
 
             <!-- Page Content -->
-            <main>
+            <main class="bg-white">
                 {{ $slot }}
             </main>
         </div>
