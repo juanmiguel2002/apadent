@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -72,5 +73,21 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+    
+    /**
+     * Verifica si el usuario tiene un rol específico.
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role): bool
+    {
+        return $this->roles->contains('title', $role);
+    }
+
+    public function clinicas(): BelongsToMany
+    {
+        return $this->belongsToMany(Clinica::class);
     }
 }
