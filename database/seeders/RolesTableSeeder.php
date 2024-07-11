@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Database\Seeder;
 
@@ -23,7 +24,7 @@ class RolesTableSeeder extends Seeder
                 'title' => 'clinica_user',
             ],
         ];
-
         Role::insert($roles);
+
     }
 }
