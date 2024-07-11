@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('pacientes', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('num_paciente');
             $table->string('name');
+            $table->date('fecha_nacimiento');
             $table->string('email');
             $table->string('telefono');
-            $table->string('num_paciente');
-            $table->date('fecha_nacimiento');
             $table->date('revision')->nullable();
             $table->string('observaciones')->nullable();
             $table->string('odontograma')->nullable();

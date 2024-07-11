@@ -20,8 +20,7 @@ class ClinicasTableSeeder extends Seeder
             'email' => 'grupo@gmail.com',
             'telefono' => '690797596',
             'direccion' => 'Plaza Gabriel Miró',
-            'localidad' => '03725 - Teulada Alicante',
-
+            'localidad' => '03725 - Teulada Alicante'
         ];
 
         Clinica::insert($clinicas);
