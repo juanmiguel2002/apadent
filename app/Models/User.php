@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -18,6 +19,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -74,20 +76,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
-    
-    /**
-     * Verifica si el usuario tiene un rol específico.
-     *
-     * @param string $role
-     * @return bool
-     */
-    public function hasRole($role): bool
-    {
-        return $this->roles->contains('title', $role);
-    }
 
-    public function clinicas(): BelongsToMany
+    public function clinicas()
     {
-        return $this->belongsToMany(Clinica::class);
+        return $this->belongsToMany(Clinica::class, 'clinica_user', 'user_id', 'clinica_id');
     }
 }

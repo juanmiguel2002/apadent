@@ -12,9 +12,11 @@ class Tratamiento extends Model
         'name',
         'description',
     ];
-    public function paciente()
+    
+    public function pacientes()
     {
-        return $this->belongsTo(Paciente::class, 'paciente_id');
+        return $this->belongsToMany(Paciente::class, 'trat_etapas')
+                    ->withPivot('status'); // Incluye el campo adicional de la tabla pivote
     }
 
     public function etapas()

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TratEtapa extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'trat_etapas';
 
     public function tratamiento()
@@ -30,4 +30,5 @@ class TratEtapa extends Model
     {
         return $this->hasMany(Mensaje::class, 'trat_etapa_id');
     }
+    
 }

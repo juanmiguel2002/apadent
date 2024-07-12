@@ -5,3 +5,18 @@
 [x-cloak] {
     display: none;
 }
+/* colores personalizados */
+.border-azul{border-color: rgb(36, 177, 174);}
+
+.bg-gris {
+    background-color: rgb(234, 246, 244)
+}
+.bg-azul {
+    background-color: rgb(36, 177, 174);
+}
+.text-azul {
+    color:rgb(36, 177, 174)
+}
+.bg-claro {
+    background-color: rgb(148,211,204)
+}

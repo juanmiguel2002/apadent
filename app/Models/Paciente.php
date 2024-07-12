@@ -10,25 +10,31 @@ class Paciente extends Model
     use HasFactory;
 
     protected $fillable = [
+        'num_paciente',
         'name',
         'email',
         'telefono',
-        'num_paciente',
         'fecha_nacimiento',
         'revision',
         'observacion',
         'obser_cbct',
-        'odontograma_obser',
+        'odontograma_obser', // observacioones odontograma (pag perfil paciente )
         'clinica_id',
-
     ];
     public function clinica()
     {
         return $this->belongsTo(Clinica::class, 'clinica_id');
     }
 
-    public function tratamientos()
+    // public function tratamiento()
+    // {
+    //     return $this->hasMany(Tratamiento::class, 'paciente_id');
+    // }
+
+    public function tratEtapas()
     {
-        return $this->hasMany(Tratamiento::class, 'paciente_id');
+        return $this->belongsToMany(Tratamiento::class, 'trat_etapas')
+                    ->withPivot('status') // Incluye el campo adicional de la tabla pivote
+                    ->withTimestamps(); // Incluye marcas de tiempo si las tienes en la tabla pivote
     }
 }
