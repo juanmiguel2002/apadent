@@ -14,7 +14,7 @@ class Pacientes extends Component
     public $showModal = false;
     public $isEditing = false;
     public $paciente_id;
-    public $selectedTratamiento;
+    public $selectedTratamiento, $status = "Set Up";
 
     protected $rules = [
         'num_paciente' => 'required|string|max:255',
@@ -33,19 +33,11 @@ class Pacientes extends Component
         $this->loadPacientes();
         $this->tratamientos = Tratamiento::all();
         $this->clinica_id = Auth::user()->clinicas()->first()->id;
-        // dd($this->clinica_id);
     }
 
     public function loadPacientes()
     {
-        // $user = Auth::user();
-        // $clinics = $user->clinicas()->pluck('id');
         $this->pacientes = Paciente::with('tratEtapas')->get();
-        // $this->pacientes = Paciente::whereIn('clinica_id', $clinics)
-        //     ->with(['tratEtapas' => function ($query) {
-        //         $query->orderBy('created_at', 'asc');
-        //     }])
-        //     ->get();
     }
 
     public function edit(Paciente $paciente)
@@ -81,9 +73,11 @@ class Pacientes extends Component
     public function save()
     {
         $this->validate();
+        // dd($this->selectedTratamiento);
 
         if (is_null($this->clinica_id)) {
-            session()->flash('message', ['style' => 'danger', 'message' => 'Error: Clínica no asignada.']);
+            // session()->flash('message', ['style' => 'danger', 'message' => 'Error: Clínica no asignada.']);
+            $this->dispatch('pacienteEdit');
             return;
         }
 
@@ -101,8 +95,8 @@ class Pacientes extends Component
                 'obser_cbct' => $this->obser_cbct,
             ]);
             $paciente->tratEtapas()->sync([$this->selectedTratamiento]); // Utiliza sync() para actualizar la relación muchos a muchos
+            $this->dispatch('pacienteEdit');
 
-            session()->flash('message', ['style' => 'success', 'message' => 'Paciente actualizado con éxito.']);
         } else {
             $pacienteNew = Paciente::create([
                 'num_paciente' => $this->num_paciente,
@@ -116,8 +110,10 @@ class Pacientes extends Component
                 'clinica_id' => $this->clinica_id, // clinica id se pone automaticamente
             ]);
             // Aquí se podría asignar el tratamiento si es necesario
-            $pacienteNew->tratEtapas()->attach($this->selectedTratamiento);
-            session()->flash('message', ['flash.bannerStyle' => 'success', 'flash.banner' => 'Paciente actualizado con éxito.']);
+            // $pacienteNew->tratEtapas()->sync([$this->selectedTratamiento]);
+            $pacienteNew->tratEtapas()->attach($this->selectedTratamiento, ['status' => $this->status]);;
+
+            $this->dispatch('nuevoPaciente');
         }
 
         $this->resetForm();
@@ -131,6 +127,7 @@ class Pacientes extends Component
         $this->session()->flash('message', ['style' => 'success', 'message' => 'Paciente eliminado con éxito.']);
         $this->pacientes = Paciente::with('tratEtapas.tratamiento')->get();
     }
+
     public function showPaciente(Paciente $paciente){
 
     }

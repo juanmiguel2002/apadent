@@ -34,7 +34,6 @@ class Paciente extends Model
     public function tratEtapas()
     {
         return $this->belongsToMany(Tratamiento::class, 'trat_etapas')
-                    ->withPivot('status') // Incluye el campo adicional de la tabla pivote
-                    ->withTimestamps(); // Incluye marcas de tiempo si las tienes en la tabla pivote
+                    ->withPivot('status'); // Incluye el campo adicional de la tabla pivote // Incluye marcas de tiempo si las tienes en la tabla pivote
     }
 }

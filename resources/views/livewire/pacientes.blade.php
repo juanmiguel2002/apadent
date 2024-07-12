@@ -1,7 +1,5 @@
 <div>
     @can('paciente_view')
-
-
         <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex justify-start items-center">
                 <span class="uppercase text-base text-azul font-light">Ordenar por: </span>
@@ -113,18 +111,31 @@
                                         <x-input type="text" id="telefono" class="w-full rounded-md" wire:model.defer="telefono" placeholder="978456123"/>
                                         <x-input-error for="telefono" />
                                     </div>
-
-                                    <div class="col-span-2 sm:col-span-1 mb-4">
-                                        <x-label for="tratamiento_id" value="Tratamiento*" class="text-azul text-base"/>
-                                        <select name="tratamiento_id" wire:model="selectedTratamiento" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
-                                            <option value="">Seleccione un Tratamiento</option>
-                                            @foreach($tratamientos as $tratamiento)
-                                                <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <x-input-error for="tratamiento_id" />
-                                    </div>
-
+                                    @if ($isEditing)
+                                        @can('doctor_user')
+                                            <div class="col-span-2 sm:col-span-1 mb-4">
+                                                <x-label for="tratamiento_id" value="Tratamiento*" class="text-azul text-base"/>
+                                                <select name="tratamiento_id" wire:model="selectedTratamiento" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                                    <option value="">Seleccione un Tratamiento</option>
+                                                    @foreach($tratamientos as $tratamiento)
+                                                        <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <x-input-error for="tratamiento_id" />
+                                            </div>
+                                        @endcan
+                                    @else
+                                        <div class="col-span-2 sm:col-span-1 mb-4">
+                                            <x-label for="tratamiento_id" value="Tratamiento*" class="text-azul text-base"/>
+                                            <select name="tratamiento_id" wire:model="selectedTratamiento" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                                <option value="">Seleccione un Tratamiento</option>
+                                                @foreach($tratamientos as $tratamiento)
+                                                    <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <x-input-error for="tratamiento_id" />
+                                        </div>
+                                    @endif
                                     <div class="col-span-2 sm:col-span-1 mb-4">
                                         <x-label for="revision" value="Revisión" class="text-azul text-base"/>
                                         <x-input type="date" id="revision" class="w-full rounded-md" wire:model.defer="revision" />
@@ -154,10 +165,7 @@
                         </x-slot>
                     </div>
                 </x-dialog-modal>
-
             @endif
         @endcan
-
     @endcan
-
 </div>
