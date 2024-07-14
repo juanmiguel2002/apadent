@@ -13,7 +13,7 @@
             <div class="flex justify-end">
                 <button wire:click="showCreateModal" class="bg-azul text-white px-2 py-1 rounded ml-2">Crear Paciente</button>
                 <div class="flex items-center ml-5">
-                    <x-input class="text-azul" type="text" wire:model="search" placeholder="Buscar clínica" />
+                    <x-input class="text-azul" type="text" wire:model="search" placeholder="Buscar paciente" />
                 </div>
             </div>
         </div>
@@ -25,7 +25,7 @@
                             <th class="px-6 text-center">Cód Paciente</th>
                             <th class="p-3 text-center">Nombre</th>
                             <th class="p-3 text-center">Tratamiento</th>
-                            <th class="p-3 text-center">Estado</th>
+                            <th class="p-3 text-center">status</th>
                             <th class="p-3 text-center">Nº Etapa</th>
                             <th class="p-3 text-center">Acción</th>
                         </tr>
@@ -36,9 +36,10 @@
                             @foreach($paciente->tratEtapas as $tratEtapa)
                                 <tr>
                                     <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
-                                    <td class="text-center px-4 py-2" wire:click='showPaciente({{$paciente}})'>{{ $paciente->name }}</td>
+                                    <td class="text-center px-4 py-2 cursor-pointer" wire:click='showPaciente({{$paciente->id}})'>{{ $paciente->name }}</td>
                                     <td class="text-center px-4 py-2">{{ $tratEtapa->name }}</td>
-                                    <td></td>
+                                    <td class="text-center relative">
+                                    </td>
                                     <td class="text-center px-4 py-2">{{ $tratEtapa->pivot->status}}</td>
                                     <td class="text-center border px-4 py-2">
                                         <button wire:click="edit({{ $paciente->id }})"
@@ -53,15 +54,19 @@
                                 </tr>
                             @endforeach
                         @endforeach
-
                     </tbody>
+
                 </table>
             @else
                 <div class="px-6 py-4">
                     No existe ningún registro coincidente
                 </div>
             @endif
+            @if ($pacientes->hasPages())
+                {{ $pacientes->links('vendor.livewire.paginacion') }}
+            @endif
         </x-tabla>
+
         {{-- Editar o Añadir paciente --}}
         @can('paciente_create')
             @if($showModal)
@@ -96,7 +101,7 @@
                                     </div>
 
                                     <div class="col-span-2 sm:col-span-1 mb-4">
-                                        <x-label for="email" value="Email" class="text-azul text-base"/>
+                                        <x-label for="email" value="Email*" class="text-azul text-base"/>
                                         <x-input type="email" id="email" class="w-full rounded-md" wire:model.defer="email" placeholder="strat@gmail.com" />
                                         <x-input-error for="email" />
                                     </div>
@@ -107,14 +112,14 @@
                                         <x-input-error for="fecha_nacimiento" />
                                     </div>
                                     <div class="col-span-2 sm:col-span-1 mb-4">
-                                        <x-label for="telefono" value="Teléfono" class="text-azul text-base"/>
+                                        <x-label for="telefono" value="Teléfono*" class="text-azul text-base"/>
                                         <x-input type="text" id="telefono" class="w-full rounded-md" wire:model.defer="telefono" placeholder="978456123"/>
                                         <x-input-error for="telefono" />
                                     </div>
                                     @if ($isEditing)
                                         @can('doctor_user')
                                             <div class="col-span-2 sm:col-span-1 mb-4">
-                                                <x-label for="tratamiento_id" value="Tratamiento*" class="text-azul text-base"/>
+                                                <x-label for="tratEtapa_id" value="tratEtapa*" class="text-azul text-base"/>
                                                 <select name="tratamiento_id" wire:model="selectedTratamiento" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
                                                     <option value="">Seleccione un Tratamiento</option>
                                                     @foreach($tratamientos as $tratamiento)
@@ -136,21 +141,35 @@
                                             <x-input-error for="tratamiento_id" />
                                         </div>
                                     @endif
+
                                     <div class="col-span-2 sm:col-span-1 mb-4">
-                                        <x-label for="revision" value="Revisión" class="text-azul text-base"/>
+                                        <x-label for="revision" value="Revisión*" class="text-azul text-base"/>
                                         <x-input type="date" id="revision" class="w-full rounded-md" wire:model.defer="revision" />
                                         <x-input-error for="revision" />
                                     </div>
 
                                     <div class="col-span-2 mb-4">
-                                        <x-label for="observaciones" value="Observaciones" class="text-azul text-base"/>
-                                        <textarea class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" wire:model.defer="observaciones" ></textarea>
+                                        <x-label for="observaciones" value="Observaciones" class="text-azul text-md"/>
+                                        <textarea wire:model.defer="observaciones" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" ></textarea>
                                         <x-input-error for="observaciones" />
                                     </div>
+                                    @if (!$isEditing)
+                                        <div class="col-span-2 mb-3">
+                                            <x-label for="imagenes" class="block text-md text-azul capitalize">Imágenes</x-label>
+                                            <x-input wire:model="imagenes" multiple id="imagenes" name="imagenes" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                                            <x-input-error for="imagenes*" />
+                                        </div>
+
+                                        <div class="col-span-2 mb-4">
+                                            <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT <i>(comprimidos .zip)</i></x-label>
+                                            <x-input multiple wire:model="cbct" id="cbct" name="cbct" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                                            <x-input-error for="cbct.*" />
+                                        </div>
+                                    @endif
 
                                     <div class="col-span-2 mb-4">
                                         <x-label for="obser_cbct" value="Observaciones Cbct/Imágenes" class="text-azul text-base"/>
-                                        <textarea class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" wire:model.defer="obser_cbct" placeholder="Definir medididas, intraorales o físicas"></textarea>
+                                        <textarea wire:model.defer="obser_cbct" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" placeholder="Definir medididas, intraorales o físicas"></textarea>
                                         <x-input-error for="obser_cbct" />
                                     </div>
                                 </div>
@@ -158,6 +177,7 @@
                         </x-slot>
 
                         <x-slot name="footer">
+                            <spa class="px-4 py-2 text-center">Campos obligatorios (*)</spa>
                             <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
                             <button type="submit" wire:click="save" class="bg-blue-500 text-white px-4 py-2 rounded">
                                 {{ $isEditing ? 'Actualizar' : 'Crear' }}
