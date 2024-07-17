@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Role;
 use Closure;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Role;
 
 class AuthGates
 {

@@ -2,25 +2,33 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
+use App\Models\Role;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The model to policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
-    protected $policies = [
-        //
-    ];
-
-    /**
-     * Register any authentication / authorization services.
-     */
-    public function boot(): void
+    public function boot()
     {
-        //
+        $this->registerPolicies();
+
+        if (Auth::check()) {
+            $roles = Role::with('permissions')->get();
+            $permissionsArray = [];
+
+            foreach ($roles as $role) {
+                foreach ($role->permissions as $permission) {
+                    $permissionsArray[$permission->title][] = $role->id;
+                }
+            }
+
+            foreach ($permissionsArray as $title => $roles) {
+                Gate::define($title, function ($user) use ($roles) {
+                    return count(array_intersect($user->roles->pluck('id')->toArray(), $roles)) > 0;
+                });
+            }
+        }
     }
 }
+
