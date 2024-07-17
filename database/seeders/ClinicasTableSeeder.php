@@ -16,11 +16,10 @@ class ClinicasTableSeeder extends Seeder
         //
         $clinicas = [
             'name' => 'Grupo Apadet Dental Clinic',
-            'responsable' => 'Carla',
-            'email' => 'grupo@gmail.com',
+            'direccion' => 'Plaza Gabriel Miró - 03725 - Teulada, Alicante',
             'telefono' => '690797596',
-            'direccion' => 'Plaza Gabriel Miró',
-            'localidad' => '03725 - Teulada Alicante'
+            'email' => 'grupo@gmail.com',
+
         ];
 
         Clinica::insert($clinicas);
