@@ -3,7 +3,7 @@
         <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex justify-start items-center">
                 <span class="uppercase text-base text-azul font-light">Ordenar por: </span>
-                <select wire:model='ordenar' id=""
+                <select wire:model="ordenar" id=""
                     class="px-4 py-2 mt-2 ml-5 text-azul placeholder-gray-400 bg-white border border-azul rounded-none focus:border-none focus:outline-none focus:ring-none focus:ring-none focus:ring-opacity-40">
                     <option value="name">A-Z</option>
                     <option value="recientes">Recientes</option>
@@ -13,10 +13,11 @@
             <div class="flex justify-end">
                 <button wire:click="showCreateModal" class="bg-azul text-white px-2 py-1 rounded ml-2">Crear Paciente</button>
                 <div class="flex items-center ml-5">
-                    <x-input class="text-azul" type="text" wire:model="search" placeholder="Buscar paciente" />
+                    <x-input class="text-azul" type="text" wire:model.live="search" placeholder="Buscar paciente" />
                 </div>
             </div>
         </div>
+
         <x-tabla>
             @if ($pacientes->count())
                 <table class="min-w-full divide-y table-fixed">
@@ -25,37 +26,52 @@
                             <th class="px-6 text-center">Cód Paciente</th>
                             <th class="p-3 text-center">Nombre</th>
                             <th class="p-3 text-center">Tratamiento</th>
-                            <th class="p-3 text-center">status</th>
+                            <th class="p-3 text-center">Status</th>
                             <th class="p-3 text-center">Nº Etapa</th>
                             <th class="p-3 text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody class="bg-gray-200 ">
                         @foreach($pacientes as $paciente)
+                            <tr>
+                                <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
+                                <td class="text-center px-4 py-2 cursor-pointer" wire:click='showPaciente({{$paciente->id}})'>{{ $paciente->name }}</td>
+                                <td class="text-center px-4 py-2">{{ $paciente->tratamiento_nombre }}</td>
+                                @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
+                                    @if ($paciente->tratamiento_status == $status)
+                                        <td class="p-3 text-center flex justify-center items-center h-full mt-4">
+                                            <button wire:click="toggleMenu" class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
+                                                <span>{{ $status }}</span>
+                                            </button>
+                                            <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="">
 
-                            @foreach($paciente->tratEtapas as $tratEtapa)
-                                <tr>
-                                    <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
-                                    <td class="text-center px-4 py-2 cursor-pointer" wire:click='showPaciente({{$paciente->id}})'>{{ $paciente->name }}</td>
-                                    <td class="text-center px-4 py-2">{{ $tratEtapa->name }}</td>
-                                    <td class="text-center relative">
-                                    </td>
-                                    <td class="text-center px-4 py-2">{{ $tratEtapa->pivot->status}}</td>
-                                    <td class="text-center border px-4 py-2">
-                                        <button wire:click="edit({{ $paciente->id }})"
-                                            class="bg-yellow-500 text-white px-2 py-1 rounded">Editar</button>
-                                        <button wire:click="showHistorial({{ $tratEtapa->id }})"
-                                            class="bg-green-500 text-white px-2 py-1 rounded">Historial</button>
-                                        @can('paciente_delete')
-                                        <button wire:click="delete({{ $paciente->id }})"
-                                            class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
-                                        @endcan
-                                    </td>
-                                </tr>
-                            @endforeach
+                                            @if ($mostrar)
+                                                <div class="ml-4">
+                                                    @foreach ($statuses as $optionStatus => $optionColor)
+                                                        <div wire:click="estado({{ $paciente->trat_id }}, '{{ $optionStatus }}')"
+                                                            class="cursor-pointer text-white {{ $optionColor }} my-2 rounded-lg hover:bg-opacity-75 px-2">
+                                                            {{ $optionStatus }}
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </td>
+                                    @endif
+                                @endforeach
+                                <td class="text-center px-4 py-2">{{ $paciente->tratamiento_status }}</td>
+                                <td class="text-center border px-4 py-2">
+                                    <button wire:click="edit({{ $paciente->id }})"
+                                        class="bg-yellow-500 text-white px-2 py-1 rounded">Editar</button>
+                                    <button wire:click="showHistorial({{ $paciente->trat_id }})"
+                                        class="bg-green-500 text-white px-2 py-1 rounded">Historial</button>
+                                    @can('paciente_delete')
+                                    <button wire:click="delete({{ $paciente->id }})"
+                                        class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                                    @endcan
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
-
                 </table>
             @else
                 <div class="px-6 py-4">
@@ -149,9 +165,9 @@
                                     </div>
 
                                     <div class="col-span-2 mb-4">
-                                        <x-label for="observaciones" value="Observaciones" class="text-azul text-md"/>
-                                        <textarea wire:model.defer="observaciones" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" ></textarea>
-                                        <x-input-error for="observaciones" />
+                                        <x-label for="observacion" value="Observaciones" class="text-azul text-md"/>
+                                        <textarea wire:model.defer="observacion" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" ></textarea>
+                                        <x-input-error for="observacion" />
                                     </div>
                                     @if (!$isEditing)
                                         <div class="col-span-2 mb-3">

@@ -1,11 +1,11 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
 
-// import Alpine from 'alpinejs'
+import Alpine from 'alpinejs'
 
-// window.Alpine = Alpine
+window.Alpine = Alpine
 
-// Alpine.start();
+Alpine.start();
 window.onload = function(){
     Livewire.on('clinicaSaved', message => {
         Swal.fire({
@@ -42,14 +42,23 @@ window.onload = function(){
         });
     });
 
-    // Livewire.on('clinicDeleted', () => {
-    //     Swal.fire(
-    //         'Eliminado!',
-    //         'La clínica ha sido eliminada.',
-    //         'success'
-    //     )
-    // });
+    Livewire.on('pacienteError', () => {
+        Swal.fire(
+            'Error!',
+            'En la clínica no hay pacientes',
+            'warning'
+        )
+    });
 
+    Livewire.on('newStatus', () => {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Nuevo estado modificado',
+            showConfirmButton: false,
+            timer: 2500
+        });
+    });
     Livewire.on('nuevoPaciente',() => {
         Swal.fire({
             position: 'top-end',

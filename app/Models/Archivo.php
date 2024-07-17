@@ -10,11 +10,12 @@ class Archivo extends Model
     use HasFactory;
     protected $table = 'archivos';
     protected $fillable = [
+        'trat_etapa_id',
         'ruta',
     ];
 
     public function tratEtapa()
     {
-        return $this->belongsTo(TratEtapa::class, 'trat_etapa_id');
+        return $this->belongsTo(TratEtapa::class);
     }
 }

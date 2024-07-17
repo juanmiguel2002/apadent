@@ -6,7 +6,9 @@ use App\Models\Archivo;
 use App\Models\Imagen;
 use App\Models\Paciente;
 use App\Models\Tratamiento;
+use App\Models\TratEtapa;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -15,12 +17,26 @@ class Pacientes extends Component
 {
     use WithFileUploads, WithPagination;
 
-    public $tratamientos, $clinica_id, $paciente_id;
-    public $name, $email, $telefono, $num_paciente, $fecha_nacimiento, $revision, $observaciones, $obser_cbct, $odontograma_obser;
-    public $showModal = false;
-    public $isEditing = false;
+    public $tratamientos, $clinica_id, $paciente_id, $paciente;
+    public $name, $email, $telefono, $num_paciente, $fecha_nacimiento, $revision, $observacion, $obser_cbct, $odontograma_obser;
+    public $showModal = false, $isEditing = false, $mostrar = false;
     public $imagenes = [], $cbct = [];
     public $selectedTratamiento, $status = "Set Up";
+
+    public $search = '';
+    public $ordenar = '';
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'ordenar' => ['except' => 'name'],
+    ];
+
+    public $statuses = [
+        'En proceso' => 'bg-green-600',
+        'Pausado' => 'bg-blue-600',
+        'Finalizado' => 'bg-red-600',
+        'Set Up' => 'bg-yellow-600'
+    ];
 
     protected $rules = [
         'num_paciente' => 'required|string|max:255',
@@ -29,12 +45,21 @@ class Pacientes extends Component
         'email' => 'required|email|max:255',
         'telefono' => 'required|string|max:20',
         'revision' => 'nullable|date',
-        'observaciones' => 'nullable|string|max:255',
+        'observacion' => 'nullable|string|max:255',
         'obser_cbct' => 'nullable|string',
         'selectedTratamiento' => 'required|exists:tratamientos,id',
         'imagenes.*' => 'image',
         'cbct.*' => 'file|mimes:zip',
     ];
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingOrdenar()
+    {
+        $this->resetPage();
+    }
 
     public function mount()
     {
@@ -42,12 +67,64 @@ class Pacientes extends Component
         $this->clinica_id = Auth::user()->clinicas()->first()->id;
     }
 
+    // public function render()
+    // {
+    //     // Subconsulta para obtener el tratamiento más reciente de cada paciente
+    //     $subQuery = DB::table('trat_etapas')
+    //             ->select('paciente_id', DB::raw('MAX(updated_at) as last_treatment_date'))
+    //             ->groupBy('paciente_id');
+
+    //     // Consulta principal para obtener los pacientes con su tratamiento más reciente
+    //     $pacientes = Paciente::select('pacientes.*', 'tratamientos.name as tratamiento_nombre', 'trat_etapas.updated_at as tratamiento_fecha', 'trat_etapas.status as tratamiento_status', 'trat_etapas.id as trat_id')
+    //         ->joinSub($subQuery, 'last_treatments', function ($join) {
+    //             $join->on('pacientes.id', '=', 'last_treatments.paciente_id');
+    //         })
+    //         ->join('trat_etapas', function ($join) {
+    //             $join->on('pacientes.id', '=', 'trat_etapas.paciente_id')
+    //                 ->on('trat_etapas.updated_at', '=', 'last_treatments.last_treatment_date');
+    //         })
+    //         ->join('tratamientos', 'trat_etapas.tratamiento_id', '=', 'tratamientos.id')
+    //         ->orderBy('trat_etapas.updated_at', 'desc')
+    //         ->paginate(5); // Cambia 5 por el número de ítems por página que desees
+
+    //     return view('livewire.pacientes', [
+    //         'pacientes' => $pacientes,
+    //     ]);
+    // }
+
     public function render()
     {
-        // Paginar los pacientes con el método 'paginate'
-        $pacientes = Paciente::with('tratEtapas')
-            ->where('clinica_id', $this->clinica_id) // Si necesitas filtrar por clínica
-            ->paginate(5); // Cambia 10 por el número de ítems por página que desees
+        // Subconsulta para obtener el tratamiento más reciente de cada paciente
+        $subQuery = DB::table('trat_etapas')
+                ->select('paciente_id', DB::raw('MAX(updated_at) as last_treatment_date'))
+                ->groupBy('paciente_id');
+
+        // Consulta principal para obtener los pacientes con su tratamiento más reciente
+        $pacientes = Paciente::select('pacientes.*', 'tratamientos.name as tratamiento_nombre', 'trat_etapas.updated_at as tratamiento_fecha', 'trat_etapas.status as tratamiento_status', 'trat_etapas.id as trat_id')
+            ->joinSub($subQuery, 'last_treatments', function ($join) {
+                $join->on('pacientes.id', '=', 'last_treatments.paciente_id');
+            })
+            ->join('trat_etapas', function ($join) {
+                $join->on('pacientes.id', '=', 'trat_etapas.paciente_id')
+                    ->on('trat_etapas.updated_at', '=', 'last_treatments.last_treatment_date');
+            })
+            ->join('tratamientos', 'trat_etapas.tratamiento_id', '=', 'tratamientos.id')
+            ->when($this->search, function($query) {
+                $query->where(function($subQuery) {
+                    $subQuery->where('pacientes.name', 'like', '%' . $this->search . '%')
+                        ->orWhere('pacientes.num_paciente', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->ordenar, function($query) {
+                if ($this->ordenar === 'name') {
+                    $query->orderBy('pacientes.name');
+                } elseif ($this->ordenar === 'recientes') {
+                    $query->orderBy('trat_etapas.updated_at', 'desc');
+                } else {
+                    $query->orderBy('pacientes.id');
+                }
+            })
+            ->paginate(5); // Cambia 5 por el número de ítems por página que desees
 
         return view('livewire.pacientes', [
             'pacientes' => $pacientes,
@@ -65,7 +142,7 @@ class Pacientes extends Component
         $this->selectedTratamiento = $paciente->tratEtapas->isNotEmpty() ? $paciente->tratEtapas->first()->id : null;
         $this->revision = $paciente->revision;
         $this->telefono = $paciente->telefono;
-        $this->observaciones = $paciente->observaciones;
+        $this->observacion = $paciente->observacion;
         $this->obser_cbct = $paciente->obser_cbct;
         $this->isEditing = true;
         $this->showModal = true;
@@ -101,7 +178,7 @@ class Pacientes extends Component
                     'fecha_nacimiento' => $this->fecha_nacimiento,
                     'telefono' => $this->telefono,
                     'revision' => $this->revision,
-                    'observaciones' => $this->observaciones,
+                    'observacion' => $this->observacion,
                     'obser_cbct' => $this->obser_cbct,
                 ]);
                 $this->dispatch('pacienteEdit');
@@ -113,18 +190,20 @@ class Pacientes extends Component
                     'email' => $this->email,
                     'telefono' => $this->telefono,
                     'revision' => $this->revision,
-                    'observaciones' => $this->observaciones,
+                    'observacion' => $this->observacion,
                     'obser_cbct' => $this->obser_cbct,
                     'clinica_id' => $this->clinica_id,
                 ]);
 
-                $tratamiento = $pacienteNew->tratEtapas()->attach($this->selectedTratamiento, ['status' => $this->status]);
+                $pacienteNew->tratEtapas()->attach($this->selectedTratamiento, ['status' => $this->status]);
+                $tratamiento = $pacienteNew->tratEtapas()->first();
+                // dd($tratamiento);
                 if ($tratamiento) {
                     if (!empty($this->imagenes)) {
                         foreach ($this->imagenes as $key => $imagen) {
                             $path = $imagen->store('imagenPaciente', 'public');
                             Imagen::create([
-                                'trat_etapa_id' => $tratamiento->id,
+                                'trat_etapa_id' => $tratamiento->pivote->id,
                                 'ruta' => $path,
                             ]);
                         }
@@ -178,11 +257,14 @@ class Pacientes extends Component
         }
     }
 
-    public function delete($id)
+    public function estado($tratId, $newStatus)
     {
-        Paciente::find($id)->delete();
-        $this->session()->flash('message', ['style' => 'success', 'message' => 'Paciente eliminado con éxito.']);
-        $pacientes = Paciente::with('tratEtapas.tratamiento')->get();
+        $tratEtapa = TratEtapa::find($tratId);
+        $tratEtapa->status = $newStatus;
+        $tratEtapa->save();
+
+        $tratEtapa->status = $newStatus; // Actualizar el estado localmente
+        $this->mostrar = false; // Cerrar el menú
     }
 
     public function showPaciente($id_paciente){
@@ -197,25 +279,26 @@ class Pacientes extends Component
                 'num_paciente',
                 'fecha_nacimiento',
                 'selectedTratamiento',
-                'revision', 'observaciones',
+                'revision', 'observacion',
                 'obser_cbct', 'odontograma_obser',
                 'imagenes', 'cbct', 'isEditing'
             ]);
+    }
+
+    public function delete($id)
+    {
+        Paciente::find($id)->delete();
+        $this->session()->flash('message', ['style' => 'success', 'message' => 'Paciente eliminado con éxito.']);
+        $pacientes = Paciente::with('tratEtapas.tratamiento')->get();
     }
 
     public function close()
     {
         $this->showModal = false;
     }
+    public function toggleMenu()
+    {
+        $this->mostrar = !$this->mostrar;
+    }
+
 }
-
-// public function updateStatus($pacienteId, $tratamientoId, $status)
-//     {
-//         $paciente = Paciente::findOrFail($pacienteId);
-//         $paciente->tratEtapas()->updateExistingPivot($tratamientoId, ['status' => $status]);
-
-//         $this->loadPacientes();
-
-//         session()->flash('flash.bannerStyle', 'success');
-//         session()->flash('flash.banner', 'Estado del tratamiento actualizado con éxito.');
-//     }
