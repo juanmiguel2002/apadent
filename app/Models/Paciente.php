@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Paciente extends Model
 {
@@ -28,15 +28,11 @@ class Paciente extends Model
         return $this->belongsTo(Clinica::class, 'clinica_id');
     }
 
-    public function tratamientos()
+    // relaciona tratamientos con pacientes muchos a muchos
+    public function tratamientos(): BelongsToMany
     {
-        return $this->belongsToMany(Tratamiento::class, 'trat_etapas', 'paciente_id', 'tratamiento_id')
-            ->withPivot('created_at')->orderByPivot('created_at','desc');
-    }
-
-    public function tratEtapas()
-    {
-        return $this->belongsToMany(Tratamiento::class, 'trat_etapas')
-                    ->withPivot('status')->withTimestamps(); // Incluye el campo adicional de la tabla pivote // Incluye marcas de tiempo si las tienes en la tabla pivote
+        return $this->belongsToMany(Tratamiento::class, 'paciente_trat', 'trat_id', 'paciente_id')
+                    ->withPivot('created_at')
+                    ->withTimestamps();
     }
 }

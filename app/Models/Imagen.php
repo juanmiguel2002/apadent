@@ -11,12 +11,13 @@ class Imagen extends Model
 
     protected $table = 'images';
     protected $fillable = [
-        'trat_etapa_id',
+        'etapa_id',
         'ruta',
     ];
 
-    public function tratEtapa()
+    // Relación muchos a uno con Etapa
+    public function etapa()
     {
-        return $this->belongsTo(TratEtapa::class, 'trat_etapa_id');
+        return $this->belongsTo(Etapa::class);
     }
 }

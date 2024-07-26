@@ -3,10 +3,11 @@
 namespace App\Livewire;
 
 use App\Models\Archivo;
+use App\Models\Etapa;
 use App\Models\Imagen;
 use App\Models\Paciente;
+use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use App\Models\TratEtapa;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -15,13 +16,13 @@ class PacienteShow extends Component
 {
     use WithFileUploads;
 
-    public $paciente, $tratamientos;
+    public $paciente, $tratamientosAll, $tratamientos,$pacienteId;
     public $showModal = false;
     public $showTratamientoModal = false;
     public $files = [];
     public $uploadType = 'imagenes'; // Default to 'imagenes'
     public $selectedTratamiento;
-    public $newTratamiento;
+    public $newTratamiento, $fecha;
     public $isCreatingNew = false;
 
     protected $rules = [
@@ -30,30 +31,57 @@ class PacienteShow extends Component
 
     public function mount($id)
     {
+        $this->pacienteId = $id;
         $this->paciente = Paciente::findOrFail($id);
-        $this->tratamientos = Tratamiento::all();
+        $this->tratamientosAll = Tratamiento::all();
+        $this->loadTratamientos();
+        // dd($this->paciente->tratamientos);
+    }
+
+    protected function loadTratamientos()
+    {
+        $this->tratamientos = PacienteTrat::with('tratamiento')
+        ->where('paciente_id', $this->paciente->id )
+        ->orderBy('created_at', 'desc')
+        ->get();
+        // dd($this->tratamientos);
     }
 
     public function render()
     {
-        $imagenes = Imagen::whereHas('tratEtapa', function ($query) {
-            $query->where('paciente_id', $this->paciente->id);
-        })->get();
+        // Obtener las etapas relacionadas con los tratamientos del paciente
+        $etapasIds = Etapa::whereIn('trat_id', $this->tratamientos->pluck('id'))
+            ->pluck('id');
 
-        $archivos = Archivo::whereHas('tratEtapa', function ($query) {
-            $query->where('paciente_id', $this->paciente->id);
-        })->get();
+        // Cargar imágenes y archivos asociados a esas etapas
+        $imagenes = Imagen::whereIn('etapa_id', $etapasIds)->get();
+        $archivos = Archivo::whereIn('etapa_id', $etapasIds)->get();
 
         return view('livewire.paciente-show', [
+            'paciente' => $this->paciente,
             'imagenes' => $imagenes,
             'archivos' => $archivos,
             'tratamientos' => $this->tratamientos,
+            'tratamientosAll' => $this->tratamientosAll
         ]);
     }
 
     public function atras() {
         return redirect()->route('clinica.pacientes');
     }
+
+    // cambiar revisión
+    public function revision(){
+        $paciente = Paciente::findOrFail($this->paciente->id);
+
+        $paciente->revision = $this->fecha;
+
+        $paciente->save();
+        $this->dispatch('revision');
+        return redirect()->route('pacientes-show',$this->paciente->id);
+
+    }
+
 
     // GESTIÓN DE IMAGENES Y ARCHIVOS
     public function showImagenes()
@@ -79,8 +107,8 @@ class PacienteShow extends Component
         $folder = $this->uploadType == 'imagenes' ? 'imagenPaciente' : 'pacienteCbct';
 
         // Obtener el primer tratamiento asociado con el paciente
-        $tratEtapa = $this->paciente->tratEtapas()
-        ->where('tratamiento_id', $this->selectedTratamiento)
+        $tratEtapa = $this->paciente->tratamientos()
+        ->where('trat_id', $this->selectedTratamiento)
         ->first();
         dd($tratEtapa);
         $tratEtapaId = $tratEtapa->pivot->id; // Obtener el ID del pivote
@@ -92,12 +120,12 @@ class PacienteShow extends Component
             // Crear registro en la base de datos
             if ($this->uploadType == 'imagenes') {
                 Imagen::create([
-                    'trat_etapa_id' => $tratEtapaId,
+                    'etapa_id' => $tratEtapaId,
                     'ruta' => $path,
                 ]);
             } else {
                 Archivo::create([
-                    'trat_etapa_id' => $tratEtapaId,
+                    'etapa_id' => $tratEtapaId,
                     'ruta' => $path,
                 ]);
             }
@@ -150,7 +178,6 @@ class PacienteShow extends Component
     public function saveTratamiento()
     {
         $tratamientoId = $this->selectedTratamiento;
-        // dd($tratamientoId);
 
         if ($this->isCreatingNew) {
             $this->validate();
@@ -161,20 +188,29 @@ class PacienteShow extends Component
             ]);
 
             // Refresh list of tratamientos
-            $this->tratamientos = Tratamiento::all();
+            $this->tratamientosAll = Tratamiento::all();
             $this->reset('newTratamiento');
             // Select newly created tratamiento
             $tratamientoId = $tratamiento->id;
         }
 
         // Save relation to the patient
-        TratEtapa::updateOrCreate(
+        PacienteTrat::updateOrCreate(
             [
-                'tratamiento_id' => $tratamientoId,
+                'trat_id' => $tratamientoId,
                 'paciente_id' => $this->paciente->id,
-                'status' => 'Set Up'
             ]
         );
+        // Crear la etapa inicial
+        $tratamiento = Tratamiento::findOrFail($tratamientoId);
+        $tratamiento->etapas()->create([
+            'trat_id' => $tratamiento,
+            'name' => 'Inicio',
+            'status' => 'Set Up'
+        ]);
+
+        // Recargar los tratamientos
+        $this->loadTratamientos();
 
         $this->closeTratamientosModal();
     }

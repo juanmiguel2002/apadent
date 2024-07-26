@@ -13,7 +13,7 @@
         <div class="flex space-x-4">
             <!-- Primer botón -->
             @can('doctor_user')
-                <button wire:click="someMethod" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <button wire:click="stripping" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -21,7 +21,7 @@
                 </button>
             @endcan
 
-            <!-- Segundo botón -->
+            <!-- botón Tratamiento-->
             <button wire:click="showTratamientosModal" class="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -38,7 +38,7 @@
                 <p class="text-lg font-semibold text-gray-800">Nombre: <span class="text-gray-600">{{ $paciente->name }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Email: <span class="text-gray-600">{{ $paciente->email }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Teléfono: <span class="text-gray-600">{{ $paciente->telefono }}</span></p>
-                <p class="text-lg font-semibold text-gray-800">Próxima revisión: <span class="text-gray-600">{{ date('d/m/Y',  strtotime($paciente->revision))}}</span></p>
+                <p class="text-lg font-semibold text-gray-800">Próxima revisión: <span class="text-gray-600">{{ date('d/m/Y', strtotime($paciente->revision)) }}</span></p>
 
                 <!-- Cambiar fecha revisión -->
                 <div class="flex items-center space-x-4">
@@ -49,10 +49,10 @@
                 <!-- Tratamientos -->
                 <div class="mt-6">
                     <h3 class="text-xl font-semibold text-gray-800">Tratamientos:</h3>
-                    @foreach ($paciente->tratamientos as $tratamiento)
+                    @foreach ($tratamientos as $tratamiento)
                         <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
-                            <p class="text-lg font-semibold text-gray-800">Tratamiento: <span class="text-gray-600">{{ $tratamiento->name }}</span></p>
-                            <p class="text-lg font-semibold text-gray-800">Fecha inicio tratamiento: <span class="text-gray-600">{{ $tratamiento->pivot->created_at->format('d/m/Y') }}</span></p>
+                            <p class="text-lg font-semibold text-gray-800">Tratamiento: <span class="text-gray-600">{{ $tratamiento->tratamiento->name }}</span></p>
+                            <p class="text-lg font-semibold text-gray-800">Fecha inicio tratamiento: <span class="text-gray-600">{{ $tratamiento->created_at->format('d/m/Y') }}</span></p>
                         </div>
                     @endforeach
                 </div>
@@ -88,11 +88,7 @@
                         </svg>
                         <span>Añadir Archivos CBCT</span>
                     </button>
-
-                    <!-- Botón para añadir tratamiento -->
-
                 </div>
-
 
                 <!-- Tabla para imágenes -->
                 <div class="mt-8">
@@ -101,7 +97,7 @@
                         <thead>
                             <tr class="bg-gray-100 border-b">
                                 <th class="px-4 py-2 text-left text-gray-600">Vista Previa</th>
-                                <th class="px-4 py-2 text-center text-gray-600 ">Acciones</th>
+                                <th class="px-4 py-2 text-center text-gray-600">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -112,13 +108,11 @@
                                             <img src="{{ Storage::url($imagen->ruta) }}" alt="Imagen" class="w-16 h-16 object-cover">
                                         </a>
                                     </td>
-                                    <td class="px-4 py-2 flex items-center space-x-2 ">
+                                    <td class="px-4 py-2 flex items-center space-x-2">
                                         <a href="{{ Storage::url($imagen->ruta) }}" target="_blank" class="text-blue-500 hover:underline text-center">Ver</a>
-                                        <a download="{{ Storage::url($imagen->ruta) }}" class="text-blue-500 hover:underline text-center">descargar</a>
+                                        <a download="{{ Storage::url($imagen->ruta) }}" class="text-blue-500 hover:underline text-center">Descargar</a>
                                         @if(Auth::user()->hasRole('doctor'))
-                                            <button wire:click="deleteImage({{ $imagen->id }})" class="text-red-500 hover:underline">
-                                                Eliminar
-                                            </button>
+                                            <button wire:click="deleteImage({{ $imagen->id }})" class="text-red-500 hover:underline">Eliminar</button>
                                         @endif
                                     </td>
                                 </tr>
@@ -148,9 +142,7 @@
                                     <td class="px-4 py-2 flex items-center space-x-2">
                                         <a href="{{ Storage::url($archivo->ruta) }}" target="_blank" class="text-blue-500 hover:underline">Descargar</a>
                                         @if(Auth::user()->hasRole('doctor'))
-                                            <button wire:click="deleteArchivo({{ $archivo->id }})" class="text-red-500 hover:underline">
-                                                Eliminar
-                                            </button>
+                                            <button wire:click="deleteArchivo({{ $archivo->id }})" class="text-red-500 hover:underline">Eliminar</button>
                                         @endif
                                     </td>
                                 </tr>
@@ -161,6 +153,7 @@
             </div>
         </div>
     </div>
+
     @if ($showModal)
         <x-dialog-modal wire:model="showModal" maxWidth="lg">
             <x-slot name="title">
@@ -204,7 +197,7 @@
                     <x-label for="selectedTratamiento" value="Seleccionar Tratamiento" />
                     <select wire:model="selectedTratamiento" id="selectedTratamiento" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                         <option value="">Seleccione un tratamiento</option>
-                        @foreach ($tratamientos as $tratamiento)
+                        @foreach ($tratamientosAll as $tratamiento)
                             <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }}</option>
                         @endforeach
                     </select>

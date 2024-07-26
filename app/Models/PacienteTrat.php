@@ -5,22 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TratEtapa extends Model
+class PacienteTrat extends Model
 {
     use HasFactory;
 
-    protected $table = 'trat_etapas';
+    protected $table = 'paciente_trat';
+    public $timestamps = true;
 
     protected $fillable = [
-        'tratamiento_id',
         'paciente_id',
-        'status',
+        'trat_id',
         // Agrega aquí otros atributos que deseas permitir para la asignación masiva
     ];
 
+    // Definir la relación con el modelo Tratamiento
     public function tratamiento()
     {
-        return $this->belongsTo(Tratamiento::class, 'tratamiento_id');
+        return $this->belongsTo(Tratamiento::class, 'trat_id', 'id');
     }
 
     public function archivos()
@@ -39,7 +40,8 @@ class TratEtapa extends Model
     }
     public function paciente()
     {
-        return $this->belongsTo(Paciente::class);
+        return $this->belongsTo(Paciente::class, 'paciente_id');
     }
+
 
 }

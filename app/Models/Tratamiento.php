@@ -2,14 +2,12 @@
 
 namespace App\Models;
 
-use App\Http\Controllers\Pacientes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Tratamiento extends Model
 {
     use HasFactory;
-    protected $table = 'tratamientos';
 
     protected $fillable = [
         'name',
@@ -17,13 +15,19 @@ class Tratamiento extends Model
 
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class, 'trat_etapas')
-                    ->withPivot('status')->withTimestamps(); // Incluye el campo adicional de la tabla pivote
+        return $this->belongsToMany(Paciente::class, 'paciente_trat', 'trat_id', 'paciente_id')
+                    ->withPivot('created_at')
+                    ->withTimestamps();
     }
 
+    public function pacienteTrats()
+    {
+        return $this->hasMany(PacienteTrat::class, 'trat_id', 'id');
+    }
 
+    // Relación uno a muchos con Etapas
     public function etapas()
     {
-        return $this->hasMany(TratEtapa::class, 'tratamiento_id');
+        return $this->hasMany(Etapa::class);
     }
 }

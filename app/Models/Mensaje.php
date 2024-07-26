@@ -9,11 +9,15 @@ class Mensaje extends Model
 {
     use HasFactory;
     protected $table = 'mensajes';
-    protected $fillable = ['message'];
+    protected $fillable = [
+        'trat_etapa_id',
+        'user_id',
+        'message',
+    ];
 
-    public function tratEtapa()
+    public function PacienteTrata()
     {
-        return $this->belongsTo(TratEtapa::class, 'trat_etapa_id');
+        return $this->belongsTo(PacienteTrat::class, 'trat_etapa_id');
     }
 
     public function user()
