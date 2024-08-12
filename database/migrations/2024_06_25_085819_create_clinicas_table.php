@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('clinicas', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
-            $table->string('responsable'); // (rol doctor)
-            $table->string('email');
-            $table->string('telefono');
             $table->string('direccion');
-            // $table->string('cp');
-            $table->string('localidad');
+            $table->string('telefono');
+            $table->string('email');
+            $table->string('cif');
+            $table->string('direccion_fac'); // (rol doctor)
+            $table->string('cuenta');
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clinics');
+        Schema::dropIfExists('clinicas');
     }
 };

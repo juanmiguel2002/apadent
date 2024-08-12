@@ -29,9 +29,16 @@ class PermissionRoleTableSeeder extends Seeder
         // Permisos específicos para clinica_user
         $clinicaUserPermissions = $permissions->filter(function ($permission) {
             return in_array($permission->name, [
-                'paciente_view', 'paciente_create', 'paciente_modify',
-                'etapa_create', 'etapa_view', 'factura_view', 'documentacion_add',
-                'clinica_access', 'clinica_view'
+                'admin_access',
+                'clinica_access',
+                'paciente_delete',
+                'etapa_revise',
+                'doctor_user',
+                'paciente_create',
+                'create_user',
+                'read_user',
+                'update_user',
+                'delete_user'
             ]);
         });
 

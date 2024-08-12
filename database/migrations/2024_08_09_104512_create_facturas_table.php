@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mensajes', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('trat_etapa_id');
+        Schema::create('facturas', function (Blueprint $table) {
+            $table->id('id');
+            $table->string('name');
+            $table->unsignedBigInteger('clinica_id');
             $table->unsignedBigInteger('user_id');
-            $table->text('message');
+            $table->string('ruta');
             $table->timestamps();
 
-            $table->foreign('trat_etapa_id')->references('id')->on('trat_etapas')->onDelete('cascade');
+            $table->foreign('clinica_id')->references('id')->on('clinicas')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
         });
     }
 
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('facturas');
     }
 };

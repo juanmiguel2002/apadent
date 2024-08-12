@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('images', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('trat_etapa_id');
+            $table->unsignedBigInteger('etapa_id');
             $table->string('ruta');
             $table->timestamps();
 
-            $table->foreign('trat_etapa_id')->references('id')->on('trat_etapas')->onDelete('cascade');
+            $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
         });
     }
 

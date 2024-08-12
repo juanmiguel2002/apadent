@@ -10,22 +10,31 @@ use Illuminate\Database\Seeder;
         public function run()
         {
             $permissions = [
-                ['id' => 1, 'name' => 'admin_access'], //admin access
-                ['id' => 2, 'name' => 'clinica_access'], //clinica access
-                ['id' => 3, 'name' => 'paciente_view'], //paciente view
-                ['id' => 4, 'name' => 'paciente_delete'],//paciente eliminar (doctor)
-                ['id' => 5, 'name' => 'etapa_revise'], //modificar etapa (doctor)
-                ['id' => 6, 'name' => 'doctor_user'], // doctor access
-                ['id' => 7, 'name' => 'clinica_view'],// ver datos clínica (doctor, clinica_user)
-                // Añadimos permisos adicionales necesarios para clinica_user
-                ['id' => 8, 'name' => 'paciente_create'],
-                ['id' => 9, 'name' => 'paciente_modify'],
-                ['id' => 10, 'name' => 'etapa_create'],
-                ['id' => 11, 'name' => 'etapa_view'],
-                ['id' => 12, 'name' => 'factura_view'],
-                ['id' => 13, 'name' => 'documentacion_add'],
+                ['name' => 'admin_access', 'guard_name' => 'web'],
+                ['name' => 'clinica_access', 'guard_name' => 'web'],
+                ['name' => 'paciente_view', 'guard_name' => 'web'],
+                ['name' => 'paciente_delete', 'guard_name' => 'web'],
+                ['name' => 'etapa_revise', 'guard_name' => 'web'],
+                ['name' => 'doctor_user', 'guard_name' => 'web'],
+                ['name' => 'clinica_view', 'guard_name' => 'web'],
+                ['name' => 'paciente_create', 'guard_name' => 'web'],
+                ['name' => 'paciente_modify', 'guard_name' => 'web'],
+                ['name' => 'etapa_create', 'guard_name' => 'web'],
+                ['name' => 'etapa_view', 'guard_name' => 'web'],
+                ['name' => 'factura_view', 'guard_name' => 'web'],
+                ['name' => 'documentacion_add', 'guard_name' => 'web'],
+                ['name' => 'usuario_create', 'guard_name' => 'web'],
+                ['name' => 'usuario_read', 'guard_name' => 'web'],
+                ['name' => 'usuario_update', 'guard_name' => 'web'],
+                ['name' => 'usuario_delete', 'guard_name' => 'web'],
+                ['name' => 'role_create', 'guard_name' => 'web'],
+                ['name' => 'role_read', 'guard_name' => 'web'],
+                ['name' => 'role_update', 'guard_name' => 'web'],
+                ['name' => 'role_delete', 'guard_name' => 'web'],
             ];
 
-            Permission::insert($permissions);
+            foreach ($permissions as $permission) {
+                Permission::create($permission);
+            }
         }
     }

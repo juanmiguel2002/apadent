@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trat_etapas', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('tratamiento_id');
+        Schema::create('paciente_trat', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('paciente_id');
-            $table->string('status');
+            $table->unsignedBigInteger('trat_id');
             $table->timestamps();
 
-            $table->foreign('tratamiento_id')->references('id')->on('tratamientos')->onDelete('cascade');
             $table->foreign('paciente_id')->references('id')->on('pacientes')->onDelete('cascade');
+            $table->foreign('trat_id')->references('id')->on('tratamientos')->onDelete('cascade');
+
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trat_etapas');
+        Schema::dropIfExists('paciente_trat');
     }
 };
