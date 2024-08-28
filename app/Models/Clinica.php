@@ -10,16 +10,16 @@ class Clinica extends Model
     use HasFactory;
     protected $fillable = [
         'name',
-        'responsable',
+        'direccion',
         'email',
         'telefono',
-        'direccion',
-        'cp',
-        'localidad',
+        'cif',
+        'direccion_fac',
+        'cuenta'
+
     ];
-    public function users()
-    {
-        return $this->belongsToMany(User::class,);
+    public function users() {
+        return $this->belongsToMany(User::class, 'clinica_user', 'clinica_id', 'user_id');
     }
 
     public function pacientes()

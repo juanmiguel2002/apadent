@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('archivos', function (Blueprint $table) {
-            $table->bigIncrements('id');
+        Schema::create('tratamiento_etapa', function (Blueprint $table) {
+            // $table->bigIncrements('id');
+            $table->unsignedBigInteger('trat_id');
             $table->unsignedBigInteger('etapa_id');
-            $table->string('ruta');
+            $table->string('orden');
             $table->timestamps();
 
+            $table->foreign('trat_id')->references('id')->on('tratamientos')->onDelete('cascade');
             $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('archivos');
+        Schema::dropIfExists('tratamiento_etapa');
     }
 };

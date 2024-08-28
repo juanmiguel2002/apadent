@@ -10,9 +10,10 @@ class Archivo extends Model
     use HasFactory;
     protected $table = 'archivos';
     protected $fillable = [
-        'etapa_id',
         'ruta',
-        'file_type',
+        'tipo',
+        'paciente_id',
+        'paciente_etapa_id',
     ];
 
     // Relación muchos a uno con Etapa

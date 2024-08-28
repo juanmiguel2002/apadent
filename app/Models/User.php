@@ -12,7 +12,7 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
     use HasFactory;
@@ -29,7 +29,9 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'colegiado',
         'password',
+        'email_verified_at',
     ];
 
     /**
@@ -72,13 +74,24 @@ class User extends Authenticatable
         });
     }
 
+    // Relaciones
     public function roles()
     {
-        return $this->belongsToMany(Role::class);
+        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
     }
 
     public function clinicas()
     {
         return $this->belongsToMany(Clinica::class, 'clinica_user', 'user_id', 'clinica_id');
+    }
+
+    public function facturas()
+    {
+        return $this->hasMany(Factura::class, 'user_id');
+    }
+
+    public function mensajes()
+    {
+        return $this->hasMany(Mensaje::class, 'users_id');
     }
 }

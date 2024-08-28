@@ -11,15 +11,34 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Schema::create('mensajes', function (Blueprint $table) {
+        //     $table->bigIncrements('id');
+        //     $table->unsignedBigInteger('etapa_id');
+        //     $table->unsignedBigInteger('user_id');
+        //     $table->text('mensaje');
+        //     $table->timestamps();
+
+        //     $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
+        //     $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        // });
         Schema::create('mensajes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('etapa_id');
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('users_id');
             $table->text('mensaje');
+            $table->unsignedBigInteger('paciente_id');
+            $table->unsignedBigInteger('etapas_id');
             $table->timestamps();
 
-            $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->index('users_id');
+            $table->index(['paciente_id', 'etapas_id']);
+
+            $table->foreign('users_id')
+                  ->references('id')
+                  ->on('users')->onDelete('cascade');
+
+            $table->foreign(['paciente_id', 'etapas_id'])
+                  ->references(['paciente_id', 'etapas_id'])
+                  ->on('paciente_etapas')->onDelete('cascade');
         });
     }
 

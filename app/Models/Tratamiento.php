@@ -13,21 +13,28 @@ class Tratamiento extends Model
         'name',
     ];
 
+    // public function pacientes()
+    // {
+    //     return $this->belongsToMany(Paciente::class, 'paciente_trat', 'trat_id', 'paciente_id')
+    //                 ->withPivot('created_at')
+    //                 ->withTimestamps();
+    // }
+
+    // Relaciones
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class, 'paciente_trat', 'trat_id', 'paciente_id')
-                    ->withPivot('created_at')
+        return $this->belongsToMany(Paciente::class, 'paciente_trat', 'trat_id', 'paciente_id');
+    }
+
+    public function etapas()
+    {
+        return $this->belongsToMany(Etapa::class, 'tratamiento_etapa', 'trat_id', 'etapas_id')
+                    ->withPivot('orden')
                     ->withTimestamps();
     }
 
-    public function pacienteTrats()
+    public function tratamientoEtapas()
     {
-        return $this->hasMany(PacienteTrat::class, 'trat_id', 'id');
-    }
-
-    // Relación uno a muchos con Etapas
-    public function etapas()
-    {
-        return $this->hasMany(Etapa::class);
+        return $this->hasMany(TratamientoEtapa::class, 'trat_id');
     }
 }
