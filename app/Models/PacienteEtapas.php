@@ -5,17 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PacienteEtapa extends Model
+class PacienteEtapas extends Model
 {
     use HasFactory;
 
     protected $table = 'paciente_etapas';
     protected $fillable = [
+        'paciente_id',
+        'etapas_id',
         'fecha_ini',
         'fecha_fin',
         'status',
         'revision',
-        'orden',
+        'orden', //ordenar las etapas del paciente
 
     ];
 

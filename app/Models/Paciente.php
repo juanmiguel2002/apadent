@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Paciente extends Model
 {
@@ -17,7 +16,6 @@ class Paciente extends Model
         'email',
         'telefono',
         'fecha_nacimiento',
-        'revision',
         'observacion',
         'obser_cbct',
         'odontograma_obser', // observacioones odontograma (pag perfil paciente )
@@ -41,7 +39,7 @@ class Paciente extends Model
                     ->withPivot('fecha_fin', 'status', 'revision', 'orden')
                     ->withTimestamps();
     }
-    
+
     // relaciona tratamientos con pacientes muchos a muchos
     // public function tratamientos(): BelongsToMany
     // {
