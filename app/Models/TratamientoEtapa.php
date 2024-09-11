@@ -14,7 +14,6 @@ class TratamientoEtapa extends Model
     protected $fillable = [
         'trat_id',
         'etapa_id',
-        'orden',
     ];
 
     // Relaciones

@@ -11,6 +11,7 @@ class Tratamiento extends Model
 
     protected $fillable = [
         'name',
+        'descripcion'
     ];
 
     // public function pacientes()
@@ -28,9 +29,7 @@ class Tratamiento extends Model
 
     public function etapas()
     {
-        return $this->belongsToMany(Etapa::class, 'tratamiento_etapa', 'trat_id', 'etapas_id')
-                    ->withPivot('orden')
-                    ->withTimestamps();
+        return $this->belongsToMany(Etapa::class, 'tratamiento_etapa', 'trat_id', 'etapa_id');
     }
 
     public function tratamientoEtapas()

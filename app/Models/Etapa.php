@@ -26,5 +26,8 @@ class Etapa extends Model
     {
         return $this->belongsToMany(Paciente::class, 'paciente_etapas', 'etapas_id', 'paciente_id');
     }
-
+    public function pacienteEtapas()
+    {
+        return $this->hasMany(PacienteEtapas::class, 'etapas_id');
+    }
 }
