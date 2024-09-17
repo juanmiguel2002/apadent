@@ -20,6 +20,7 @@ class Paciente extends Model
         'obser_cbct',
         'odontograma_obser', // observacioones odontograma (pag perfil paciente )
         'clinica_id',
+        'activo'
     ];
 
     // Relaciones
@@ -35,7 +36,7 @@ class Paciente extends Model
 
     public function etapas()
     {
-        return $this->belongsToMany(Etapa::class, 'paciente_etapas', 'paciente_id', 'etapas_id')
+        return $this->belongsToMany(Etapa::class, 'paciente_etapas', 'paciente_id', 'etapa_id')
                     ->withPivot('fecha_fin', 'status', 'revision', 'orden')
                     ->withTimestamps();
     }

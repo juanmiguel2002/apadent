@@ -24,10 +24,10 @@ class Etapa extends Model
 
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class, 'paciente_etapas', 'etapas_id', 'paciente_id');
+        return $this->belongsToMany(Paciente::class, 'paciente_etapas', 'etapa_id', 'paciente_id');
     }
     public function pacienteEtapas()
     {
-        return $this->hasMany(PacienteEtapas::class, 'etapas_id');
+        return $this->hasMany(PacienteEtapas::class, 'etapa_id');
     }
 }

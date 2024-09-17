@@ -12,12 +12,12 @@ class PacienteEtapas extends Model
     protected $table = 'paciente_etapas';
     protected $fillable = [
         'paciente_id',
-        'etapas_id',
+        'etapa_id',
         'fecha_ini',
         'fecha_fin',
         'status',
         'revision',
-        'orden', //ordenar las etapas del paciente
+        // 'orden', //ordenar las etapas del paciente
 
     ];
 
@@ -29,5 +29,14 @@ class PacienteEtapas extends Model
     public function paciente()
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
+
+    public function mensajes()
+    {
+        return $this->hasMany(Mensaje::class, 'etapa_id', 'paciente_id');
+    }
+    public function etapa()
+    {
+        return $this->belongsTo(Etapa::class, 'etapa_id');
     }
 }

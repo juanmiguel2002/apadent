@@ -36,20 +36,18 @@ class Clinica extends Model
     {
         // Definir el nombre limpio de la carpeta principal usando el nombre de la clínica
         $clinicaName = preg_replace('/\s+/', '_', trim($this->name));
-        // Reemplazar espacios con guiones bajos y eliminar espacios en blanco al inicio y al final
-        $clinicaFolder = 'clinicas/' . $clinicaName;
 
         // Crear la carpeta principal de la clínica usando el disco 'public'
-        if (!Storage::disk('public')->exists($clinicaFolder)) {
-            if (!Storage::disk('public')->makeDirectory($clinicaFolder)) {
-                throw new \Exception("No se pudo crear la carpeta principal de la clínica: {$clinicaFolder}");
+        if (!Storage::disk('clinicas')->exists($clinicaName)) {
+            if (!Storage::disk('clinicas')->makeDirectory($clinicaName)) {
+                throw new \Exception("No se pudo crear la carpeta principal de la clínica: {$clinicaName}");
             }
         }
 
         // Crear subcarpetas dentro de la carpeta de la clínica
         $subfolders = ['facturas', 'documentos']; // Puedes agregar más subcarpetas aquí
         foreach ($subfolders as $subfolder) {
-            $subfolderPath = $clinicaFolder . '/' . $subfolder;
+            $subfolderPath = $clinicaName . '/' . $subfolder;
             if (!Storage::disk('public')->exists($subfolderPath)) {
                 if (!Storage::disk('public')->makeDirectory($subfolderPath)) {
                     throw new \Exception("No se pudo crear la subcarpeta: {$subfolderPath}");

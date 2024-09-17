@@ -13,7 +13,7 @@ class Mensaje extends Model
         'users_id',
         'mensaje',
         'paciente_id',
-        'etapas_id',
+        'etapa_id',
     ];
 
     // Relaciones
@@ -22,8 +22,8 @@ class Mensaje extends Model
         return $this->belongsTo(User::class, 'users_id');
     }
 
-    public function pacienteEtapa()
+    public function etapaPaciente()
     {
-        return $this->belongsTo(PacienteEtapa::class, ['paciente_id', 'etapas_id']);
+        return $this->belongsTo(PacienteEtapas::class, 'etapas_id');
     }
 }
