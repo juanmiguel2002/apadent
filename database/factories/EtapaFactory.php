@@ -18,7 +18,7 @@ class EtapaFactory extends Factory
     public function definition(): array
     {
         return [
-            'trat_id' => Tratamiento::all()->random(rand(1,5)),
+            'trat_id' => Tratamiento::inRandomOrder()->limit(1)->pluck('id')->first(),
             'name' => $this->faker->word,
             'status' => $this->faker->randomElement(['Set Up','En proceso','Pausado','Finalizado']),
             'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),

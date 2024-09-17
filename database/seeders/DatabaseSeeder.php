@@ -11,6 +11,7 @@ use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
 use App\Models\User;
+use Database\Factories\PacienteTratFactory;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -24,81 +25,86 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // $this->call(RolesTableSeeder::class);
 
-        // Crear usuarios
-        // $admin = User::factory()->create([
-        //     'name' => 'admin',
-        //     'password' => bcrypt('admin123'),
-        //     'email' => 'admin@admin.com',
-        // ]);
+        // // Crear usuarios
+        User::factory()->create([
+            'name' => 'admin',
+            'colegiado' => '123456',
+            'password' => bcrypt('admin123'),
+            'email' => 'admin@admin.com',
+        ]);
 
-        // $doctor = User::factory()->create([
-        //     'name' => 'doctor',
-        //     'password' => bcrypt('doctor123'),
-        //     'email' => 'doctor@doctor.com',
-        // ]);
+        User::factory()->create([
+            'name' => 'doctor',
+            'colegiado' => '1234546',
+            'password' => bcrypt('doctor123'),
+            'email' => 'doctor@doctor.com',
+        ]);
 
-        // $clinicaUser = User::factory()->create([
-        //     'name' => 'clinica_user',
-        //     'password' => bcrypt('clinica123'),
-        //     'email' => 'clinica@clinica.com',
-        // ]);
+        User::factory()->create([
+            'name' => 'clinica_user',
+            'colegiado' => '1233456',
+            'password' => bcrypt('clinica123'),
+            'email' => 'clinica@clinica.com',
+        ]);
 
         // Crear roles
-        $adminRole = Role::findById(1);
-        $doctorRole = Role::findById(2);
-        $clinicaUserRole = Role::findById(3);
+        // $adminRole = Role::findById(1);
+        // $doctorRole = Role::findById(2);
+        // $clinicaUserRole = Role::findById(3);
         // $this->call(PermissionsTableSeeder::class);
 
         // Asignar permisos a los roles
-        $adminRole->syncPermissions(Permission::whereIn('name', [
-            'admin_access',
-            'clinica_access',
-            'paciente_view',
-            'paciente_delete',
-            'etapa_revise',
-            'doctor_user',
-            'clinica_view',
-            'paciente_create',
-            'paciente_modify',
-            'etapa_create',
-            'etapa_view',
-            'factura_view',
-            'documentacion_add',
-            'usuario_create',
-            'usuario_read',
-            'usuario_update',
-            'usuario_delete',
-            'role_create',
-            'role_read',
-            'role_update',
-            'role_delete',
-        ])->get());
+        // $adminRole->syncPermissions(Permission::whereIn('name', [
+        //     'admin_access',
+        //     'clinica_access',
+        //     'paciente_view',
+        //     'paciente_delete',
+        //     'etapa_revise',
+        //     'doctor_user',
+        //     'clinica_view',
+        //     'paciente_create',
+        //     'paciente_modify',
+        //     'etapa_create',
+        //     'etapa_view',
+        //     'factura_view',
+        //     'documentacion_add',
+        //     'usuario_create',
+        //     'usuario_read',
+        //     'usuario_update',
+        //     'usuario_delete',
+        //     'role_create',
+        //     'role_read',
+        //     'role_update',
+        //     'role_delete',
+        // ])->get());
 
-        $doctorRole->syncPermissions(Permission::whereIn('name', [
-            'paciente_view',
-            'paciente_delete',
-            'etapa_revise',
-            'clinica_view',
-            'usuario_create',
-            'usuario_read',
-            'usuario_update',
-        ])->get());
+        // $doctorRole->syncPermissions(Permission::whereIn('name', [
+        //     'paciente_view',
+        //     'paciente_delete',
+        //     'etapa_revise',
+        //     'clinica_view',
+        //     'usuario_create',
+        //     'usuario_read',
+        //     'usuario_update',
+        // ])->get());
 
-        $clinicaUserRole->syncPermissions(Permission::whereIn('name', [
-            'paciente_view',
-            'paciente_modify',
-            'etapa_create',
-            'etapa_view',
-            'clinica_view',
-            'factura_view',
-            'documentacion_add',
-        ])->get());
+        // $clinicaUserRole->syncPermissions(Permission::whereIn('name', [
+        //     'paciente_view',
+        //     'paciente_modify',
+        //     'etapa_create',
+        //     'etapa_view',
+        //     'clinica_view',
+        //     'factura_view',
+        //     'documentacion_add',
+        // ])->get());
+        // $this->call(ClinicasTableSeeder::class);
 
         // Asignar roles a los usuarios
-        // User::findId(1)->assignRole('admin');
-        // User::findId(2)->assignRole('doctor');
-        // User::findId(3)->assignRole('clinica_user');
+        // User::find(1)->assignRole('admin');
+        // User::find(2)->assignRole('doctor');
+        // User::find(3)->assignRole('clinica_user');
 
     }
     // public function run()

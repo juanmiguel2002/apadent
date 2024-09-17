@@ -18,6 +18,7 @@ class PacienteFactory extends Factory
         return [
             'num_paciente' => $this->faker->unique()->numerify('PAC####'),
             'name' => $this->faker->name,
+            'fecha_nacimiento' => $this->faker->date(),
             'email' => $this->faker->unique()->safeEmail,
             'telefono' => $this->faker->phoneNumber,
             'clinica_id' => 1,
