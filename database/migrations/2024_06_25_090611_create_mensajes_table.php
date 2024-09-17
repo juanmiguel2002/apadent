@@ -26,18 +26,18 @@ return new class extends Migration
             $table->unsignedBigInteger('users_id');
             $table->text('mensaje');
             $table->unsignedBigInteger('paciente_id');
-            $table->unsignedBigInteger('etapas_id');
+            $table->unsignedBigInteger('etapa_id');
             $table->timestamps();
 
             $table->index('users_id');
-            $table->index(['paciente_id', 'etapas_id']);
+            $table->index(['paciente_id', 'etapa_id']);
 
             $table->foreign('users_id')
                   ->references('id')
                   ->on('users')->onDelete('cascade');
 
-            $table->foreign(['paciente_id', 'etapas_id'])
-                  ->references(['paciente_id', 'etapas_id'])
+            $table->foreign(['paciente_id', 'etapa_id'])
+                  ->references(['paciente_id', 'etapa_id'])
                   ->on('paciente_etapas')->onDelete('cascade');
         });
     }
