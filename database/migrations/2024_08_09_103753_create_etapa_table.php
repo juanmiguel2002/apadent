@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigIncrements('id'); // id - bigint(20) UNSIGNED NOT NULL
             $table->unsignedBigInteger('trat_id'); // trat_id - bigint(20) UNSIGNED NOT NULL
             $table->string('name'); // name - varchar(255) NOT NULL
-            $table->enum('status', ['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->default('Set Up'); // status - enum
+            // $table->enum('status', ['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->default('Set Up'); // status - enum
             $table->timestamps(); // created_at and updated_at - timestamp NULL DEFAULT NULL
 
             // Foreign key constraint (if 'trat_id' references another table)
