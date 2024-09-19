@@ -45,11 +45,11 @@ class Clinica extends Model
         }
 
         // Crear subcarpetas dentro de la carpeta de la clínica
-        $subfolders = ['facturas', 'documentos']; // Puedes agregar más subcarpetas aquí
+        $subfolders = ['facturas', 'pacientes']; // Puedes agregar más subcarpetas aquí
         foreach ($subfolders as $subfolder) {
             $subfolderPath = $clinicaName . '/' . $subfolder;
-            if (!Storage::disk('public')->exists($subfolderPath)) {
-                if (!Storage::disk('public')->makeDirectory($subfolderPath)) {
+            if (!Storage::disk('clinicas')->exists($subfolderPath)) {
+                if (!Storage::disk('clinicas')->makeDirectory($subfolderPath)) {
                     throw new \Exception("No se pudo crear la subcarpeta: {$subfolderPath}");
                 }
             }

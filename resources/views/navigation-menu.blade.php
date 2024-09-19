@@ -2,25 +2,24 @@
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
+            <!-- Logo -->
             <div class="shrink-0 flex items-center">
                 @php
                     $user = Auth::user();
+                    $clinicaId = optional($user->clinicas->first())->id;
                     $route = '';
 
                     if ($user) {
                         if ($user->hasRole('admin')) {
-                            $route = route('admin-clinica');
+                            $route = route('admin.clinica');
                         }
-                        // elseif ($user->hasRole('doctor')) {
-                        //     $route = route('doctor.pacientes');
-                        // } elseif ($user->hasRole('clinica')) {
-                        //     $route = route('clinica.pacientes');
-                        // } else {
-                        //     $route = route('dashboard'); // Default route
-                        // }
+                        if ($user->hasRole('doctor')) {
+                            $route = route('doctor.pacientes');
+                        } elseif ($user->hasRole('clinica_user')) {
+                            $route = route('clinica.pacientes');
+                        }
                     } else {
-                        $route = route('login'); // Default route for guests
+                        $route = route('auth.login'); // Default route for guests
                     }
                 @endphp
 
@@ -31,28 +30,55 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                  <!-- Navigation Links -->
-                 <div class="lg:flex items-center">
-                    @can('clinica_access')
+                <div class="lg:flex items-center">
+                    @if (Auth::user()->hasRole('admin'))
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            <x-nav-link href="{{ route('admin-clinica') }}" :active="request()->routeIs('admin-clinica')">
-                                {{ __('Clinicas') }}
+                            <x-nav-link href="{{ route('admin.clinica') }}" :active="request()->routeIs('admin.clinica')">
+                                {{ __('Clínicas') }}
                             </x-nav-link>
                         </div>
-                    @endcan
-                    @can('user_access')
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')">
-                                Usuarios
+                                {{ __('Usuarios') }}
                             </x-nav-link>
                         </div>
-                    @endcan
-                    @can('paciente_access')
+                    @endif
+
+                    @if (Auth::user()->hasRole('doctor'))
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link href="{{ route('clinica', ['id' => $clinicaId]) }}" :active="request()->routeIs('clinica')">
+                                {{ __('Clínica') }}
+                            </x-nav-link>
+                        </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <x-nav-link href="{{ route('pacientes') }}" :active="request()->routeIs('pacientes')">
-                                Pacientes
+                            <x-nav-link href="{{ route('doctor.pacientes') }}" :active="request()->routeIs('doctor.pacientes')">
+                                {{ __('Pacientes') }}
                             </x-nav-link>
                         </div>
-                    @endcan
+                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('doctor.tratamientos') }}" :active="request()->routeIs('doctor.tratamientos')">
+                                {{ __('Tratamientos') }}
+                            </x-nav-link>
+                        </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('doctor.users') }}" :active="request()->routeIs('doctor.users')">
+                                {{ __('Usuarios') }}
+                            </x-nav-link>
+                        </div>
+                    @endif
+
+                    @if (Auth::user()->hasRole('clinica_user'))
+                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('clinica.pacientes') }}" :active="request()->routeIs('clinica.pacientes')">
+                                {{ __('Pacientes') }}
+                            </x-nav-link>
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <x-nav-link href="{{ route('clinica', ['id' => $clinicaId]) }}" :active="request()->routeIs('clinica')">
+                                    {{ __('Clinica') }}
+                                </x-nav-link>
+                            </div>
+                        </div>
+                    @endif
                 </div>
                 <!-- Teams Dropdown -->
                 @if (Laravel\Jetstream\Jetstream::hasTeamFeatures())
@@ -70,7 +96,7 @@
                                 </span>
                             </x-slot>
 
-                            <x-slot name="content">
+                            {{-- <x-slot name="content">
                                 <div class="w-60">
                                     <!-- Team Management -->
                                     <div class="block px-4 py-2 text-xs text-gray-400">
@@ -101,7 +127,7 @@
                                         @endforeach
                                     @endif
                                 </div>
-                            </x-slot>
+                            </x-slot> --}}
                         </x-dropdown>
                     </div>
                 @endif
@@ -137,18 +163,11 @@
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
-                            @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                                <x-dropdown-link href="{{ route('api-tokens.index') }}">
-                                    {{ __('API Tokens') }}
-                                </x-dropdown-link>
-                            @endif
-
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->
                             <form method="POST" action="{{ route('logout') }}" x-data>
                                 @csrf
-
                                 <x-dropdown-link href="{{ route('logout') }}"
                                          @click.prevent="$root.submit();">
                                     {{ __('Log Out') }}
@@ -177,6 +196,12 @@
             {{-- <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link> --}}
+            <x-responsive-nav-link href="{{ route('admin.clinica') }}" :active="request()->routeIs('admin.clinica')">
+                {{ __('Clinicas') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('user.*')">
+                {{ __('Users') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
@@ -195,10 +220,13 @@
             </div>
 
             <div class="mt-3 space-y-1">
+
+
                 <!-- Account Management -->
                 <x-responsive-nav-link href="{{ route('profile.show') }}" :active="request()->routeIs('profile.show')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
 
                 @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
                     <x-responsive-nav-link href="{{ route('api-tokens.index') }}" :active="request()->routeIs('api-tokens.index')">
