@@ -6,7 +6,6 @@
             <p class="text-lg font-semibold text-naranja">Pacientes</p>
         </a>
 
-        <!-- Contenedor de los botones -->
         <div class="flex space-x-4">
             <!-- botón factura-->
             <button wire:click="openModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
@@ -27,7 +26,6 @@
                 <p class="text-lg font-semibold text-gray-800">Email: <span class="text-azul">{{ $clinica->email }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Teléfono: <span class="text-azul">{{ $clinica->telefono }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Dirección: <span class="text-azul">{{ $clinica->direccion }}</span></p>
-                <p class="text-lg font-semibold text-gray-800">Próxima revisión: <span class="text-azul">{{ date('d/m/Y', strtotime($clinica->revision)) }}</span></p>
 
                 <hr>
                 <h2 class="text-xl font-semibold">Datos de facturación</h2>
@@ -36,43 +34,42 @@
                 <p class="text-lg font-semibold text-gray-800">Dirección: <span class="text-azul">{{ $clinica->direccion_fac }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Nº Cuenta: <span class="text-azul">{{ $clinica->cuenta }}</span></p>
             </div>
-
-            <!-- Botones para añadir imágenes y archivos -->
-            <div class="w-2/4 space-y-4 text-center">
-                <!-- Tabla para imágenes -->
-                <div class="mt-8">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-2">Facturas</h2>
-                    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-                        <thead>
-                            <tr class="bg-gray-100 border-b">
-                                <th class="px-4 py-2 text-center text-gray-600">Nombre</th>
-                                <th class="px-4 py-2 text-center text-gray-600">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($facturas as $factura)
-                                <tr>
-                                    {{-- <td class="py-2">{{ $factura->id }}</td> --}}
-                                    <td class="py-2">{{ $factura->name }}</td>
-                                    <td class="py-2">
-                                        <a href="{{ Storage::url($factura->ruta) }}" target="_blank" class="text-blue-500">Ver</a>
-                                    </td>
-                                    @can('doctor_user')
-                                        <td class="py-2">
-                                            <button wire:click="delete({{ $factura->id }})" class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
-                                        </td>
-                                    @endcan
+            @can('doctor_user')
+                <div class="w-2/4 space-y-4 text-center">
+                    <!-- Tabla facturas -->
+                    <div class="mt-8">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-2">Facturas</h2>
+                        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+                            <thead>
+                                <tr class="bg-gray-100 border-b">
+                                    <th class="px-4 py-2 text-center text-gray-600">Nombre</th>
+                                    <th class="px-4 py-2 text-center text-gray-600">Acciones</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <div class="mt-4">
-                        {{ $facturas->links() }}
+                            </thead>
+                            <tbody>
+                                @foreach ($facturas as $factura)
+                                    <tr>
+                                        <td class="py-2">{{ $factura->name }}</td>
+                                        <td class="py-2">
+                                            {{-- <a href="{{ Storage::url($factura->ruta) }}" target="_blank" class="text-blue-500">Ver</a> --}}
+                                            <a href="{{ route('facturas.download', $factura) }}" target="_blank" class="text-blue-500">Descargar</a>
+
+                                                <a wire:click="delete({{ $factura->id }})" class="text-red-500 cursor-pointer">Eliminar</a>
+
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <div class="mt-4">
+                            {{ $facturas->links() }}
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endcan
         </div>
     </div>
+    <div class="my-4"></div>
 
     @if ($modalOpen)
         <x-dialog-modal wire:model="modalOpen" maxWidth="lg">
