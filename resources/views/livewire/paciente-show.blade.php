@@ -128,7 +128,7 @@
                                 </ul>
                             </div>
 
-                            {{-- ETapas? --}}
+                            {{-- Etapas --}}
                             <div>
                                 <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M4 6h2v2H4zm0 5h2v2H4zm0 5h2v2H4zm16-8V6H8.023v2H18.8zM8 11h12v2H8zm0 5h12v2H8z"></path></svg>
@@ -149,6 +149,51 @@
                                     </li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="my-3"></div>
+
+                    {{-- Observaciones --}}
+                    <div class="bg-white p-3 shadow-sm rounded-lg">
+                        <div class="grid grid-cols-1">
+                            <div>
+                                <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
+                                    <span clas="text-green-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M21 3h-7a2.98 2.98 0 0 0-2 .78A2.98 2.98 0 0 0 10 3H3a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h5.758a2.01 2.01 0 0 1 1.414.586l1.121 1.121c.009.009.021.012.03.021.086.08.182.15.294.196h.002a.996.996 0 0 0 .762 0h.002c.112-.046.208-.117.294-.196.009-.009.021-.012.03-.021l1.121-1.121A2.01 2.01 0 0 1 15.242 20H21a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 15h-4.758a4.03 4.03 0 0 0-2.242.689V6c0-.551.448-1 1-1h6v13z"></path></svg>
+                                    </span>
+                                    <span class="tracking-wide">Observaciones</span>
+                                </div>
+                                <ul class="list-inside space-y-2">
+                                    <li>
+                                        <span class="font-semibold">Observación General:</span>
+                                        <span class="text-azul">{{$paciente->observacion ? $paciente->observacion : "No hay ninguna observación"}}</span>
+                                    </li>
+                                    <li>
+                                        <span class="font-semibold">Observación CBCT:</span>
+                                        <span class="text-azul">{{$paciente->obser_cbct ? $paciente->obser_cbct : "No hay ninguna observación"}}</span>
+                                    </li>
+                                    <li>
+                                        <span class="font-semibold">Observación Odontograma:</span>
+                                        <span class="text-azul">{{$paciente->odontograma_obser ? $paciente->odontograma_obser : "No hay ninguna observación"}}</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {{-- Añadir observaciones? --}}
+                            {{-- <div>
+                                <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
+                                    <span clas="text-green-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M21 3h-7a2.98 2.98 0 0 0-2 .78A2.98 2.98 0 0 0 10 3H3a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h5.758a2.01 2.01 0 0 1 1.414.586l1.121 1.121c.009.009.021.012.03.021.086.08.182.15.294.196h.002a.996.996 0 0 0 .762 0h.002c.112-.046.208-.117.294-.196.009-.009.021-.012.03-.021l1.121-1.121A2.01 2.01 0 0 1 15.242 20H21a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 15h-4.758a4.03 4.03 0 0 0-2.242.689V6c0-.551.448-1 1-1h6v13z"></path></svg>
+                                    </span>
+                                    <span class="tracking-wide">Añadir Observaciones</span>
+                                </div>
+                                <ul class="list-inside space-y-2">
+                                    <li>
+
+                                    </li>
+                                </ul>
+                            </div> --}}
                         </div>
                     </div>
                     <!-- End of profile tab -->
@@ -251,6 +296,11 @@
                                 <x-label for="obser_cbct" value="Observaciones Cbct/Imágenes" class="text-azul text-base"/>
                                 <textarea wire:model.defer="obser_cbct" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" placeholder="Definir medididas, intraorales o físicas"></textarea>
                                 <x-input-error for="obser_cbct" />
+                            </div>
+                            <div class="col-span-2 mb-4">
+                                <x-label for="odontograma" value="Observaciones Odontograma" class="text-azul text-base"/>
+                                <textarea wire:model.defer="odontograma" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" placeholder="Definir medididas, intraorales o físicas"></textarea>
+                                <x-input-error for="odontograma" />
                             </div>
                         </div>
                     </form>
