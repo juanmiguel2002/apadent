@@ -3,7 +3,7 @@
         <!-- Contenedor del título -->
         <a href="javascript: history.go(-1)" class="flex items-center mr-4">
             <img class="w-6 mr-2" src="{{ asset('storage/recursos/icons/volver_naranja.png') }}" alt="Volver">
-            <p class="text-lg font-semibold text-naranja">Pacientes</p>
+            <p class="text-lg font-semibold text-naranja">Atrás</p>
         </a>
 
         <div class="flex space-x-4">
@@ -22,7 +22,21 @@
             <!-- Información del clinica -->
             <div class="w-2/3 space-y-4">
                 <p class="text-lg font-semibold text-gray-800">Nombre: <span class="text-azul">{{ $clinica->name }}</span></p>
-                <p class="text-lg font-semibold text-gray-800">Responsable de la Clínica: <span class="text-azul">{{ $users[0]->name }}</span></p>
+                <p class="text-lg font-semibold text-gray-800">
+                    Responsable de la Clínica:
+                    <span class="text-azul">
+                        @foreach ($users as $user)
+                            <span class="font-medium px-2">{{ $user->name }}</span>
+                            <span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                <span class="w-2 h-2 me-1 bg-green-500 rounded-full"></span>
+                                @foreach ($user->roles as $role)
+                                    {{ $role->name }}@if (!$loop->last), @endif
+                                @endforeach
+                            </span>
+                        @endforeach
+                    </span>
+                </p>
+
                 <p class="text-lg font-semibold text-gray-800">Email: <span class="text-azul">{{ $clinica->email }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Teléfono: <span class="text-azul">{{ $clinica->telefono }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Dirección: <span class="text-azul">{{ $clinica->direccion }}</span></p>

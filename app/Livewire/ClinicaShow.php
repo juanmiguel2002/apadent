@@ -12,7 +12,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-class SubirFactura extends Component
+class ClinicaShow extends Component
 {
     use WithFileUploads, WithPagination;
 
@@ -37,7 +37,7 @@ class SubirFactura extends Component
     public function render()
     {
         $facturas = Factura::where('clinica_id', $this->clinica->id)->paginate(6);
-        return view('livewire.subir-factura', compact('facturas'));
+        return view('livewire.clinica-show', compact('facturas'));
     }
 
     public function openModal()

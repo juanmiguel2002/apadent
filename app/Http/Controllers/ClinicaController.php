@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Clinica;
+use DragonCode\Support\Facades\Filesystem\File;
 use Illuminate\Http\Request;
 
 class ClinicaController extends Controller
@@ -12,8 +13,10 @@ class ClinicaController extends Controller
         // Obtener la clínica especificada por el ID
         $clinica = Clinica::findOrFail($id);
 
-        // Obtener los usuarios relacionados con esta clínica
-        $users = $clinica->users;
+        // Obtener solo los usuarios relacionados con esta clínica que son doctores
+        $users = $clinica->users()->with('roles')->whereHas('roles', function($query) {
+            $query->where('name', 'doctor'); // Filtrar por rol "doctor"
+        })->get();
 
         return view('clinica', compact('clinica', 'users'));
     }
