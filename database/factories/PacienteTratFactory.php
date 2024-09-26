@@ -21,9 +21,9 @@ class PacienteTratFactory extends Factory
         return [
             'paciente_id' => Paciente::factory(),
             'trat_id' => Tratamiento::inRandomOrder()->limit(1)->pluck('id')->first(),
-            'updated_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
-            'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'updated_at' => $this->faker->date(),
+            'created_at' => $this->faker->date(),
         ];
 
-    }
+    }   
 }

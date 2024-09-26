@@ -8,8 +8,10 @@ use App\Models\Factura;
 use App\Models\Imagen;
 use App\Models\Mensaje;
 use App\Models\Paciente;
+use App\Models\PacienteEtapas;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
+use App\Models\TratamientoEtapa;
 use App\Models\User;
 use Database\Factories\PacienteTratFactory;
 use Illuminate\Database\Seeder;
@@ -25,29 +27,56 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $pacientes = Paciente::all();
+
+        // Obtener todos los tratamientos
+        $tratamientos = Tratamiento::all();
+
+        foreach ($pacientes as $paciente) {
+            // Asignar un tratamiento aleatorio
+            $tratamiento = $tratamientos->random();
+
+            // Relacionar el paciente con el tratamiento en la tabla "paciente_trat"
+            $paciente->tratamientos()->attach($tratamiento->id);
+
+            // Obtener las etapas del tratamiento desde la tabla "tratamiento_etapa"
+            $etapasTratamiento = TratamientoEtapa::where('trat_id', $tratamiento->id)->get();
+
+            // Crear la relación de paciente con cada etapa en la tabla "paciente_etapas"
+            foreach ($etapasTratamiento as $etapaTratamiento) {
+                PacienteEtapas::create([
+                    'paciente_id' => $paciente->id,
+                    'etapa_id' => $etapaTratamiento->etapa_id,
+                    'fecha_ini' => now(), // Asigna la fecha actual como fecha de inicio
+                    'fecha_fin' => now()->addDays(rand(1, 100)), // Fecha de finalización aleatoria
+                    'status' => 'Set Up', // O puedes usar un estado aleatorio
+                ]);
+            }
+        }
+
         // $this->call(RolesTableSeeder::class);
 
         // // Crear usuarios
-        User::factory()->create([
-            'name' => 'admin',
-            'colegiado' => '123456',
-            'password' => bcrypt('admin123'),
-            'email' => 'admin@admin.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'admin',
+        //     'colegiado' => '123456',
+        //     'password' => bcrypt('admin123'),
+        //     'email' => 'admin@admin.com',
+        // ]);
 
-        User::factory()->create([
-            'name' => 'doctor',
-            'colegiado' => '1234546',
-            'password' => bcrypt('doctor123'),
-            'email' => 'doctor@doctor.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'doctor',
+        //     'colegiado' => '1234546',
+        //     'password' => bcrypt('doctor123'),
+        //     'email' => 'doctor@doctor.com',
+        // ]);
 
-        User::factory()->create([
-            'name' => 'clinica_user',
-            'colegiado' => '1233456',
-            'password' => bcrypt('clinica123'),
-            'email' => 'clinica@clinica.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'clinica_user',
+        //     'colegiado' => '1233456',
+        //     'password' => bcrypt('clinica123'),
+        //     'email' => 'clinica@clinica.com',
+        // ]);
 
         // Crear roles
         // $adminRole = Role::findById(1);
@@ -107,43 +136,4 @@ class DatabaseSeeder extends Seeder
         // User::find(3)->assignRole('clinica_user');
 
     }
-    // public function run()
-    // {
-    //     // Crear pacientes
-    //     $pacientes = Paciente::factory()->count(100)->create();
-
-    //     // Obtener tratamientos existentes
-    //     $tratamientos = Tratamiento::all(); // Asegúrate de que haya tratamientos en la base de datos
-
-    //     // Crear relaciones muchos a muchos entre pacientes y tratamientos
-    //     foreach ($pacientes as $paciente) {
-    //         // Seleccionar algunos tratamientos al azar sin duplicados
-    //         $tratamientosRandom = $tratamientos->random(rand(1, 5))->unique();
-
-    //         foreach ($tratamientosRandom as $tratamiento) {
-    //             // Crear relación en la tabla pivote
-    //             $pacienteTrat = PacienteTrat::factory()->create([
-    //                 'paciente_id' => $paciente->id,
-    //                 'trat_id' => $tratamiento->id,
-    //             ]);
-
-    //             // Crear etapas para cada tratamiento
-    //             $etapas = Etapa::factory()->count(rand(1, 3))->create([
-    //                 'trat_id' => $pacienteTrat->trat_id,
-    //             ]);
-
-    //             // Crear imágenes, archivos y mensajes para cada etapa
-    //             foreach ($etapas as $etapa) {
-    //                 Imagen::factory()->count(rand(1, 5))->create(['etapa_id' => $etapa->id]);
-    //                 Archivo::factory()->count(rand(1, 5))->create(['etapa_id' => $etapa->id]);
-    //                 Mensaje::factory()->count(rand(1, 5))->create([
-    //                     'etapa_id' => $etapa->id,
-    //                     'user_id' => User::all()->random()->id,
-    //                 ]);
-    //             }
-    //         }
-    //     }
-    //     Factura::factory()->count(10)->create();
-    // }
-
 }
