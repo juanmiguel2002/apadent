@@ -1,13 +1,7 @@
 <div class="container mx-auto px-4 sm:px-8 max-w-[100%]">
     <div class="py-8">
         <div class="flex flex-row justify-between w-full mb-1 sm:mb-0">
-            <button
-                class="flex-shrink-0 px-4 py-2 text-base font-semibold text-white bg-azul rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-purple-200"
-                type="button" wire:click="clear">
-                <i class="fa fa-eraser"></i> Limpiar
-            </button>
-            <div>
-                Mostrar
+            <div>Mostrar
                 <select class="px-5 py-1 text-base text-gray-700 placeholder-gray-400 bg-white border border-transparent border-gray-400 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent "
                     wire:model="perPage">
                     <option value="5">5</option>
@@ -22,7 +16,7 @@
                 <form class="flex flex-col md:flex-row md:space-x-3 md:space-y-0 space-y-3 w-full max-w-sm">
                     <div class="relative flex-1">
                         <input type="text"
-                            class="w-full px-4 py-2 text-base text-gray-700 placeholder-gray-400 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+                            class="w-full px-4 py-2 text-base text-gray-700 placeholder-gray-400 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-purple-600"
                             placeholder="Buscar" wire:model.live="search" />
                     </div>
 
@@ -40,7 +34,6 @@
                     @endcan
                 </form>
             </div>
-
         </div>
     </div>
 
@@ -48,13 +41,13 @@
         <table class="min-w-full">
             <thead class="text-white">
                 <tr class="bg-azul">
-                    <th scope="col"
+                    {{-- <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
                         ID
                         <button wire:click="sortable('id')">
                             <span class="fa fa{{ $camp === 'id' ? $icon : '-sort' }}"></span>
                         </button>
-                    </th>
+                    </th> --}}
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 ">
                         Nombre
@@ -72,10 +65,6 @@
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
                         Rol
-                        <button >
-                            <span wire:click="sortable('role')" class="fa fa{{ $camp === 'role' ? $icon : '-sort' }}"></span>
-                        </button>
-
                     </th>
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
@@ -87,7 +76,6 @@
                         <button wire:click="sortable('created_at')">
                             <span class="fa fa{{ $camp === 'created_at' ? $icon : '-sort' }}"></span>
                         </button>
-
                     </th>
                    @can('usuario_create')
                         <th scope="col"
@@ -100,7 +88,7 @@
             <tbody>
                 @forelse($users as $user)
                     <tr>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                        {{-- <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <div class="flex items-center">
                                 <div class="ml-3">
                                     <p class="text-gray-900 whitespace-no-wrap">
@@ -108,7 +96,7 @@
                                     </p>
                                 </div>
                             </div>
-                        </td>
+                        </td> --}}
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <p class="text-gray-900 whitespace-no-wrap">
                                 {{ $user->name }}
@@ -159,7 +147,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">No se encontró registros</td>
+                        <td colspan="5" class="px-5">No se encontró ningún registro</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -171,6 +159,7 @@
             {!! $users->links() !!}
         </div>
     </div>
+
     @if ($showModal)
         <x-dialog-modal maxWidth="lg" x-data="{ showModal: @entangle('showModal') }">
             <div class="relative">
@@ -244,8 +233,8 @@
                                 <x-label for="role_id" value="Asigna un Role*" class="text-azul text-base"/>
                                 <select id="role_id" wire:model.defer="selectedRole" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
                                     <option value="">Seleccione un Role</option>
-                                    @foreach($roles as $roleId => $roleName)
-                                        <option value="{{ $roleId }}">{{ $roleName }}</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
                                     @endforeach
                                 </select>
                                 <x-input-error for="selectedRole" />

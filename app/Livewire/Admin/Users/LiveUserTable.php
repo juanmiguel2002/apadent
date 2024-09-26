@@ -4,13 +4,10 @@ namespace App\Livewire\Admin\Users;
 
 use App\Models\Clinica;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
-
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Storage;
 
 class LiveUserTable extends Component
 {
@@ -48,7 +45,7 @@ class LiveUserTable extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'camp' => ['except' => null],
-        'order' => ['except' => null],
+        'order' => ['except' => ''],
     ];
     /*********************************************
      * Método para resetear el url de paginación *
@@ -65,12 +62,8 @@ class LiveUserTable extends Component
     public function mount()
     {
         $this->icon = $this->iconDirection($this->order);
-        $roles = Role::pluck('name', 'id')->toArray();
+        $roles = Role::all();
         // dd($roles);
-        // Si el usuario no es admin, quitar el rol 'admin' de la lista
-        if (!auth()->user()->hasRole('admin')) {
-            unset($roles['admin']);
-        }
 
         $this->roles = $roles;
     }
@@ -85,15 +78,20 @@ class LiveUserTable extends Component
             $usersQuery->role($this->user_role);
         }
 
-        // Filtramos los usuarios por la clínica asignada al usuario autenticado, excepto si es admin
+        // Filtramos los usuarios por la clínica asignada al usuario autenticado
         if (auth()->user()->hasRole('admin')) {
-            $usersQuery->get();
             $this->clinicas = Clinica::all();
-        }else{
-            $usersQuery->whereHas('clinicas', function ($query) {
-                $query->whereIn('clinica_id', auth()->user()->clinicas->pluck('id'));
-            });
+        } else {
+            // $usersQuery->whereHas('clinicas', function ($query) {
+            //     $query->whereIn('clinica_id', auth()->user()->clinicas->pluck('id'));
+            // });
 
+            // Si el usuario autenticado tiene el rol de "doctor", filtramos aún más
+            if (auth()->user()->hasRole('doctor')) {
+                $usersQuery->whereHas('clinicas', function ($query) {
+                    $query->whereIn('clinica_id', auth()->user()->clinicas->pluck('id'));
+                });
+            }
         }
 
         // Búsqueda por nombre de usuario
@@ -114,7 +112,7 @@ class LiveUserTable extends Component
 
         // Paginación
         $users = $usersQuery->paginate($this->perPage);
-        // dd($users);
+
         // Devolvemos la vista con los usuarios filtrados
         return view('livewire.admin.users.live-user-table', ['users' => $users, 'roles' => $this->roles, 'clinicas' => $this->clinicas]);
     }
@@ -175,7 +173,10 @@ class LiveUserTable extends Component
                 'password' => Hash::make($this->password),
             ]);
 
-            $user->roles()->attach($this->selectedRole);
+            $roleId = Role::findById($this->selectedRole);
+            dd($roleId);
+
+            $user->roles()->attach($roleId);
             $user->clinicas()->attach($this->selectedClinica);
 
             $user->sendEmailVerificationNotification();
@@ -194,7 +195,7 @@ class LiveUserTable extends Component
     // Eliminar usuario
     public function deleteUser($userId)
     {
-        $this->dispatchBrowserEvent('confirmDelete', ['userId' => $userId]);
+        $this->dispatch('confirmDelete', ['userId' => $userId]);
     }
 
     public function deleteUserConfirmed($userId)
@@ -210,18 +211,6 @@ class LiveUserTable extends Component
     }
 
     //Método para limpiar y ordenar icon
-    public function clear()
-    {
-        // $this->reset(); //hace todo lo comentado
-        $this->page = 1;
-        $this->order = null;
-        $this->camp = null;
-        $this->icon = '-sort';
-        $this->search = '';
-        $this->perPage = 5;
-        // $this->user_role = '';
-    }
-
     public function resetFields()
     {
         $this->name = '';
