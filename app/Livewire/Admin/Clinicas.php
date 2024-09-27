@@ -6,7 +6,7 @@ use App\Mail\CredencialesClinica;
 use App\Models\Clinica;
 use App\Models\ClinicaUser;
 use App\Models\User;
-use DragonCode\Support\Facades\Filesystem\File;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,10 +18,9 @@ class Clinicas extends Component
     public $showModal, $editable = false;
     public $clinicas, $clinica_id;
     public $ordenar = '';
-    public $search = "";
+    public $search = '';
     public $name, $direccion, $telefono, $email, $cif, $direccion_fac, $cuenta;
 
-    protected $listeners =['deleteClinicConfirmed', 'clinicaId'];
     protected $queryString = [
         'search' => ['except' => ''],
         'ordenar' => ['except' => ''],
@@ -37,19 +36,21 @@ class Clinicas extends Component
         $this->resetPage();
     }
 
-    protected $rules = [
-        'name' => 'required|string|max:255',
-        'direccion' => 'required|string|max:255',
-        'telefono' => 'required',
-        'email' => 'required|email|max:255',
-        'cif' => 'required|string|max:9',
-        'direccion_fac' => 'required|string|max:255',
-        'cuenta' => 'required|string|max:255',
-    ];
+    protected function rules() {
+        return  [
+            'name' => 'required|string|max:255',
+            'direccion' => 'required|string|max:255',
+            'telefono' => 'required',
+            'email' => 'required|email|max:255|unique:clinicas,email,' . ($this->editable ? $this->clinica_id : 'NULL') . ',id',
+            'cif' => 'required|string|max:9',
+            'direccion_fac' => 'required|string|max:255',
+            'cuenta' => 'required|string|max:255',
+        ];
+    }
 
     public function mount() {
         // Definir la columna y dirección de ordenación predeterminadas
-        $orderByColumn = 'name';
+        $orderByColumn = 'id';
         $orderByDirection = 'asc';
 
         // Determinar la columna de ordenación basada en la selección del usuario
@@ -62,12 +63,8 @@ class Clinicas extends Component
                 $orderByColumn = 'name';
                 $orderByDirection = 'asc';
                 break;
-            case 'id':
-                $orderByColumn = 'id'; // Asegúrate de que 'codigo' es un campo en tu base de datos
-                $orderByDirection = 'asc';
-                break;
             default:
-                $orderByColumn = 'name';
+                $orderByColumn = 'id';
                 $orderByDirection = 'asc';
                 break;
         }
@@ -119,7 +116,7 @@ class Clinicas extends Component
 
             $clinica->save();
             $this->dispatch('clinicaSaved', 'Clínica Actualizada');  // Emite un evento para que otros componentes puedan escuchar
-
+            $this->resetPage();
         }else{
             $clinica = Clinica::create([
                 'name' => $this->name,
@@ -132,18 +129,17 @@ class Clinicas extends Component
             ]);
 
             // Generar una contraseña aleatoria
-            $password = Str::random(8);
+            $password = Str::password(8);
 
             // Creamos el usuario asignado a la clínica
             $user = User::create([
-                'name' => $this->name,
-                'colegiado' => '12345',
+                'name' => $this->name.'_doctor',
+                'colegiado' => Str::random(8),
                 'email' => $this->email,
                 'password' => bcrypt($password), // Cambia esto por la lógica de contraseña que desees
-                'clinica_id' => $clinica->id, // Relacionamos el usuario con la clínica
             ]);
 
-            // Asignar el rol "admin" al usuario
+            // Asignar el rol "doctor" al usuario
             $user->assignRole('doctor');
 
             $clinica_user = ClinicaUser::create([
@@ -158,41 +154,11 @@ class Clinicas extends Component
             $this->dispatch('clinicaSaved', 'Clinica '. $this->name. ' creada');
         }
         $this->close();
+        $this->resetPage();
     }
 
     public function showClinica($clinicaId){
         return redirect()->route('admin.clinica.view', ['id' => $clinicaId]);
-    }
-
-    public function deleteClinica($clinicaId)
-    {
-        $this->dispatch('deleteClinic', ['clinicaId' => $clinicaId]);
-    }
-
-    public function deleteClinicConfirmed($clinicaId)
-    {
-        try {
-            $clinica = Clinica::findOrFail($clinicaId); // Usamos findOrFail para lanzar una excepción si no se encuentra
-            // Eliminar archivos relacionados
-            $this->deleteRelatedFiles($clinica);
-
-            // Eliminamos la clínica
-            $clinica->delete();
-
-            // Mensaje de éxito
-            session()->flash('message', 'Clínica eliminada exitosamente.');
-            $this->dispatchBrowserEvent('clinicaEliminada');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al eliminar la clínica: ' . $e->getMessage());
-        }
-    }
-
-    private function deleteRelatedFiles($clinica)
-    {
-        $folderPath = storage_path('app/public/clinicas/' . $clinica->name);
-        if (File::exists($folderPath)) {
-            File::deleteDirectory($folderPath); // Eliminar la carpeta de la clínica y sus archivos
-        }
     }
 
     public function resetForm()
@@ -210,7 +176,36 @@ class Clinicas extends Component
     public function close()
     {
         $this->showModal = false;
-        $this->reset();
+    }
 
+    public function confirmDelete($id)
+    {
+        $clinica = Clinica::with('users', 'pacientes')->find($id);
+
+        // Eliminación en cascada de relaciones
+        if($clinica->usuarios){
+            foreach ($clinica->usuarios as $usuario) {
+                $usuario->delete();
+            }
+
+            foreach ($clinica->pacientes as $paciente) {
+                $paciente->delete();
+            }
+        }
+
+        $clinicaName = preg_replace('/\s+/', '_', trim($clinica->name));
+        // Eliminar la carpeta de la clínica (asumiendo una estructura de carpetas definida)
+        $carpetaClinica = public_path('clinicas/' . $clinicaName);
+        if (is_dir($carpetaClinica)) {
+            // Utilizar una librería como File para una eliminación recursiva más segura
+            File::deleteDirectory($carpetaClinica);
+        }
+
+        // Eliminar el registro de la clínica
+        $clinica->delete();
+
+        // Disparar el evento
+        $this->dispatch('clinicaEliminada', 'La Clínica '.$clinica->name.' ha sido eliminada exitosamente.');
+        $this->resetPage();
     }
 }

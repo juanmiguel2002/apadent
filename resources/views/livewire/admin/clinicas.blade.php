@@ -1,9 +1,4 @@
 <div>
-    @if (session('error'))
-        <div class="alert alert-error">
-            {{ session('error') }}
-        </div>
-    @endif
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex justify-start items-center">
@@ -23,12 +18,13 @@
         </div>
 
         <x-tabla>
-            @if ($clinicas)
+            @if ($clinicas->count())
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="text-white">
                         <tr class="bg-azul">
                             <th scope="col" class="px-6 text-center uppercase">ID</th>
                             <th scope="col" class="p-3 text-center uppercase">Nombre</th>
+                            <th scope="col" class="p-3 text-center uppercase">Teléfono</th>
                             <th scope="col" class="p-3 text-center uppercase">Usuarios</th>
                             <th scope="col" class="p-3 text-center uppercase">Clientes</th>
                             <th scope="col" class="p-3 text-center uppercase">Dirección</th>
@@ -45,6 +41,7 @@
                                 <td class="px-6 py-4 text-center border-b">
                                     <div class="text-sm text-gray-900 cursor-pointer" wire:click='showClinica({{$clinica->id}})'>{{ $clinica->name }}</div>
                                 </td>
+                                <td class="px-6 py-4 text-center border-b">{{$clinica->telefono}}</td>
                                 <td class="px-6 py-4 text-center border-b">
                                     @if($clinica->users->isEmpty())
                                         <p>No hay usuarios asignados a esta clínica.</p>
@@ -64,10 +61,6 @@
                                     <a class="text-azul px-4 py-2 hover:bg-gray-200 rounded cursor-pointer" wire:click="showCreateModal({{ $clinica->id }})">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <div class="px-1"></div>
-                                    <a class="px-4 py-2 rounded cursor-pointer" wire:click="deleteClinica({{ $clinica->id }})">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
                                 </td>
                             </tr>
                         @endforeach
@@ -78,9 +71,6 @@
                     No existe ningún registro coincidente.
                 </div>
             @endif
-            {{-- @if ($clinicas->hasPages())
-                {{ $clinicas->links('vendor.pagination.paginacion') }}
-            @endif --}}
         </x-tabla>
     </div>
 
@@ -156,4 +146,5 @@
             </div>
         </x-dialog-modal>
     @endif
+
 </div>
