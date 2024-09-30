@@ -8,14 +8,15 @@ use App\Models\PacienteTrat;
 class PacienteHistorial extends Controller
 {
     public function index($id)
-{
-    $paciente = Paciente::findOrFail($id);
-    $tratamientos = PacienteTrat::where('paciente_id', $paciente->id)->with('tratamiento')->get();
-
-    return view('paciente-historial', [
-        'paciente' => $paciente,
-        'tratamientos' => $tratamientos,
-    ]);
-}
+    {
+        $paciente = Paciente::findOrFail($id);
+        $tratamiento = PacienteTrat::where('paciente_id', $paciente->id)->with('tratamiento')->get();
+        
+        return view('paciente-historial', [
+            'paciente' => $paciente,
+            'tratamiento' => $tratamiento,
+            // 'id' => $id,
+        ]);
+    }
 
 }
