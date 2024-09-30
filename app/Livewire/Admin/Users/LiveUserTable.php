@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Users;
 
 use App\Models\Clinica;
+use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -19,15 +20,15 @@ class LiveUserTable extends Component
     public $icon = '-sort'; //Para el ícono
     public $user_role = ''; //Para filtrado por rol
     public $roles = []; //Para roles
+    public $selectedPermissions = [];
     public $page, $clear;
     public $clinicas;
 
-    // variables crear y modificar user
-    protected $listeners = ['showModal'];
-    public $showModal = false;
+    public $permissions, $user;
+    public $showModal = false, $showPermisos = false;
     public $isEditing = false;
     public $name, $email, $colegiado, $password, $password_confirmation, $selectedClinica;
-    public $selectedRole, $userId; // Para edición
+    public $selectedRole, $userId, $selectedUser; // Para edición
 
     protected function rules()
     {
@@ -63,8 +64,7 @@ class LiveUserTable extends Component
     {
         $this->icon = $this->iconDirection($this->order);
         $roles = Role::all();
-        // dd($roles);
-
+        $this->permissions = Permission::all();
         $this->roles = $roles;
     }
 
@@ -114,7 +114,10 @@ class LiveUserTable extends Component
         $users = $usersQuery->paginate($this->perPage);
 
         // Devolvemos la vista con los usuarios filtrados
-        return view('livewire.admin.users.live-user-table', ['users' => $users, 'roles' => $this->roles, 'clinicas' => $this->clinicas]);
+        return view('livewire.admin.users.live-user-table', [
+                    'users' => $users,
+                    'roles' => $this->roles,
+                    'clinicas' => $this->clinicas]);
     }
 
     /*METODOS PARA EL CRUD */
@@ -189,26 +192,58 @@ class LiveUserTable extends Component
     public function close()
     {
         $this->showModal = false;
-        $this->reset();
+        // $this->reset();
     }
+
+    // Permissions
+    // public function verPermisos($id){
+    //     $this->showPermisos = true;
+    //     $this->userId = $id;
+    //     $this->selectedUser = User::findOrFail($id);
+
+    //     // Cargar los permisos asignados actualmente
+    //     $this->selectedPermissions = $this->selectedUser->permissions->pluck('id')->toArray();
+    //     // Abrir el modal
+    //     $this->showPermisos = true;
+    // }
+
+    // public function updatePermissions(){
+    //     // Verificamos que un usuario esté seleccionado
+    //     if ($this->selectedUser) {
+    //         // Sincronizar los permisos seleccionados
+    //         $this->selectedUser->syncPermissions($this->selectedPermissions);
+
+    //         // Opcionalmente, puedes emitir un mensaje o redirigir
+    //         session()->flash('message', 'Permisos actualizados correctamente.');
+
+    //         $this->showPermisos = false;
+
+    //     }
+    // }
+
+    // public function closePermisos(){
+    //     $this->showPermisos = false;
+    //     $this->selectedUser = null;
+    // }
+
 
     // Eliminar usuario
-    public function deleteUser($userId)
-    {
-        $this->dispatch('confirmDelete', ['userId' => $userId]);
-    }
+    // public function deleteUser($userId)
+    // {
+    //     $this->dispatch('confirmDelete', ['userId' => $userId]);
+    // }
 
-    public function deleteUserConfirmed($userId)
-    {
-        $user = User::find($userId);
+    // public function deleteUserConfirmed($userId)
+    // {
+    //     $user = User::find($userId);
 
-        if ($user) {
-            $user->delete();
-            session()->flash('message', 'Usuario eliminado exitosamente.');
-        } else {
-            session()->flash('error', 'El usuario no se encontró.');
-        }
-    }
+    //     if ($user) {
+    //         $user->delete();
+    //         session()->flash('message', 'Usuario eliminado exitosamente.');
+    //     } else {
+    //         session()->flash('error', 'El usuario no se encontró.');
+    //     }
+    // }
 
     //Método para limpiar y ordenar icon
     public function resetFields()

@@ -125,23 +125,26 @@
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <div class="flex items-center">
                                 @can('usuario_update')
-                                    <a href="#" wire:click.prevent="showCreateModal({{ $user->id }})"
-                                        class="flex items-center justify-center px-4 py-2 mx-1 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
-                                        <i class="fas fa-edit mr-2"></i> Editar
-                                    </a>
+                                    @if ($user->clinicas->first())
+                                        <a href="#" wire:click.prevent="showCreateModal({{ $user->id }})"
+                                            class="flex items-center justify-center px-4 py-2 mx-1 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                                            <i class="fas fa-edit mr-2"></i> Editar
+                                        </a>
+                                    @endif
+
                                 @endcan
-                                @can('role_create')
-                                    <a href="#" wire:click="$emit('addPermission', {{ $user->id }}, 'user')"
+                                {{-- @can('role_create')
+                                    <a href="#" wire:click="verPermisos({{ $user->id }})"
                                         class="flex items-center justify-center px-4 py-2 mx-1 text-base font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
                                         <i class="fas fa-plus mr-2"></i> Permisos
                                     </a>
-                                @endcan
-                                @can('usuario_delete')
+                                @endcan --}}
+                                {{-- @can('usuario_delete')
                                     <a href="#" class="flex items-center justify-center px-4 py-2 mx-1 text-base font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
                                         wire:click="deleteUser({{ $user->id }})">
                                         <i class="fas fa-trash-alt mr-2"></i> Eliminar
                                     </a>
-                                @endcan
+                                @endcan --}}
                             </div>
                         </td>
                     </tr>
@@ -253,4 +256,51 @@
             </div>
         </x-dialog-modal>
     @endif
+
+    {{-- @if ($showPermisos)
+        <x-dialog-modal maxWidth="lg" x-data="{ showPermisos: @entangle('showPermisos') }">
+            <div class="relative">
+                <x-slot name="title">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <svg class="h-6 w-6 text-azul" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold">Permisos registrados Para {{ $selectedUser->name }}</h2>
+                        <button wire:click='closePermisos' class="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </x-slot>
+
+                <x-slot name="content">
+                    <form wire:submit.prevent="save">
+                        <div class="space-y-4">
+                            @foreach ($permissions as $permission)
+                                <div>
+                                    <label for="permission-{{ $permission->id }}" class="inline-flex items-center">
+                                        <!-- Checkbox que se marca si el permiso está asignado al usuario -->
+                                        <input type="checkbox" id="permission-{{ $permission->id }}"
+                                               wire:model="selectedPermissions"
+                                               value="{{ $permission->id }}">
+                                        <span class="ml-2">{{ $permission->name }}</span>
+                                    </label>
+                                </div>
+                            @endforeach
+                    </form>
+                </x-slot>
+
+                <x-slot name="footer">
+                    <button type="button" wire:click="closePermisos" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
+                    <button type="submit" wire:click="updatePermissions" class="bg-blue-500 text-white px-4 py-2 rounded">
+                        {{ 'Modificar' }}
+                    </button>
+                </x-slot>
+            </div>
+
+        </x-dialog-modal>
+    @endif --}}
 </div>
