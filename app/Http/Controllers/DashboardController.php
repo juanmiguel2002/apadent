@@ -16,15 +16,21 @@ class DashboardController extends Controller
 
         if ($user->hasRole('admin')){
             // Dashboard for admin
-            $clinicas = Clinica::all();
-            return view('livewire.admin.clinicas', compact('clinicas'));
+            return view('clinicas');
         }elseif ($user->hasRole('doctor')) {
             // Dashboard for doctor (related to a clinica)
             $clinica = $user->clinica;
             return view('pacientes', compact('clinica'));
-        } elseif ($user->hasRole('clinica_user')) {
+        }
+        elseif ($user->hasRole('doctor_admin')) {
+            // Dashboard for doctor (related to a clinica)
+            $clinica = $user->clinica;
+            return view('pacientes', compact('clinica'));
+        }
+        elseif ($user->hasRole('clinica_user')) {
             // Dashboard for clinica
             $pacientes = Paciente::where('clinica_id', $user->clinica_id)->get();
+
             return view('pacientes', compact('pacientes'));
         }
 
