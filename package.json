@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "alpinejs": "^3.14.1",
+        "jquery": "^3.7.1",
         "sweetalert2": "^11.12.2"
     }
 }
