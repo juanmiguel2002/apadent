@@ -133,14 +133,17 @@ class Clinicas extends Component
 
             // Creamos el usuario asignado a la clínica
             $user = User::create([
-                'name' => $this->name.'_doctor',
+                'name' => $this->name. '_admin',
                 'colegiado' => Str::random(8),
                 'email' => $this->email,
-                'password' => bcrypt($password), // Cambia esto por la lógica de contraseña que desees
+                'password' => bcrypt($password),
             ]);
 
-            // Asignar el rol "doctor" al usuario
-            $user->assignRole('doctor');
+            // Limpiar roles existentes si es necesario
+            $user->syncRoles([]); // Esto eliminará todos los roles existentes
+
+            // Asignar el rol 'doctor_admin' al usuario
+            $user->assignRole('doctor_admin');
 
             $clinica_user = ClinicaUser::create([
                 'clinica_id' => $clinica->id,
@@ -151,10 +154,9 @@ class Clinicas extends Component
             // Enviar los datos de acceso al correo del usuario
             Mail::to($this->email)->send(new CredencialesClinica($this->name, $this->email, $password));
 
-            $this->dispatch('clinicaSaved', 'Clinica '. $this->name. ' creada');
+            $this->dispatch('clinicaSaved', 'Clinica '. $this->name . ' creada');
         }
         $this->close();
-        $this->resetPage();
     }
 
     public function showClinica($clinicaId){
@@ -178,34 +180,34 @@ class Clinicas extends Component
         $this->showModal = false;
     }
 
-    public function confirmDelete($id)
-    {
-        $clinica = Clinica::with('users', 'pacientes')->find($id);
+    // public function confirmDelete($id)
+    // {
+    //     $clinica = Clinica::with('users', 'pacientes')->find($id);
 
-        // Eliminación en cascada de relaciones
-        if($clinica->usuarios){
-            foreach ($clinica->usuarios as $usuario) {
-                $usuario->delete();
-            }
+    //     // Eliminación en cascada de relaciones
+    //     if($clinica->usuarios){
+    //         foreach ($clinica->usuarios as $usuario) {
+    //             $usuario->delete();
+    //         }
 
-            foreach ($clinica->pacientes as $paciente) {
-                $paciente->delete();
-            }
-        }
+    //         foreach ($clinica->pacientes as $paciente) {
+    //             $paciente->delete();
+    //         }
+    //     }
 
-        $clinicaName = preg_replace('/\s+/', '_', trim($clinica->name));
-        // Eliminar la carpeta de la clínica (asumiendo una estructura de carpetas definida)
-        $carpetaClinica = public_path('clinicas/' . $clinicaName);
-        if (is_dir($carpetaClinica)) {
-            // Utilizar una librería como File para una eliminación recursiva más segura
-            File::deleteDirectory($carpetaClinica);
-        }
+    //     $clinicaName = preg_replace('/\s+/', '_', trim($clinica->name));
+    //     // Eliminar la carpeta de la clínica (asumiendo una estructura de carpetas definida)
+    //     $carpetaClinica = public_path('clinicas/' . $clinicaName);
+    //     if (is_dir($carpetaClinica)) {
+    //         // Utilizar una librería como File para una eliminación recursiva más segura
+    //         File::deleteDirectory($carpetaClinica);
+    //     }
 
-        // Eliminar el registro de la clínica
-        $clinica->delete();
+    //     // Eliminar el registro de la clínica
+    //     $clinica->delete();
 
-        // Disparar el evento
-        $this->dispatch('clinicaEliminada', 'La Clínica '.$clinica->name.' ha sido eliminada exitosamente.');
-        $this->resetPage();
-    }
+    //     // Disparar el evento
+    //     $this->dispatch('clinicaEliminada', 'La Clínica '.$clinica->name.' ha sido eliminada exitosamente.');
+    //     $this->resetPage();
+    // }
 }
