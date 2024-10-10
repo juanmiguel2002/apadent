@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Mail\CambioEstado;
 use App\Mail\NotificacionNuevoPaciente;
 use App\Models\Archivos;
 use App\Models\Clinica;
@@ -22,10 +23,10 @@ class Pacientes extends Component
 {
     use WithFileUploads, WithPagination;
 
-    public $tratamientos, $clinica_id, $paciente;
+    public $tratamientos, $clinica_id, $paciente, $paciente_id;
     public $num_paciente, $name, $apellidos, $email, $telefono, $fecha_nacimiento;
     public $observacion, $obser_cbct, $odontograma_obser;
-    public $showModal = false, $isEditing = false, $mostrar = false;
+    public $showModal = false, $isEditing = false, $mostrar = false, $showModalDelete = false;
     public $imagenes = [], $cbct = [], $img_paciente;
     public $selectedTratamiento, $status = "Set Up", $activo = false;
 
@@ -46,7 +47,7 @@ class Pacientes extends Component
     ];
 
     protected $rules = [
-        'num_paciente' => 'required|integer',
+        'num_paciente' => 'required|integer|unique:pacientes,num_paciente',
         'name' => 'required|string|max:255',
         'apellidos' => 'required|string|max:255',
         'fecha_nacimiento' => 'required|date',
@@ -86,7 +87,7 @@ class Pacientes extends Component
         // Determinar la columna de ordenación basada en la selección del usuario
         switch ($this->ordenar) {
             case 'recientes':
-                $orderByColumn = 'created_at'; // Suponiendo que estás utilizando 'created_at' para ordenar por los más recientes
+                $orderByColumn = 'created_at';
                 $orderByDirection = 'desc';
                 break;
             case 'name':
@@ -108,8 +109,11 @@ class Pacientes extends Component
             'etapas.name as etapa_name',
             'paciente_etapas.status as etapa_status'
         )
-        ->join('clinicas', 'pacientes.clinica_id', '=', 'clinicas.id')
-        ->leftJoin('paciente_trat', 'pacientes.id', '=', 'paciente_trat.paciente_id')
+        ->join('clinicas', 'pacientes.clinica_id', '=', 'clinicas.id') // Relación entre clínica y pacientes
+        ->leftJoin('paciente_trat', function ($join) {
+            $join->on('pacientes.id', '=', 'paciente_trat.paciente_id')
+                 ->whereRaw('paciente_trat.id = (SELECT MAX(id) FROM paciente_trat WHERE paciente_id = pacientes.id)');
+        })
         ->leftJoin('tratamientos', 'paciente_trat.trat_id', '=', 'tratamientos.id')
         ->leftJoin('tratamiento_etapa', 'tratamientos.id', '=', 'tratamiento_etapa.trat_id')
         ->leftJoin('etapas', 'tratamiento_etapa.etapa_id', '=', 'etapas.id')
@@ -119,24 +123,31 @@ class Pacientes extends Component
         })
         ->where('pacientes.activo', $this->activo ? 0 : 1)  // Filtrar solo pacientes activos
         ->where(function ($query) {
-            $query->where('pacientes.name', 'like', '%' . $this->search . '%')
-                  ->orWhere('pacientes.telefono', 'like', '%' . $this->search . '%')
-                  ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%');
+            $query->where(function ($subquery) {
+                // Primero, buscamos si hay una etapa que no esté finalizada o sin status
+                $subquery->where('paciente_etapas.status', '!=', 'Finalizado')
+                         ->orWhereNull('paciente_etapas.status');
+            })
+            ->orWhere(function ($subquery) {
+                // Si no hay etapas activas, mostramos la última etapa finalizada
+                $subquery->where('paciente_etapas.status', '=', 'Finalizado')
+                         ->whereNotExists(function ($subSubquery) {
+                             // Subconsulta para verificar si hay etapas no finalizadas
+                             $subSubquery->select(DB::raw(1))
+                                         ->from('paciente_etapas as pe')
+                                         ->whereColumn('pe.paciente_id', 'pacientes.id')
+                                         ->where('pe.status', '!=', 'Finalizado');
+                         });
+            });
         })
-        ->whereIn('etapas.id', function ($query) {
-            $query->select(DB::raw('MIN(etapas.id)'))
-                ->from('etapas')
-                ->join('tratamiento_etapa', 'etapas.id', '=', 'tratamiento_etapa.etapa_id')
-                ->join('paciente_trat', 'tratamiento_etapa.trat_id', '=', 'paciente_trat.trat_id')
-                ->whereColumn('paciente_trat.paciente_id', 'pacientes.id')
-                ->groupBy('paciente_trat.trat_id');
-        })
+        ->groupBy('pacientes.id')
         ->orderBy($orderByColumn, $orderByDirection)
         ->paginate($this->perPage);
 
         return view('livewire.pacientes', [
             'pacientes' => $pacientes,
         ]);
+
     }
 
     public function showCreateModal()
@@ -193,7 +204,8 @@ class Pacientes extends Component
         // 5. Subir la foto del paciente (si existe)
         $paciente->refresh();
         if ($this->img_paciente) {
-            $fileName = $pacienteName . '.' . $this->img_paciente->getClientOriginalExtension();
+            $extension = $this->img_paciente->getClientOriginalExtension();
+            $fileName = $pacienteName . '.' . $extension;
             $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName ,'public');
 
             $paciente->url_img = $path;
@@ -205,7 +217,7 @@ class Pacientes extends Component
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = "EtapaInicio".$key. '.' . $extension;
-                $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName,'clinicas');
+                $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
                 $archivo = Archivos::create([
@@ -287,17 +299,29 @@ class Pacientes extends Component
 
     public function estado($pacienteId, $tratId, $newStatus)
     {
-
         $tratamientoEtapa = TratamientoEtapa::where('trat_id', $tratId)->first();
 
         if ($tratamientoEtapa) {
-            PacienteEtapas::where('paciente_id', $pacienteId)
+            if($newStatus === 'Finalizado'){
+                PacienteEtapas::where('paciente_id', $pacienteId)
+                ->where('etapa_id', $tratamientoEtapa->etapa_id)
+                ->update(['status' => $newStatus, 'fecha_fin' => now()]);
+            }else{
+                PacienteEtapas::where('paciente_id', $pacienteId)
                 ->where('etapa_id', $tratamientoEtapa->etapa_id)
                 ->update(['status' => $newStatus]);
+            }
 
             $this->mostrar = false; // Cerrar el menú
             $this->dispatch('estadoActualizado');
             $this->resetPage();
+
+            // Enviar email a la clínica
+            $paciente = Paciente::find($pacienteId);
+            $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
+            if ($clinica && $clinica->email) {
+                Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus));
+            }
 
         }
     }
@@ -322,24 +346,6 @@ class Pacientes extends Component
                 'observacion','obser_cbct', 'odontograma_obser',
                 'imagenes', 'cbct', 'isEditing', 'img_paciente'
             ]);
-    }
-
-    public function deletePaciente($id)
-    {
-        $this->dispatch('deletePaciente', ['id' => $id]);
-    }
-
-    public function deletePacienteConfirmed($id)
-    {
-        $paciente = Paciente::find($id);
-        // $clinica->delete();
-
-        if ($paciente) {
-            $paciente->delete();
-            $this->dispatch('deletedPaciente');
-        } else {
-            session()->flash('error', 'El usuario no se encontró.');
-        }
     }
 
     public function close()
