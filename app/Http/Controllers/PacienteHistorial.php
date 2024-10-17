@@ -11,8 +11,8 @@ class PacienteHistorial extends Controller
     {
         $paciente = Paciente::findOrFail($id);
         $tratamiento = PacienteTrat::where('paciente_id', $paciente->id)->with('tratamiento')->get();
-        
-        return view('paciente-historial', [
+        // dd($tratamiento);
+        return view('pacientes.paciente-historial', [
             'paciente' => $paciente,
             'tratamiento' => $tratamiento,
             // 'id' => $id,

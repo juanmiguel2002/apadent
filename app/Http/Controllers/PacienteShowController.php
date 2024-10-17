@@ -10,6 +10,6 @@ class PacienteShowController extends Controller
     public function show($id)
     {
         $paciente = Paciente::findOrFail($id);
-        return view('paciente-show', ['id' => $id, 'paciente' => $paciente]);
+        return view('pacientes.paciente-show', ['id' => $id, 'paciente' => $paciente]);
     }
 }
