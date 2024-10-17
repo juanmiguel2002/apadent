@@ -14,6 +14,6 @@
             <h2 class="text-gris-texto text-2xl font-normal">Clínica: <span class="text-azul font-medium">{{ $paciente->clinica->name }}</span></h2>
         </div>
 
-        <livewire:historial-paciente :paciente="$paciente->id" :tratamiento="$tratamiento"/>
+        <livewire:historial-paciente :paciente="$paciente" :tratamiento="$tratamiento"/>
     </div>
 </x-app-layout>
