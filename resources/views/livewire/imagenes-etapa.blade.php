@@ -1,18 +1,23 @@
 <div>
     <h3 class="mt-2 font-semibold text-lg text-gray-800">Tratamiento: {{$paciente->tratamientos[0]->name . ' - '. $paciente->tratamientos[0]->descripcion}}</h3>
-    <p class="mt-2">{{ $etapa->name }}</p>
+    <p class="mt-2 font-semibold ">{{ $etapa->name }}</p>
 
     @if($archivos->isNotEmpty())
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             @foreach ($archivos as $archivo)
                 <div class="relative group">
-                    <img src="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}"
-                        class="h-48 w-full object-cover rounded-lg shadow-md transform group-hover:scale-105 transition-transform duration-300"
-                        alt="Imagen">
+                    <!-- Enlace para Lightbox -->
+                    <a href="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}" target="_black" data-lightbox="gallery" data-title="{{ basename($archivo->ruta) }}">
+                        <img src="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}"
+                            class="h-49 w-full object-cover rounded-lg shadow-md transform group-hover:scale-105 transition-transform duration-300"
+                            alt="Imagen">
+                    </a>
 
-                    <!-- Opción de mostrar la ruta o un título al pasar el ratón por encima -->
-                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p class="text-white text-sm">{{ basename($archivo->ruta) }}</p>
+                    <!-- Botón para descargar la imagen -->
+                    <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <a href="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}" download class="bg-azul text-white px-3 py-1 rounded-lg shadow">
+                            Descargar
+                        </a>
                     </div>
                 </div>
             @endforeach
@@ -20,4 +25,5 @@
     @else
         <p class="mt-2 text-gray-600">No hay archivos disponibles.</p>
     @endif
+
 </div>

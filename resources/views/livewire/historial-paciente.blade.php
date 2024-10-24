@@ -54,11 +54,15 @@
                                 @endforeach
 
                                 <div class="flex items-center mt-2">
-                                    <input wire:model="mensaje" name="mensaje" id="mensaje" placeholder="Escribe tu mensaje..." type="text" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-azul-light focus:border-transparent font-light text-xs">
+                                    <input wire:model="mensajes.{{$etapa->id}}" name="mensaje" id="mensaje" placeholder="Escribe tu mensaje..." type="text" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-azul-light focus:border-transparent font-light text-xs">
                                     <button wire:click="enviarMensaje({{ $etapa->id }})" class="ml-2 px-3 py-1 bg-azul text-white rounded-md text-xs font-semibold hover:bg-azul-dark focus:outline-none focus:ring-2 focus:ring-azul-light focus:ring-opacity-50">
                                         Enviar
                                     </button>
                                 </div>
+                                <!-- Mostrar mensaje de error -->
+                                @error('mensajes.' . $etapa->id)
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
                             </td>
                             <td class="p-3 text-center flex justify-center items-center h-full mt-4">
                                 @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
@@ -89,29 +93,35 @@
                                 @endif
 
                             </td>
-
+                            {{-- Archivos --}}
                             <td class="px-4 py-2">
                                 <div class="flex justify-center items-center">
-                                    @if (!$archivos)
+                                    @if (!$this->tieneArchivos($etapa->id))
                                         <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}" alt="">
-                                        <span wire:click="showModalArchivo({{$etapa->id }})" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
+                                        <span wire:click="showModalArchivo()" class="mr-2 cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
+                                    @else
+                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}" class="flex items-center">
+                                            <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
+                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3"/>
+                                            </svg>
+                                            <span class="cursor-pointer font-light text-sm">Descargar</span>
+                                        </a>
                                     @endif
-
-                                    <img class="w-4 ml-4 mr-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" alt="">
-                                    <span wire:click="showArchivo()" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Ver</span>
                                 </div>
                             </td>
 
+                            {{-- Imágenes --}}
                             <td class="px-4 py-2">
                                 <div class="flex justify-center items-center">
-                                    @if (!$archivos)
-                                        <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}" alt="">
+                                    @if ($this->tieneArchivos($etapa->id))
+                                        <!-- Mostrar botón 'Ver' si tiene archivos -->
+                                        <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
+                                        <span wire:click="verImg({{ $etapa->id }})" class="cursor-pointer font-light text-sm">Ver</span>
+                                    @else
+                                        <!-- Mostrar botón 'Añadir' si no tiene archivos -->
+                                        <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
                                         <span wire:click="showModalImg()" class="cursor-pointer font-light text-sm">Añadir</span>
                                     @endif
-
-                                    <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" alt="">
-                                    {{-- <a href=" {{ route('imagenes.ver', ['paciente' => $pacienteId, 'etapa' => $etapa->id]) }}" class="cursor-pointer font-light text-sm" target="_black">Ver</a> --}}
-                                    <span wire:click="verImg( {{$etapa->id}} )" class="cursor-pointer font-light text-sm">Ver</span>
                                 </div>
                             </td>
                         </tr>
@@ -119,7 +129,7 @@
                 </tbody>
             </table>
 
-            <div  class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
+            <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
                 <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
                 <strong wire:click='nuevaEtapa'>Añadir etapa</strong>
             </div>
@@ -237,6 +247,7 @@
         </x-dialog-modal>
     @endif
 
+    {{-- Añadir IMG Etapa --}}
     @if ($modalImg)
         <x-dialog-modal wire:model="modalImg" >
             <x-slot name="title">
@@ -253,13 +264,43 @@
             <x-slot name="content">
                 <div>
                     <x-label for="selectedEtapa" value="Añadir Imágenes" />
-                    <input type="file" multible wire:model="imagenes" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                    <input type="file" multiple wire:model="imagenes" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
                 </div>
             </x-slot>
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="button" wire:click="saveImg({{$etapa->id}}, {{$estapa->name}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="button" wire:click="saveImg({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                    Guardar
+                </button>
+            </x-slot>
+        </x-dialog-modal>
+    @endif
+    {{-- Añadir Archivos Etapa --}}
+
+    @if ($modalArchivo)
+        <x-dialog-modal wire:model="modalArchivo" >
+            <x-slot name="title">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Añadir Archivos (.zip)</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </x-slot>
+
+            <x-slot name="content">
+                <div>
+                    <x-label for="selectedEtapa" value="Añadir Archivos" />
+                    <input type="file" wire:model="archivos" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                </div>
+            </x-slot>
+
+            <x-slot name="footer">
+                <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
+                <button type="button" wire:click="saveArchivos({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>
