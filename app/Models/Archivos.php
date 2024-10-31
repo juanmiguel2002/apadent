@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Archivos extends Model
 {
     use HasFactory;
+    
     protected $table = 'archivos';
     protected $fillable = [
         'ruta',
@@ -19,6 +20,6 @@ class Archivos extends Model
     // Relación muchos a uno con pacienteEtapas
     public function PacienteEtapas()
     {
-        return $this->belongsTo(PacienteEtapas::class);
+        return $this->belongsTo(PacienteEtapas::class, 'paciente_etapa_id');
     }
 }

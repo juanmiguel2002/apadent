@@ -15,7 +15,6 @@ class PacienteTrat extends Model
     protected $fillable = [
         'paciente_id',
         'trat_id',
-        // Agrega aquí otros atributos que deseas permitir para la asignación masiva
     ];
 
     // Relaciones
@@ -27,5 +26,10 @@ class PacienteTrat extends Model
     public function tratamiento()
     {
         return $this->belongsTo(Tratamiento::class, 'trat_id');
+    }
+    
+    public function mensajes()
+    {
+        return $this->hasMany(Mensaje::class, 'paciente_trat_id');
     }
 }

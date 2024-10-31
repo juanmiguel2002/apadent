@@ -37,15 +37,24 @@ class Paciente extends Model
     public function etapas()
     {
         return $this->belongsToMany(Etapa::class, 'paciente_etapas', 'paciente_id', 'etapa_id')
-                    ->withPivot('fecha_fin', 'status', 'revision', 'orden')
+                    ->withPivot('fecha_ini','fecha_fin', 'status', 'revision')
                     ->withTimestamps();
     }
+    
+    public function mensajes()
+    {
+        return $this->hasMany(Mensaje::class);
+    }
 
-    // relaciona tratamientos con pacientes muchos a muchos
-    // public function tratamientos(): BelongsToMany
+    // Relación directa con PacienteEtapas
+    // public function pacienteEtapas()
     // {
-    //     return $this->belongsToMany(Tratamiento::class, 'paciente_trat', 'trat_id', 'paciente_id')
-    //             ->withPivot('created_at')
-    //             ->withTimestamps();
+    //     return $this->hasMany(PacienteEtapas::class, 'paciente_id');
+    // }
+
+    // // Relación con los mensajes a través de PacienteEtapas
+    // public function mensajes()
+    // {
+    //     return $this->hasManyThrough(Mensaje::class, PacienteEtapas::class, 'paciente_id', 'etapa_id', 'id', 'etapa_id');
     // }
 }

@@ -14,13 +14,6 @@ class Tratamiento extends Model
         'descripcion'
     ];
 
-    // public function pacientes()
-    // {
-    //     return $this->belongsToMany(Paciente::class, 'paciente_trat', 'trat_id', 'paciente_id')
-    //                 ->withPivot('created_at')
-    //                 ->withTimestamps();
-    // }
-
     // Relaciones
     public function pacientes()
     {
@@ -32,8 +25,8 @@ class Tratamiento extends Model
         return $this->belongsToMany(Etapa::class, 'tratamiento_etapa', 'trat_id', 'etapa_id');
     }
 
-    public function tratamientoEtapas()
-    {
-        return $this->hasMany(TratamientoEtapa::class, 'trat_id');
-    }
+    // public function mensajes()
+    // {
+    //     return $this->hasMany(Mensaje::class, 'tratamientos_id');
+    // }
 }

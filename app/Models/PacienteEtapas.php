@@ -17,13 +17,15 @@ class PacienteEtapas extends Model
         'fecha_fin',
         'status',
         'revision',
-        // 'orden', //ordenar las etapas del paciente
-
     ];
 
-    public function tratamientoEtapa()
+    // public function tratamientoEtapa()
+    // {
+    //     return $this->hasOne(TratamientoEtapa::class, 'etapa_id', 'etapa_id');
+    // }
+    public function isCompleted()
     {
-        return $this->hasOne(TratamientoEtapa::class, 'etapas_id', 'etapas_id');
+        return $this->status === 'Finalizado';
     }
 
     public function paciente()
@@ -33,10 +35,17 @@ class PacienteEtapas extends Model
 
     public function mensajes()
     {
-        return $this->hasMany(Mensaje::class, 'etapa_id', 'paciente_id');
+        return $this->hasMany(Mensaje::class, 'paciente_etapas_id');
     }
+
     public function etapa()
     {
-        return $this->belongsTo(Etapa::class, 'etapa_id');
+        return $this->belongsTo(Etapa::class);
     }
+    
+    public function archivos()
+    {
+        return $this->hasMany(Archivos::class, 'paciente_id');
+    }
+
 }

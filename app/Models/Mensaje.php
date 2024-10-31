@@ -10,20 +10,35 @@ class Mensaje extends Model
     use HasFactory;
     protected $table = 'mensajes';
     protected $fillable = [
-        'users_id',
+        'user_id',
         'mensaje',
-        'paciente_id',
-        'etapa_id',
+        'tratamientos_id',
+        'paciente_trat_id',
+        'paciente_etapas_id',
     ];
 
-    // Relaciones
+
+    // Relación con el modelo User (usuario que escribió el mensaje)
     public function user()
     {
-        return $this->belongsTo(User::class, 'users_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function etapaPaciente()
+    // Relación con el modelo PacienteTrat (tratamiento del paciente)
+    public function pacienteTratamiento()
     {
-        return $this->belongsTo(PacienteEtapas::class, 'etapas_id');
+        return $this->belongsTo(PacienteTrat::class, 'paciente_trat_id');
+    }
+
+    // Relación con el modelo PacienteEtapa (etapa del tratamiento del paciente)
+    public function pacienteEtapa()
+    {
+        return $this->belongsTo(PacienteEtapas::class, 'paciente_etapas_id');
+    }
+
+    // Relación con el modelo Tratamiento (tratamiento relacionado)
+    public function tratamiento()
+    {
+        return $this->belongsTo(Tratamiento::class, 'tratamientos_id');
     }
 }
