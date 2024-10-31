@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use Livewire\Component;
+use Livewire\WithFileUploads;
 use App\Mail\CambioEstado;
 use App\Models\Etapa;
 use App\Models\Mensaje;
@@ -9,12 +11,10 @@ use App\Models\PacienteEtapas;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
 use App\Models\TratamientoEtapa;
-use Illuminate\Support\Facades\Mail;
-use Livewire\Component;
-use Livewire\WithFileUploads;
+use App\Models\Archivos;
 use App\Mail\NotificacionMensaje;
 use App\Mail\NotificacionRevision;
-use App\Models\Archivos;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 
 class HistorialPaciente extends Component
@@ -54,8 +54,6 @@ class HistorialPaciente extends Component
         }
 
         $this->archivo = Archivos::where('paciente_id', $this->pacienteId)->where('tipo', 'zip')->get();
-        // dd($this->tieneArchivos(2),$this->archivo);
-
         $this->tratamientos = Tratamiento::all();
         $this->verificarUltimaEtapa();
     }
@@ -77,26 +75,8 @@ class HistorialPaciente extends Component
                     $query->where('tratamientos.id', $this->tratamientoId);
                 })
                 ->get();
-        // dd($this->etapas);
-
         }
     }
-
-    // public function updatedSelectedTratamiento($tratamientoId)
-    // {
-    //     $this->tratamientoId = $tratamientoId;
-
-    //     if ($this->tratamientoId) {
-    //         // Filtrar por el tratamiento específico y paciente
-
-    //         $this->etapas = TratamientoEtapa::where('trat_id', $tratamientoId)
-    //             ->get();
-    //         // dd($this->etapas);
-    //     } else {
-    //         // Si no hay tratamiento seleccionado, limpiar las etapas
-    //         $this->etapas = collect();
-    //     }
-    // }
 
     public function render()
     {
@@ -104,8 +84,11 @@ class HistorialPaciente extends Component
     }
 
     // COMPRUEBA SI TIENE ARCHIVO UNA ETAPA
-    public function tieneArchivos($etapaId)
+    public function tieneArchivos($etapaId, $archivo)
     {
+        if($archivo){
+           return Archivos::where('paciente_etapa_id', $etapaId)->where('tipo', 'zip')->exists();
+        }
         return Archivos::where('paciente_etapa_id', $etapaId)->exists();
     }
 
@@ -316,6 +299,10 @@ class HistorialPaciente extends Component
 
     public function saveImg($etapaId){
 
+        $this->validate([
+            'imagenes.*' => 'required|image',
+        ]);
+
         $etapa = Etapa::find($etapaId);
         $clinicaName = preg_replace('/\s+/', '_', trim(Auth::user()->clinicas->first()->name));
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
@@ -325,7 +312,7 @@ class HistorialPaciente extends Component
         if ($this->imagenes && is_array($this->imagenes)) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
-                $fileName = $etapa->name."_" . $key . '.' . $extension;
+                $fileName = $etapa->name . "_" . $key . '.' . $extension;
                 $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
@@ -352,12 +339,16 @@ class HistorialPaciente extends Component
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
         $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
 
+        $this->validate([
+            'archivos.*' => 'required|file',
+        ]);
+
         // Subir múltiples imágenes del paciente, si existen
-        if ($this->imagenes && is_array($this->imagenes)) {
-            foreach ($this->imagenes as $key => $imagen) {
-                $extension = $imagen->getClientOriginalExtension();
+        if ($this->archivos && is_array($this->archivos)) {
+            foreach ($this->archivos as $key => $archivo) {
+                $extension = $archivo->getClientOriginalExtension();
                 $fileName = $etapa->name."_" . $key . '.' . $extension;
-                $path = $imagen->storeAs($pacienteFolder . '/archivoEtapa', $fileName, 'clinicas');
+                $path = $archivo->storeAs($pacienteFolder . '/archivoEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
                 $archivo = Archivos::create([

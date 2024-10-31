@@ -17,6 +17,7 @@
             <span>Documentación</span>
         </button>
     </div>
+
     @if ($tratId)
         <h2 class="px-2 mb-4 font-semibold text-lg text-gray-800">Tratamiento seleccionado: {{ $tratamiento->tratamiento->name }} - {{ $tratamiento->tratamiento->descripcion }}</h2>
     @else
@@ -103,8 +104,6 @@
                                         @endif
                                     @endif
                             @endforeach
-
-
                             </td>
                             <td class="px-4 py-2 text-center">
                                 @if($etapa->revision)
@@ -118,7 +117,7 @@
                             {{-- Archivos --}}
                             <td class="px-4 py-2">
                                 <div class="flex justify-center items-center">
-                                    @if ($this->tieneArchivos($etapa->etapa->id) == true)
+                                    @if ($this->tieneArchivos($etapa->etapa->id, true) == true)
                                     {{-- <p class="flex items-center">Descargar</p> --}}
                                         <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}" class="flex items-center">
                                             <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
@@ -136,7 +135,7 @@
                             {{-- Imágenes --}}
                             <td class="px-4 py-2">
                                 <div class="flex justify-center items-center">
-                                    @if ($this->tieneArchivos($etapa->etapa->id) == true)
+                                    @if ($this->tieneArchivos($etapa->etapa->id, false) == true)
                                         <!-- Mostrar botón 'Ver' si tiene archivos -->
                                         <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
                                         <span wire:click="verImg({{ $etapa->id }})" class="cursor-pointer font-light text-sm">Ver</span>
@@ -286,15 +285,16 @@
             </x-slot>
 
             <x-slot name="content">
-                <div>
-                    <x-label for="selectedEtapa" value="Añadir Imágenes" />
-                    <input type="file" multiple wire:model="imagenes" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
-                </div>
+                <form wire:submit.prevent="saveImg">
+                    <x-label for="imagenes" value="Añadir Imágenes" />
+                    <input type="file" multiple accept="image/*" wire:model="imagenes" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                    <x-input-error for="imagenes.*" />
+                </form>
             </x-slot>
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="button" wire:click="saveImg({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="submit" wire:click="saveImg({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>
@@ -316,10 +316,11 @@
             </x-slot>
 
             <x-slot name="content">
-                <div>
-                    <x-label for="selectedEtapa" value="Añadir Archivos" />
-                    <input type="file" wire:model="archivos" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
-                </div>
+                <form wire:submit.prevent='saveArchivos'>
+                    <x-label for="archivos" value="Añadir Archivos" />
+                    <input type="file" multiple wire:model="archivos" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                    <x-input-error for="archivos.*" />
+                </form>
             </x-slot>
 
             <x-slot name="footer">
