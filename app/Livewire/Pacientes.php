@@ -6,6 +6,7 @@ use App\Mail\CambioEstado;
 use App\Mail\NotificacionNuevoPaciente;
 use App\Models\Archivos;
 use App\Models\Clinica;
+use App\Models\Etapa;
 use App\Models\Paciente;
 use App\Models\PacienteEtapas;
 use App\Models\PacienteTrat;
@@ -25,8 +26,8 @@ class Pacientes extends Component
 
     public $tratamientos, $clinica_id, $paciente, $paciente_id;
     public $num_paciente, $name, $apellidos, $email, $telefono, $fecha_nacimiento;
-    public $observacion, $obser_cbct, $odontograma_obser;
-    public $showModal = false, $isEditing = false, $mostrar = false, $showModalDelete = false;
+    public $observacion, $obser_cbct;
+    public $showModal = false, $mostrar = false;
     public $imagenes = [], $cbct = [], $img_paciente;
     public $selectedTratamiento, $status = "Set Up", $activo = false;
 
@@ -109,6 +110,11 @@ class Pacientes extends Component
             'etapas.name as etapa_name',
             'paciente_etapas.status as etapa_status'
         )
+        ->where(function ($query) {  //busqueda
+            $query->where('pacientes.name', 'like', '%' . $this->search . '%')
+                  ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%')
+                  ->orWhere('pacientes.telefono', 'like', '%' . $this->search . '%');
+        })
         ->join('clinicas', 'pacientes.clinica_id', '=', 'clinicas.id') // Relación entre clínica y pacientes
         ->leftJoin('paciente_trat', function ($join) {
             $join->on('pacientes.id', '=', 'paciente_trat.paciente_id')
@@ -136,7 +142,8 @@ class Pacientes extends Component
                              $subSubquery->select(DB::raw(1))
                                          ->from('paciente_etapas as pe')
                                          ->whereColumn('pe.paciente_id', 'pacientes.id')
-                                         ->where('pe.status', '!=', 'Finalizado');
+                                         ->where('pe.status', '!=', 'Finalizado')
+                                         ->orderBy('id', 'desc');
                          });
             });
         })
@@ -150,6 +157,7 @@ class Pacientes extends Component
 
     }
 
+    // CREAR PACIENTE
     public function showCreateModal()
     {
         $this->resetForm();
@@ -216,7 +224,7 @@ class Pacientes extends Component
         if ($this->imagenes && is_array($this->imagenes)) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
-                $fileName = "EtapaInicio".$key. '.' . $extension;
+                $fileName = "EtapaInicio". $key . '.' . $extension;
                 $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
@@ -297,9 +305,10 @@ class Pacientes extends Component
         }
     }
 
-    public function estado($pacienteId, $tratId, $newStatus)
+    // CAMBIAR ESTADO PACIENTE ETAPA
+    public function estado($pacienteId, $etapaId, $newStatus)
     {
-        $tratamientoEtapa = TratamientoEtapa::where('trat_id', $tratId)->first();
+        $tratamientoEtapa = TratamientoEtapa::where('etapa_id', $etapaId)->first();
 
         if ($tratamientoEtapa) {
             if($newStatus === 'Finalizado'){
@@ -319,8 +328,11 @@ class Pacientes extends Component
             // Enviar email a la clínica
             $paciente = Paciente::find($pacienteId);
             $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
+            $etapa = Etapa::find($etapaId);
+            $trat = Tratamiento::find($tratamientoEtapa->trat_id);
+
             if ($clinica && $clinica->email) {
-                Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus));
+                Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $trat));
             }
 
         }
@@ -343,8 +355,8 @@ class Pacientes extends Component
                 'num_paciente',
                 'fecha_nacimiento',
                 'selectedTratamiento',
-                'observacion','obser_cbct', 'odontograma_obser',
-                'imagenes', 'cbct', 'isEditing', 'img_paciente'
+                'observacion','obser_cbct',
+                'imagenes', 'cbct', 'img_paciente'
             ]);
     }
 

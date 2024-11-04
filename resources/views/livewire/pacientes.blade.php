@@ -1,5 +1,6 @@
 <div>
     @can('paciente_view')
+
         <div class="px-4 py-4 flex justify-between items-center">
             <div class="flex justify-start items-center">
                 <span class="uppercase text-base text-azul font-light">Ordenar por: </span>
@@ -35,7 +36,7 @@
                         placeholder="Buscar paciente" />
                 </div>
 
-                @can('doctor_user')
+                @can('doctor_admin')
                     <button wire:click="toggleVerInactivos"
                             class="px-4 py-2 rounded shadow font-semibold text-white
                                 {{ $activo ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600' }}">
@@ -72,42 +73,44 @@
                                 @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
                                     @if ($paciente->etapa_status == $status)
                                         <td class="p-3 text-center flex justify-center items-center mt-4">
-                                            <button wire:click="toggleMenu" class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
-                                                <span>{{ $status }}</span>
-                                            </button>
-                                            <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
+                                            @if ($status === 'Finalizado')
+                                                <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
+                                                    <span>{{ $status }}</span>
+                                                </span>
+                                            @else
+                                                <button wire:click="toggleMenu" class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
+                                                    <span>{{ $status }}</span>
+                                                </button>
+                                                <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
 
-                                            @if ($mostrar)
-                                                <div class="ml-2">
-                                                    @foreach ($statuses as $optionStatus => $optionColor)
-                                                        <div wire:click="estado({{ $paciente->id}}, {{ $paciente->tratamiento_id }}, '{{ $optionStatus }}')"
-                                                            class="cursor-pointer text-white {{ $optionColor }} my-2 rounded-lg hover:bg-opacity-75 px-2">
-                                                            {{ $optionStatus }}
-                                                        </div>
-                                                    @endforeach
-                                                </div>
+                                                @if ($mostrar)
+                                                    <div class="ml-2">
+                                                        @foreach ($statuses as $optionStatus => $optionColor)
+                                                            <div wire:click="estado({{ $paciente->id }}, {{ $paciente->etapa_id }}, '{{ $optionStatus }}')"
+                                                                class="cursor-pointer text-white {{ $optionColor }} my-2 rounded-lg hover:bg-opacity-75 px-2">
+                                                                {{ $optionStatus }}
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                             @endif
                                         </td>
                                     @endif
                                 @endforeach
+
                                 <td class="text-center px-4 py-2">{{ $paciente->etapa_name }}</td>
                                 <td class="text-center border px-4 py-2">
                                     <button wire:click="showHistorial({{ $paciente->id }})">
-                                        <img src="{{ asset('storage/recursos\icons\ojo_azul.png') }}" class="w-5 cursor-pointer">
+                                        <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
                                     </button>
-                                    @can('paciente_delete')
-                                        <button wire:click="deletePaciente({{ $paciente->id }})">
-                                            <img class="w-5 cursor-pointer" src="{{ asset('storage/recursos/icons/papelera.png') }}" alt="" srcset="">
-                                        </button>
-                                    @endcan
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             @else
-                <div class="px-6 py-4">
-                    No existe ningún registro coincidente
+                <div class="px-6 py-4 mt-4">
+                    No existe ningún registro.
                 </div>
             @endif
             @if ($pacientes->hasPages())
@@ -194,7 +197,7 @@
                                     </div>
                                     <div class="col-span-2 mb-3">
                                         <x-label for="imagenes" class="block text-md text-azul capitalize">Imágenes</x-label>
-                                        <x-input wire:model="imagenes" multiple type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                                        <x-input type="file" wire:model="imagenes" multiple class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                         {{-- <x-input-error for="imagenes*" /> --}}
                                     </div>
 
