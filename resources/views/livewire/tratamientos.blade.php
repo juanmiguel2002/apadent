@@ -1,7 +1,7 @@
 <div>
     <div class="px-6 py-4 flex justify-end items-center">
         <div class="flex justify-end">
-            <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded ml-2">Crear Tratamiento</button>
+            <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded ml-2"><i class="fas fa-plus mr-2"></i> Crear Tratamiento</button>
         </div>
     </div>
     <x-tabla>
@@ -12,6 +12,7 @@
                         <th class="p-3 text-center">ID</th>
                         <th class="p-3 text-center">Nombre</th>
                         <th class="p-3 text-center">Descripción</th>
+                        <th class="p-3 text-center">Pacientes</th>
                         <th class="p-3 text-center">Acción</th>
                     </tr>
                 </thead>
@@ -21,16 +22,13 @@
                             <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->id }}</td>
                             <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->name }}</td>
                             <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->descripcion }}</td>
+                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->pacientes->count() }}</td>
 
                             <td class="px-6 py-4 text-sm text-center whitespace-nowrap">
                                 <div class="flex justify-center space-x-2">
-                                    <a href="#" wire:click.prevent="showCreateModal({{ $tratamiento->id }})"
+                                    <a wire:click="showCreateModal({{ $tratamiento->id }})"
                                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                         <i class="fas fa-edit mr-2"></i> Editar
-                                    </a>
-                                    <a href="#" wire:click.prevent="delete({{ $tratamiento->id }})"
-                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
-                                        <i class="fas fa-trash-alt mr-2"></i> Eliminar
                                     </a>
                                 </div>
                             </td>
@@ -46,7 +44,7 @@
     </x-tabla>
 
     @if ($showModal)
-        <x-dialog-modal maxWidth="lg" x-data="{ showModal: @entangle('showModal') }">
+        <x-dialog-modal maxWidth="lg">
             <div class="relative">
                 <x-slot name="title">
                     <div class="flex justify-between items-center">
@@ -66,7 +64,7 @@
                         <div class="grid grid-cols-1 gap-4">
                             <div class="col-span-2 mb-4 sm:col-span-1">
                                 <x-label for="name" value="Nombre*" class="text-azul text-base"/>
-                                <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" placeholder="Nombre" />
+                                <x-input type="text" class="w-full rounded-md" wire:model.defer="name" placeholder="Nombre" />
                                 <x-input-error for="name" />
                             </div>
 

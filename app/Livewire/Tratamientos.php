@@ -2,23 +2,25 @@
 
 namespace App\Livewire;
 
+use App\Mail\NewTratamiento;
 use App\Models\Tratamiento;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class Tratamientos extends Component
 {
-    use WithPagination;
-    public $tratamientos, $showModal, $isEditing, $trat_id;
+    public $tratamientos, $trat_id;
+    public $showModal = false, $isEditing = false;
     public $name, $descripcion;
 
     public function mount(){
-        $this->tratamientos = Tratamiento::get();
+        $this->tratamientos = Tratamiento::all();
     }
 
     public function render()
     {
-        return view('livewire.tratamientos');
+        return view('livewire.tratamientos'); //
     }
 
     public function showCreateModal($tratamientoId = null)
@@ -27,14 +29,13 @@ class Tratamientos extends Component
             'name', 'descripcion'
         ]);
         $this->trat_id = $tratamientoId;
-        if ($tratamientoId) {
+        if ($this->trat_id) {
             $tratamiento = Tratamiento::findOrFail($this->trat_id);
             $this->name = $tratamiento->name;
             $this->descripcion = $tratamiento->descripcion;
             $this->isEditing = true;
         }else{
             $this->isEditing = false;
-
         }
         $this->showModal = true;
     }
@@ -45,12 +46,16 @@ class Tratamientos extends Component
             'name' => 'string|required|max:50',
             'descripcion' => 'string|required|max:255'
         ]);
+        // Obtener la clinica del usuario logueado
+        $clinica = Auth::user()->clinicas->first();
 
         if ($this->isEditing) {
             $tratamiento = Tratamiento::findOrFail($this->trat_id);
             $tratamiento->name = $this->name;
             $tratamiento->descripcion = $this->descripcion;
             $tratamiento->save();
+            $this->dispatch('tratamiento', 'Tratamiento Actualizado');  // Emite un evento para que otros componentes puedan escuchar
+            Mail::to($clinica->email)->send(new NewTratamiento($tratamiento,'Actualizado Tratamiento',true));
         } else {
             $trat = Tratamiento::create([
                 'name' => $this->name,
@@ -58,24 +63,11 @@ class Tratamientos extends Component
             ]);
 
             $trat->etapas()->sync([1]);
-            $this->dispatch('tratamiento');  // Emite un evento para que otros componentes puedan escuchar
+            $this->dispatch('tratamiento', 'Tratamiento Creado');  // Emite un evento para que otros componentes puedan escuchar
+            Mail::to($clinica->email)->send(new NewTratamiento($trat,'Nuevo Tratamiento',false));
         }
-        $this->reset([
-            'name', 'descripcion'
-        ]);
         $this->close();
-        $this->resetPage();
-    }
-
-    public function delete($trat_id)
-    {
-        $tratamiento = Tratamiento::findOrFail($trat_id);
-        $tratamiento->delete();
-
-        // Emitir un mensaje de éxito
-        $this->dispatch('tratamientoEliminado', 'El tratamiento ha sido eliminado correctamente.');
-        $this->resetPage();
-
+        $this->mount();
     }
 
     public function close()
