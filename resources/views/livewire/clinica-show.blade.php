@@ -17,6 +17,7 @@
         </div>
     </div>
     <div class="my-3"></div>
+
     <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
         <div class="flex space-x-6">
             <!-- Información del clinica -->
@@ -48,7 +49,7 @@
                 <p class="text-lg font-semibold text-gray-800">Dirección: <span class="text-azul">{{ $clinica->direccion_fac }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Nº Cuenta: <span class="text-azul">{{ $clinica->cuenta }}</span></p>
             </div>
-            @can('doctor_user')
+            @can('factura_view')
                 <div class="w-2/4 space-y-4 text-center">
                     <!-- Tabla facturas -->
                     <div class="mt-8">
@@ -65,11 +66,8 @@
                                     <tr>
                                         <td class="py-2">{{ $factura->name }}</td>
                                         <td class="py-2">
-                                            {{-- <a href="{{ Storage::url($factura->ruta) }}" target="_blank" class="text-blue-500">Ver</a> --}}
-                                            <a href="{{ route('facturas.download', $factura) }}" target="_blank" class="text-blue-500">Descargar</a>
-
-                                                <a wire:click="delete({{ $factura->id }})" class="text-red-500 cursor-pointer">Eliminar</a>
-
+                                            <a href="{{ route('facturas.download', $factura) }}" target="_blank" class="text-azul">Descargar</a>
+                                            <a wire:click="delete({{ $factura->id }})" class="text-red-500 cursor-pointer">Eliminar</a>
                                         </td>
                                     </tr>
                                 @endforeach

@@ -56,7 +56,7 @@ class ClinicaShow extends Component
         $fileName = $this->name . '.' . $extension;
 
         // Definir la ruta de almacenamiento para la factura y guardar el archivo con el nombre del usuario
-        $filePath = $this->factura->storeAs('clinicas/' . $this->clinicaName . '/facturas', $fileName);
+        $filePath = $this->factura->storeAs($this->clinicaName . '/facturas', $fileName , 'clinicas');
 
         // Guardar los detalles en la base de datos
         $factura = Factura::create([
@@ -91,5 +91,6 @@ class ClinicaShow extends Component
     public function close()
     {
         $this->modalOpen = false;
+        $this->reset(['name', 'factura']);
     }
 }
