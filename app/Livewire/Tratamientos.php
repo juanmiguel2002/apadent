@@ -2,11 +2,13 @@
 
 namespace App\Livewire;
 
-use App\Mail\NewTratamiento;
+use Livewire\Component;
+use App\Models\Clinica;
 use App\Models\Tratamiento;
+use App\Mail\NewTratamiento;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Livewire\Component;
+
 
 class Tratamientos extends Component
 {
@@ -15,7 +17,10 @@ class Tratamientos extends Component
     public $name, $descripcion;
 
     public function mount(){
-        $this->tratamientos = Tratamiento::all();
+        // Filtrar los tratamientos por la clinica del usuario logueado
+        $clinicaId = Auth::user()->clinicas->first()->id;
+        $clinica = Clinica::find($clinicaId);
+        $this->tratamientos = $clinica->tratamientos;
     }
 
     public function render()
@@ -49,23 +54,15 @@ class Tratamientos extends Component
         // Obtener la clinica del usuario logueado
         $clinica = Auth::user()->clinicas->first();
 
-        if ($this->isEditing) {
-            $tratamiento = Tratamiento::findOrFail($this->trat_id);
-            $tratamiento->name = $this->name;
-            $tratamiento->descripcion = $this->descripcion;
-            $tratamiento->save();
-            $this->dispatch('tratamiento', 'Tratamiento Actualizado');  // Emite un evento para que otros componentes puedan escuchar
-            Mail::to($clinica->email)->send(new NewTratamiento($tratamiento,'Actualizado Tratamiento',true));
-        } else {
-            $trat = Tratamiento::create([
-                'name' => $this->name,
-                'descripcion' => $this->descripcion
-            ]);
+        $tratamiento = Tratamiento::updateOrCreate(['id' => $this->trat_id],[
+            'name' => $this->name,
+            'descripcion' => $this->descripcion,
+        ]);
+        $clinica->tratamientos()->attach($tratamiento->id); // Agrega un tratamiento a una clínica
+        $this->dispatch('tratamiento', $this->trat_id ? 'Tratamiento Actualizado.' : 'Tratamiento Creado');
 
-            $trat->etapas()->sync([1]);
-            $this->dispatch('tratamiento', 'Tratamiento Creado');  // Emite un evento para que otros componentes puedan escuchar
-            Mail::to($clinica->email)->send(new NewTratamiento($trat,'Nuevo Tratamiento',false));
-        }
+        Mail::to($clinica->email)->send(new NewTratamiento($tratamiento, $this->trat_id ? 'Tratamiento actualizado.' : 'Tratamiento Creado',$this->trat_id ? true : false));
+
         $this->close();
         $this->mount();
     }
