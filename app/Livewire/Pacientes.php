@@ -76,7 +76,8 @@ class Pacientes extends Component
 
     public function mount()
     {
-        $this->tratamientos = Tratamiento::all();
+        $clinica = Clinica::find(Auth::user()->clinicas->first()->id);
+        $this->tratamientos = $clinica->tratamientos; // Obtiene todos los tratamientos relacionados
     }
 
     public function render()
@@ -198,8 +199,9 @@ class Pacientes extends Component
                 'fecha_fin' => null,
                 'status' => 'Set Up',
             ]);
+            $pacienteEtapa->save();
+
         }
-        $pacienteEtapa->save();
 
         // 4. Crear carpetas para el paciente (si es necesario)
         $this->createPacienteFolders($paciente->id);
