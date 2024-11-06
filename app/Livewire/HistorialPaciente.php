@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Mail\CambioEstado;
+use App\Models\Clinica;
 use App\Models\Etapa;
 use App\Models\Mensaje;
 use App\Models\PacienteEtapas;
@@ -41,6 +42,10 @@ class HistorialPaciente extends Component
         'Set Up' => 'bg-yellow-600'
     ];
 
+    protected $rules = [
+        'selectedNewTratamiento' => 'required|exists:tratamientos,id',
+    ];
+
     public function mount($paciente, $tratamiento = null, $tratId = null)
     {
         $this->paciente = $paciente;
@@ -54,8 +59,8 @@ class HistorialPaciente extends Component
         }
 
         $this->archivo = Archivos::where('paciente_id', $this->pacienteId)->where('tipo', 'zip')->get();
-        $this->tratamientos = Tratamiento::all();
-        $this->verificarUltimaEtapa();
+        $clinica = Clinica::find(Auth::user()->clinicas->first()->id);
+        $this->tratamientos = $clinica->tratamientos; // Obtiene todos los tratamientos relacionados
     }
 
     public function loadEtapas($trat = null)
@@ -69,6 +74,9 @@ class HistorialPaciente extends Component
                 ->get();
         } else {
             $this->tratId = null;
+            // $this->etapas = DB::table('historial_paciente')
+            //     ->where('trat', $this->pacienteId)
+            //     ->get();
             $this->etapas = PacienteEtapas::with(['etapa', 'mensajes.user'])
                 ->where('paciente_id', $this->pacienteId)
                 ->whereHas('etapa.tratamientos', function ($query) {
@@ -107,24 +115,25 @@ class HistorialPaciente extends Component
         ]);
 
         $paciente_trat =  PacienteTrat::where('paciente_id', $this->pacienteId)
-            ->where('trat_id', $this->tratamientoId)
+            ->where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
             ->first();
 
-            // Crear el mensaje
+        // Crear el mensaje
         $Tmensaje = Mensaje::create([
             'user_id' => auth()->id(),
             'mensaje' => $mensaje,
-            'tratamientos_id' => $this->tratamientoId,
+            'tratamientos_id' => $this->tratId ? $this->tratId : $this->tratamientoId,
             'paciente_trat_id' => $paciente_trat->id,
             'paciente_etapas_id' => $etapaId,
         ]);
         $Tmensaje->save();
+
         // Limpiar el campo de mensaje
         $this->mensajes[$etapaId] = '';
-        $this->loadEtapas($this->selectedTratamiento);
+        $this->loadEtapas($this->tratId ? $this->tratId : $this->tratamientoId);
         $this->dispatch('mensaje');
         $etapa = Etapa::find($etapaId);
-        $trat = Tratamiento::find($this->tratamientoId);
+        $trat = Tratamiento::find($this->tratId ? $this->tratId : $this->tratamientoId);
 
         Mail::to($this->paciente->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
 
@@ -178,7 +187,6 @@ class HistorialPaciente extends Component
             Mail::to($this->paciente->clinica->email)->send(new NotificacionRevision($this->paciente, $etapaPaciente));
 
             $this->loadEtapas($this->selectedTratamiento);
-
         }
     }
 
@@ -195,47 +203,40 @@ class HistorialPaciente extends Component
 
     public function nuevaEtapa()
     {
-        $this->verificarUltimaEtapa();
+        // Obtener la última etapa para el paciente y tratamiento dado
+        $ultimaEtapa = PacienteEtapas::where('paciente_id', $this->pacienteId)
+                // ->where('tratamiento_id', $this->selectedTratamiento) // Ajusta según tu modelo
+                ->orderBy('created_at', 'desc')
+                ->first();
 
         // Determinar el número de la nueva etapa
         $j = 1;
-        if (preg_match('/Etapa (\d+)/', $this->ultimaEtapa->etapa->name, $matches)) {
+        if ($ultimaEtapa && preg_match('/Etapa (\d+)/', $ultimaEtapa->etapa->name, $matches)) {
             $i = (int)$matches[1];
             $j = $i + 1;
         }
 
-        // Crear la nueva etapa en la tabla de 'etapas'
+        // Crear una nueva etapa
         $etapa = Etapa::create([
             'name' => "Etapa " . $j,
         ]);
 
-        // Asociar la nueva etapa al tratamiento en la tabla 'tratamiento_etapa'
-        if($this->tratId){
-            TratamientoEtapa::create([
-                'trat_id' => $this->tratId,
-                'etapa_id' => $etapa->id
-            ]);
-        }else{
-            TratamientoEtapa::create([
-                'trat_id' => $this->tratamientoId,
-                'etapa_id' => $etapa->id
-            ]);
-        }
+        // Asociar la nueva etapa al tratamiento en la tabla tratamiento_etapa
+        TratamientoEtapa::create([
+            'trat_id' => $this->tratamientoId,
+            'etapa_id' => $etapa->id
+        ]);
 
-
-        // Asociar la nueva etapa al paciente en la tabla 'paciente_etapas'
+        // Asociar la nueva etapa al paciente en la tabla paciente_etapas
         PacienteEtapas::create([
             'paciente_id' => $this->pacienteId,
             'etapa_id' => $etapa->id,
             'fecha_ini' => now(),
-            'status' => 'Set Up', // Estado inicial de la nueva etapa
+            'status' => 'Set Up', // O el estado que prefieras
         ]);
-
-        // Emitir un evento para actualizar la vista y recargar las etapas
+        // Emitir un evento para actualizar la vista
         $this->dispatch('etapa');
-        if(!$this->tratId){
-            $this->loadEtapas($this->tratamientoId);
-        }
+        $this->loadEtapas($this->selectedTratamiento);
     }
 
     // GESTIÓN NEW TRATAMIENTO
@@ -247,37 +248,53 @@ class HistorialPaciente extends Component
 
     public function saveTratamiento()
     {
-        // 0. Comprobar que el tratamiento esta finalizado => ultima etapa status Finalizado.
-
-        // 1. Crear o relacionar el tratamiento con el paciente
-        $pacienteTrat = PacienteTrat::create([
-            'paciente_id' => $this->pacienteId,
-            'trat_id' => $this->selectedNewTratamiento,
+        // Validar que se haya seleccionado un tratamiento
+        $this->validate([
+            'selectedNewTratamiento' => 'required|exists:tratamientos,id',
+        ], [
+            'selectedNewTratamiento' => 'Has selecionado un tratamiento que esta asignado ya'
         ]);
 
-        // 2. Obtener las etapas asociadas al tratamiento
-        $tratamientoEtapas = TratamientoEtapa::where('trat_id', $this->selectedNewTratamiento)->get();
+        try {
+            // Verificar si el tratamiento ya está asociado con el paciente
+            $existingTratamiento = PacienteTrat::where('paciente_id', $this->pacienteId)
+                ->where('trat_id', $this->selectedNewTratamiento)
+                ->first();
 
-        // 3. Relacionar cada etapa con el paciente en la tabla 'paciente_etapas'
-        foreach ($tratamientoEtapas as $etapa) {
-            PacienteEtapas::create([
+            if ($existingTratamiento) {
+                $this->dispatch('error', 'El tratamiento ya está asociado al paciente.');
+                return;
+            }
+
+            // Crear la relación entre el paciente y el tratamiento
+            $pacienteTrat = PacienteTrat::create([
                 'paciente_id' => $this->pacienteId,
-                'etapa_id' => $etapa->etapa_id,
-                'fecha_ini' => now(), // Ajusta las fechas si es necesario
-                'status' => 'Set Up', // Estado inicial de la etapa
+                'trat_id' => $this->selectedNewTratamiento,
             ]);
+
+            // Obtener las etapas del tratamiento seleccionado
+            $etapas = TratamientoEtapa::where('trat_id', $this->selectedNewTratamiento)->get();
+
+            // Asociar cada etapa con el paciente en `paciente_etapas`
+            foreach ($etapas as $etapa) {
+                PacienteEtapas::create([
+                    'paciente_id' => $this->pacienteId,
+                    'etapa_id' => $etapa->etapa_id,
+                    'status' => 'Set Up', // Estado inicial
+                    'fecha_ini' => now(), // Fecha de inicio actual
+                ]);
+            }
+
+            // Resetear el tratamiento seleccionado y cerrar el modal
+            $this->reset('selectedNewTratamiento');
+            $this->closeModal();
+            $this->loadEtapas($this->selectedNewTratamiento);
+            // Emitir un evento para actualizar la lista de tratamientos en la vista principal si es necesario
+            $this->dispatch('tratamientoAsignado', 'Tratamiento asignado.');
+        } catch (\Exception $e) {
+            $this->dispatch('error', 'Ocurrió un error al guardar el tratamiento.');
         }
-
-        // 4. Cerrar el modal para asignar tratamiento
-        $this->showTratamientoModal = false;
-
-        // 5. Enviar notificación de éxito
-        $this->dispatch('tratamientoAsignado', 'Tratamiento asignado al paciente ' . $this->paciente->name);
-
-        // 6. Actualizar la selección de tratamientos para recargar las etapas del tratamiento recién asignado
-        $this->loadEtapas($this->selectedNewTratamiento);
     }
-
 
     // Nueva Documentación
     public function showDocumentacionModal(){
@@ -328,6 +345,7 @@ class HistorialPaciente extends Component
         $this->modalImg = false;
     }
 
+    // GESTIONAR ARCHIVOS ETAPA PACIENTE TRATAMIENTO
     public function showModalArchivo(){
         $this->modalArchivo = true;
     }
@@ -375,7 +393,7 @@ class HistorialPaciente extends Component
             $this->modalArchivo = false;
         }else{
             $this->showTratamientoModal = false;
-            $this->reset(['selectedTratamiento']);
+            // $this->reset(['selectedNewTratamiento']);
         }
         $this->loadEtapas($this->selectedTratamiento);
     }
@@ -384,5 +402,4 @@ class HistorialPaciente extends Component
     {
         $this->mostrarMenu[$etapaId] = isset($this->mostrarMenu[$etapaId]) ? !$this->mostrarMenu[$etapaId] : true;
     }
-
 }
