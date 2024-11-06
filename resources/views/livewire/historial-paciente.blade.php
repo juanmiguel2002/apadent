@@ -49,7 +49,7 @@
                 <tbody>
                     @foreach($etapas as $etapa)
                         <tr>
-                            <td class="px-4 text-center">{{$etapa->etapa->id}}</td>
+                            <td class="px-4 text-center">{{$etapa->id}}</td>
                             <td class="px-4 py-2 text-center">{{ $etapa->etapa->name }}</td>
                             <td class="px-4 py-2">
                                 @foreach ($etapa->mensajes as $mensaje)
@@ -84,7 +84,7 @@
                                             </button>
 
                                             <!-- Icono de flecha solo si se puede mostrar el submenú -->
-                                            @if ($etapa->status != 'Finalizado')
+                                            @if ($etapa->etapa_status != 'Finalizado')
                                                 <img class="ml-2 w-3 cursor-pointer" alt="Icono desplegable"
                                                     src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}"
                                                     wire:click="toggleMenu({{ $etapa->id }})">
@@ -150,12 +150,10 @@
                     @endforeach
                 </tbody>
             </table>
-            @if($mostrarBotonNuevaEtapa)
-                <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
-                    <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
-                    <strong wire:click='nuevaEtapa'>Añadir etapa</strong>
-                </div>
-            @endif
+            <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
+                <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
+                <strong wire:click='nuevaEtapa'>Añadir etapa</strong>
+            </div>
         </x-tabla>
         <div class="mb-5"></div>
     @endif
@@ -194,7 +192,7 @@
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="button" wire:click="saveTratamiento({{$tratamiento->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="button" wire:click="saveTratamiento" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>
