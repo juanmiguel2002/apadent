@@ -17,16 +17,11 @@ class Tratamiento extends Model
     // Relaciones
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class, 'paciente_trat', 'trat_id', 'paciente_id');
+        return $this->hasMany(PacienteTrat::class, 'trat_id');
     }
 
     public function etapas()
     {
-        return $this->belongsToMany(Etapa::class, 'tratamiento_etapa', 'trat_id', 'etapa_id');
+        return $this->hasMany(TratamientoEtapa::class, 'trat_id');
     }
-
-    // public function mensajes()
-    // {
-    //     return $this->hasMany(Mensaje::class, 'tratamientos_id');
-    // }
 }

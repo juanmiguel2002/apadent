@@ -19,11 +19,11 @@ class TratamientoEtapa extends Model
     // Relaciones
     public function tratamiento()
     {
-        return $this->belongsTo(Tratamiento::class, 'trat_id');
+        return $this->belongsTo(Tratamiento::class);
     }
 
     public function etapa()
     {
-        return $this->belongsTo(Etapa::class, 'etapa_id');
+        return $this->belongsTo(Etapa::class);
     }
 }

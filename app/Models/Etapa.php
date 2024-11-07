@@ -14,26 +14,24 @@ class Etapa extends Model
     protected $fillable = [
         'id',
         'name',
+        'fecha_ini',
+        'fecha_fin',
+        'status',
+        'revision'
     ];
 
     // Relaciones
-    public function tratamientos()
-    {
-        return $this->belongsToMany(Tratamiento::class, 'tratamiento_etapa', 'etapa_id', 'trat_id');
-    }
-
     public function pacientes()
     {
         return $this->belongsToMany(Paciente::class, 'paciente_etapas', 'etapa_id', 'paciente_id');
     }
 
-    public function pacienteEtapas()
+    public function tratamiento()
     {
-        return $this->hasMany(PacienteEtapas::class, 'id');
+        return $this->belongsTo(TratamientoEtapa::class, 'etapa_id');
     }
-
-    // public function mensajes()
-    // {
-    //     return $this->hasMany(Mensaje::class, 'etapa_id');
-    // }
+    public function mensajes()
+    {
+        return $this->hasMany(Mensaje::class, 'etapa_id');
+    }
 }

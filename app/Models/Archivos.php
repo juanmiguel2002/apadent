@@ -8,18 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Archivos extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'archivos';
     protected $fillable = [
         'ruta',
         'tipo',
-        'paciente_id',
-        'paciente_etapa_id',
+        'etapa_id',
     ];
 
     // Relación muchos a uno con pacienteEtapas
-    public function PacienteEtapas()
+    public function etapas()
     {
-        return $this->belongsTo(PacienteEtapas::class, 'paciente_etapa_id');
+        return $this->belongsTo(Etapa::class, 'etapa_id');
     }
 }

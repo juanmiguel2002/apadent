@@ -27,9 +27,4 @@ class PacienteTrat extends Model
     {
         return $this->belongsTo(Tratamiento::class, 'trat_id');
     }
-    
-    public function mensajes()
-    {
-        return $this->hasMany(Mensaje::class, 'paciente_trat_id');
-    }
 }

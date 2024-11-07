@@ -14,7 +14,7 @@ class Mensaje extends Model
         'mensaje',
         'tratamientos_id',
         'paciente_trat_id',
-        'paciente_etapas_id',
+        'etapas_id',
     ];
 
 
@@ -24,21 +24,7 @@ class Mensaje extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relación con el modelo PacienteTrat (tratamiento del paciente)
-    public function pacienteTratamiento()
-    {
-        return $this->belongsTo(PacienteTrat::class, 'paciente_trat_id');
-    }
-
-    // Relación con el modelo PacienteEtapa (etapa del tratamiento del paciente)
-    public function pacienteEtapa()
-    {
-        return $this->belongsTo(PacienteEtapas::class, 'paciente_etapas_id');
-    }
-
-    // Relación con el modelo Tratamiento (tratamiento relacionado)
-    public function tratamiento()
-    {
-        return $this->belongsTo(Tratamiento::class, 'tratamientos_id');
+    public function etapas() {
+        return $this->belongsTo(Etapa::class, 'etapa_id');
     }
 }
