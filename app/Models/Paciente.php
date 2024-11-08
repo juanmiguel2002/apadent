@@ -19,17 +19,18 @@ class Paciente extends Model
         'observacion',
         'obser_cbct',
         'odontograma_obser', // observacioones odontograma (pag perfil paciente )
-        'activo'
+        'activo',
+        'clinica_id'
     ];
 
     // Relaciones
     public function clinicas()
     {
-        return $this->belongsToMany(Clinica::class, 'clinicas_pacientes', 'pacientes_id', 'clinicas_id');
+        return $this->belongsTo(Clinica::class, 'clinica_id');
     }
 
     public function tratamientos()
     {
-        return $this->hasMany(PacienteTrat::class, 'paciente_id');
+        return $this->belongsToMany(Tratamiento::class, 'paciente_trat', 'paciente_id', 'trat_id');
     }
 }

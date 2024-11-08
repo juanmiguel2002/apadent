@@ -17,21 +17,23 @@ class Etapa extends Model
         'fecha_ini',
         'fecha_fin',
         'status',
-        'revision'
+        'revision',
+        'fases_id',
     ];
 
     // Relaciones
-    public function pacientes()
+    public function fase()
     {
-        return $this->belongsToMany(Paciente::class, 'paciente_etapas', 'etapa_id', 'paciente_id');
+        return $this->belongsTo(Fase::class);
     }
 
-    public function tratamiento()
+    public function archivos()
     {
-        return $this->belongsTo(TratamientoEtapa::class, 'etapa_id');
+        return $this->hasMany(Archivo::class);
     }
+
     public function mensajes()
     {
-        return $this->hasMany(Mensaje::class, 'etapa_id');
+        return $this->hasMany(Mensaje::class);
     }
 }

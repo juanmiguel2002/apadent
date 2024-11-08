@@ -64,19 +64,19 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     // Relaciones
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
-    }
-
     public function clinicas()
     {
         return $this->belongsToMany(Clinica::class, 'clinica_user', 'user_id', 'clinica_id');
     }
-
+    
     public function facturas()
     {
         return $this->hasMany(Factura::class, 'user_id');
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
     }
 
     public function mensajes()

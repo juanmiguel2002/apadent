@@ -5,25 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TratamientoEtapa extends Model
+class Fase extends Model
 {
     use HasFactory;
-
-    protected $table = 'tratamiento_etapa';
-
+    protected $table = 'fases';
     protected $fillable = [
+        'name',
         'trat_id',
-        'etapa_id',
     ];
-
     // Relaciones
     public function tratamiento()
     {
         return $this->belongsTo(Tratamiento::class);
     }
 
-    public function etapa()
+    public function etapas()
     {
-        return $this->belongsTo(Etapa::class);
+        return $this->hasMany(Etapa::class);
     }
+
 }

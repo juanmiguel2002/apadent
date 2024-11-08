@@ -62,6 +62,11 @@ class Clinica extends Model
 
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class, 'clinicas_pacientes', 'clinicas_id', 'pacientes_id');
+        return $this->hasMany(Paciente::class, 'clinica_id');
+    }
+
+    public function facturas()
+    {
+        return $this->hasMany(Factura::class, 'clinica_id');
     }
 }
