@@ -9,7 +9,7 @@
         <!-- Contenedor de los botones -->
         <div class="flex space-x-4">
             <!-- Primer botón -->
-            @can('doctor_user')
+            @can('doctor_admin')
                 <button wire:click="stripping" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -40,14 +40,15 @@
                                 alt="Foto {{$paciente->name}}">
                         </div>
                         <h1 class="text-gray-900 font-bold text-xl leading-8 my-1">{{$paciente->name}} {{$paciente->apellidos}}</h1>
-                        <h3 class="text-gray-600 font-semibold text-azul leading-6">{{$paciente->clinica->name}}</h3>
+                        {{-- <h3 class="text-gray-600 font-semibold text-azul leading-6">{{$paciente->clinicas[0]->name}}</h3> --}}
                         <ul class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:shadow py-2 px-3 mt-3 divide-y rounded shadow-sm">
                             <li class="flex items-center py-3">
                                 <span>Status</span>
-                                <span class="ml-auto"><button wire:click="toggleActivo"
+                                <span class="ml-auto">
+                                    <button wire:click="toggleActivo"
                                     class="{{ $paciente->activo ? 'bg-green-500' : 'bg-red-500' }} py-1 px-2 rounded text-white text-sm">
                                     {{ $paciente->activo ? 'Activo' : 'Inactivo' }}
-                            </button>
+                                    </button>
                                 </span>
                             </li>
                             <li class="flex items-center py-3">
@@ -60,7 +61,7 @@
                     <div class="my-4"></div>
                 </div>
                 <!-- Right Side -->
-                <div class="w-full md:w-9/12 mx-2 h-64 rounded-lg">
+                <div class="w-full md:w-9/12 mx-2 rounded-lg">
                     <!-- Profile tab -->
                     <div class="bg-white p-3 shadow-sm rounded-sm ">
                         <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8">
@@ -88,7 +89,7 @@
                                     <div class="px-4 py-2 text-azul">{{$paciente->telefono}}</div>
                                 </div>
                                 <div class="grid grid-cols-2">
-                                    <div class="px-4 py-2 font-semibold">Email:</div>
+                                    <div class="px-4 py-2 font-semibold">Email</div>
                                     <div class="px-4 py-2">
                                         <a class="text-azul" href="mailto:{{$paciente->email}}">{{$paciente->email}}</a>
                                     </div>
@@ -105,51 +106,102 @@
                     <div class="my-4"></div>
 
                     <!-- Tratamientos -->
-                    <div class="bg-white p-3 shadow-sm rounded-lg">
-                        <div class="grid grid-cols-2">
-                            <div>
-                                <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
-                                    <span clas="text-green-500">
-                                        <svg class="h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                    </span>
-                                    <span class="tracking-wide">Tratamientos</span>
-                                </div>
-                                <ul class="list-inside space-y-2">
-                                    @foreach ($tratamientos as $tratamiento)
-                                        <li>
-                                            <div class="text-teal-600">{{$tratamiento->tratamiento->name }} - {{$tratamiento->tratamiento->descripcion }}</div>
-                                            <div class="text-gray-500 text-xs">Fecha Inicio: {{date('d/m/Y', strtotime($tratamiento->created_at))}}</div>
-                                        </li>
-                                    @endforeach
-                                </ul>
+                    <div class="bg-white p-5 shadow-lg rounded-lg space-y-6">
+                        <!-- Título de la sección -->
+                        <div class="flex justify-evenly items-center space-x-8">
+                            <!-- Historial de Tratamientos -->
+                            <div class="flex items-center space-x-2 font-semibold text-gray-900">
+                                <span class="text-gray-500">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </span>
+                                <span class="tracking-wide text-xl">Historial de Tratamientos</span>
                             </div>
 
-                            {{-- Etapas --}}
-                            <div>
-                                <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M4 6h2v2H4zm0 5h2v2H4zm0 5h2v2H4zm16-8V6H8.023v2H18.8zM8 11h12v2H8zm0 5h12v2H8z"></path></svg>
-                                    <span class="tracking-wide">Etapas</span>
-                                </div>
-                                <ul class="list-inside space-y-2">
-                                    <li>
-                                        @foreach($paciente->etapas as $etapa)
-                                            <li class="bg-gray-100 p-4 rounded shadow">
-                                                <div class="flex justify-between items-center">
-                                                    <span class="font-semibold">{{ $etapa->name }}</span>
-                                                    <span class="text-sm text-gray-600">
-                                                        Próxima revisión: {{ $etapa->pivot->revisión ? \Carbon\Carbon::parse($etapa->pivot->revisión)->format('d/m/Y') : 'No asignada' }}
-                                                    </span>
-                                                </div>
-                                            </li>
-                                        @endforeach
-                                    </li>
-                                </ul>
-                            </div>
+                            <!-- Etapas -->
+                            {{-- <div class="flex items-center space-x-2 font-semibold text-gray-900">
+                                <span class="text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="h-6 w-6">
+                                        <path d="M4 6h2v2H4zm0 5h2v2H4zm0 5h2v2H4zm16-8V6H8.023v2H18.8zM8 11h12v2H8zm0 5h12v2H8z"></path>
+                                    </svg>
+                                </span>
+                                <span class="tracking-wide text-xl">Etapas</span>
+                            </div> --}}
                         </div>
+
+                        <!-- Contenedor de Tratamientos y Etapas -->
+                        <div class="space-y-8">
+                            @foreach ($tratamientos as $tratamiento)
+                                <div class="grid grid-cols-1 gap-6 items-start border-t pt-4">
+                                    <!-- Tratamiento -->
+                                    <div class="space-y-2">
+                                        <div class="text-teal-600 font-semibold text-lg cursor-pointer" wire:click='historial({{$paciente->id}}, {{$tratamiento->id}})'>
+                                            {{ $tratamiento->name }} - {{ $tratamiento->descripcion }}
+                                        </div>
+                                        <div class="text-gray-500 text-sm">Fecha Inicio: {{ date('d/m/Y', strtotime($tratamiento->created_at)) }}</div>
+                                    </div>
+
+                                    <!-- Fases y Etapas -->
+                                    <div class="space-y-6">
+                                        @foreach ($tratamiento->fases as $fase)
+                                            <div class="border-t pt-4">
+                                                <!-- Fase -->
+                                                <div class="flex justify-between items-center">
+                                                    <h3 class="text-lg font-semibold text-teal-700">{{ $fase->name }}</h3>
+                                                    <span class="text-sm text-gray-600">{{ $fase->created_at->format('d/m/Y') }}</span>
+                                                </div>
+
+                                                <!-- Etapas de la fase -->
+                                                <ul class="space-y-4 mt-4">
+                                                    @foreach ($fase->etapas as $etapa)
+                                                        <li class="p-4 rounded-lg shadow-md border {{ $etapa->status === 'Finalizado' ? 'bg-red-100 border-red-300' : 'bg-gray-100 border-gray-200' }}">
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="font-semibold text-md">{{ $etapa->name }}</span>
+                                                                @if ($etapa->status === 'Finalizado')
+                                                                    <span class="text-sm text-gray-800">
+                                                                        Finalizado el: {{ \Carbon\Carbon::parse($etapa->fecha_fin)->format('d/m/Y') }}
+                                                                    </span>
+                                                                @else
+                                                                    <span class="text-sm text-gray-600">
+                                                                        Próxima revisión: {{ $etapa->revision ? \Carbon\Carbon::parse($etapa->revision)->format('d/m/Y') : 'No asignada' }}
+                                                                    </span>
+                                                                @endif
+                                                            </div>
+                                                            <div class="mt-2 text-xs text-gray-500">
+                                                                <!-- Detalles adicionales de la etapa -->
+                                                                @if($etapa->mensajes->count() > 0)
+                                                                    <div class="mt-4">
+                                                                        <h4 class="text-sm font-semibold text-gray-700">Mensajes:</h4>
+                                                                        <ul class="space-y-2 mt-2">
+                                                                            @foreach ($etapa->mensajes as $mensaje)
+                                                                                <li class="bg-gray-50 p-3 rounded-md border-l-4 border-teal-500 shadow-sm">
+                                                                                    <div class="flex justify-between items-center">
+                                                                                        <span class="text-sm text-gray-800">{{ $mensaje->mensaje }}</span>
+                                                                                        <span class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($mensaje->created_at)->format('d/m/Y H:i') }}</span>
+                                                                                    </div>
+                                                                                    <div class="text-xs text-gray-600 mt-2">
+                                                                                        <span class="font-semibold">Usuario:</span> {{ $mensaje->user->name }}
+                                                                                    </div>
+                                                                                </li>
+                                                                            @endforeach
+                                                                        </ul>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-4 text-sm text-gray-500">No hay mensajes para esta etapa.</div>
+                                                                @endif
+                                                            </div>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
                     </div>
 
                     <div class="my-3"></div>
@@ -171,7 +223,7 @@
                                     </li>
                                     <li>
                                         <span class="font-semibold">Observación CBCT:</span>
-                                        <span class="text-azul">{{$paciente->obser_cbct ? $paciente->obser_cbct : "No hay ninguna observación"}}</span>
+                                        <span class="text-azul">{{$paciente->obser_cbct ? $paciente->obser_cbct : "No hay ninguna observación CBCT"}}</span>
                                     </li>
                                     <li>
                                         <span class="font-semibold">Observación Odontograma:</span>
@@ -179,21 +231,6 @@
                                     </li>
                                 </ul>
                             </div>
-
-                            {{-- Añadir observaciones? --}}
-                            {{-- <div>
-                                <div class="flex items-center space-x-2 font-semibold text-gray-900 leading-8 mb-3">
-                                    <span clas="text-green-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: rgba(0, 0, 0, 1);transform: ;msFilter:;"><path d="M21 3h-7a2.98 2.98 0 0 0-2 .78A2.98 2.98 0 0 0 10 3H3a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h5.758a2.01 2.01 0 0 1 1.414.586l1.121 1.121c.009.009.021.012.03.021.086.08.182.15.294.196h.002a.996.996 0 0 0 .762 0h.002c.112-.046.208-.117.294-.196.009-.009.021-.012.03-.021l1.121-1.121A2.01 2.01 0 0 1 15.242 20H21a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 15h-4.758a4.03 4.03 0 0 0-2.242.689V6c0-.551.448-1 1-1h6v13z"></path></svg>
-                                    </span>
-                                    <span class="tracking-wide">Añadir Observaciones</span>
-                                </div>
-                                <ul class="list-inside space-y-2">
-                                    <li>
-
-                                    </li>
-                                </ul>
-                            </div> --}}
                         </div>
                     </div>
                     <!-- End of profile tab -->
@@ -203,7 +240,7 @@
         </div>
     </div>
 
-    {{-- Añadir IMG o ZIP --}}
+    {{-- Añadir Stripping--}}
     {{-- @if ($showModal)
       <x-dialog-modal wire:model="showModal" maxWidth="lg">
           <x-slot name="title">
@@ -252,6 +289,11 @@
                                 <x-label for="name" value="Nombre*" class="text-azul text-base"/>
                                 <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" />
                                 <x-input-error for="name" />
+                            </div>
+                            <div class="col-span-2 sm:col-span-1 mb-4">
+                                <x-label for="apellidos" value="Apellidos*" class="text-azul text-base"/>
+                                <x-input type="text" id="apellidos" class="w-full rounded-md" wire:model.defer="apellidos" />
+                                <x-input-error for="apellidos" />
                             </div>
 
                             <div class="col-span-2 sm:col-span-1 mb-4">
