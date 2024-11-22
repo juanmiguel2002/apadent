@@ -50,7 +50,7 @@
                     @foreach($etapas as $etapa)
                         <tr>
                             <td class="px-4 text-center">{{$etapa->id}}</td>
-                            <td class="px-4 py-2 text-center">{{ $etapa->etapa->name }}</td>
+                            <td class="px-4 py-2 text-center">{{ $etapa->name }}</td>
                             <td class="px-4 py-2">
                                 @foreach ($etapa->mensajes as $mensaje)
                                     <div class="text-left mb-2">
@@ -103,13 +103,13 @@
                                             </div>
                                         @endif
                                     @endif
-                            @endforeach
+                                @endforeach
                             </td>
                             <td class="px-4 py-2 text-center">
                                 @if($etapa->revision)
                                     <span class="text-sm font-semibold">{{ \Carbon\Carbon::parse($etapa->revision)->format('d-m-Y') }}</span>
                                 @else
-                                    <button wire:click="abrirModalRevision({{ $etapa->etapa->id }})" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
+                                    <button wire:click="abrirModalRevision({{ $etapa->id }})" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
                                         Asignar Fecha
                                     </button>
                                 @endif
@@ -117,8 +117,7 @@
                             {{-- Archivos --}}
                             <td class="px-4 py-2">
                                 <div class="flex justify-center items-center">
-                                    @if ($this->tieneArchivos($etapa->etapa->id, true) == true)
-                                    {{-- <p class="flex items-center">Descargar</p> --}}
+                                    @if ($this->tieneArchivos($etapa->id, true) == true)
                                         <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}" class="flex items-center">
                                             <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3"/>
@@ -135,7 +134,7 @@
                             {{-- Imágenes --}}
                             <td class="px-4 py-2">
                                 <div class="flex justify-center items-center">
-                                    @if ($this->tieneArchivos($etapa->etapa->id, false) == true)
+                                    @if ($this->tieneArchivos($etapa->id, false) == true)
                                         <!-- Mostrar botón 'Ver' si tiene archivos -->
                                         <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
                                         <span wire:click="verImg({{ $etapa->id }})" class="cursor-pointer font-light text-sm">Ver</span>
@@ -231,7 +230,7 @@
     @endif
 
     {{-- Documentación --}}
-    @if ($documents)
+        @if ($documents)
         <x-dialog-modal wire:model="documents" >
             <x-slot name="title">
                 <div class="flex justify-between items-center">

@@ -24,7 +24,7 @@ class Etapa extends Model
     // Relaciones
     public function fase()
     {
-        return $this->belongsTo(Fase::class);
+        return $this->belongsTo(Fase::class, 'fases_id');
     }
 
     public function archivos()

@@ -8,11 +8,9 @@ use App\Mail\CambioEstado;
 use App\Models\Clinica;
 use App\Models\Etapa;
 use App\Models\Mensaje;
-use App\Models\PacienteEtapas;
+use App\Models\Archivo;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use App\Models\TratamientoEtapa;
-use App\Models\Archivos;
 use App\Mail\NotificacionMensaje;
 use App\Mail\NotificacionRevision;
 use Illuminate\Support\Facades\Mail;
@@ -33,7 +31,6 @@ class HistorialPaciente extends Component
     public $modalImg, $imagenes = [], $modalArchivo = false, $archivos = [];
     public $selectedEtapa, $documentacion;
     public $mostrarBotonNuevaEtapa = false, $ultimaEtapa;
-
 
     public $statuses = [
         'En proceso' => 'bg-green-600',
@@ -58,7 +55,7 @@ class HistorialPaciente extends Component
             $this->loadEtapas($tratId);
         }
 
-        $this->archivo = Archivos::where('paciente_id', $this->pacienteId)->where('tipo', 'zip')->get();
+        $this->archivo = Archivo::where('etapa_id', $this->pacienteId)->where('tipo', 'zip')->get();
         $clinica = Clinica::find(Auth::user()->clinicas->first()->id);
         $this->tratamientos = $clinica->tratamientos; // Obtiene todos los tratamientos relacionados
     }
@@ -66,23 +63,18 @@ class HistorialPaciente extends Component
     public function loadEtapas($trat = null)
     {
         if ($trat) {
-            $this->etapas = PacienteEtapas::with(['etapa', 'mensajes.user'])
-                ->where('paciente_id', $this->pacienteId)
-                ->whereHas('etapa.tratamientos', function ($query) {
-                    $query->where('tratamientos.id', $this->tratId);
-                })
-                ->get();
+            $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
+            ->whereHas('fase.tratamiento', function ($query) use ($trat) {
+                $query->where('trat_id', $trat);
+            })
+            ->get();
         } else {
             $this->tratId = null;
-            // $this->etapas = DB::table('historial_paciente')
-            //     ->where('trat', $this->pacienteId)
-            //     ->get();
-            $this->etapas = PacienteEtapas::with(['etapa', 'mensajes.user'])
-                ->where('paciente_id', $this->pacienteId)
-                ->whereHas('etapa.tratamientos', function ($query) {
-                    $query->where('tratamientos.id', $this->tratamientoId);
-                })
-                ->get();
+            $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
+            ->whereHas('fase.tratamiento', function ($query) {
+                $query->where('id', $this->tratamientoId);
+            })
+            ->get();
         }
     }
 
@@ -95,9 +87,9 @@ class HistorialPaciente extends Component
     public function tieneArchivos($etapaId, $archivo)
     {
         if($archivo){
-           return Archivos::where('paciente_etapa_id', $etapaId)->where('tipo', 'zip')->exists();
+           return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
         }
-        return Archivos::where('paciente_etapa_id', $etapaId)->exists();
+        return Archivo::where('etapa_id', $etapaId)->exists();
     }
 
     // ENVIAR MENSAJE TRATAMIENTO ETAPA PACIENTE
@@ -140,30 +132,29 @@ class HistorialPaciente extends Component
     }
 
     // CAMBIO ESTADO PACIENTE ETAPA
-    public function estado($pacienteId, $etapaId, $newStatus)
+    public function estado($etapaId, $newStatus)
     {
-        $tratamientoEtapa = TratamientoEtapa::where('etapa_id', $etapaId)->first();
+        $etapa = Etapa::find($etapaId);
 
-        if ($tratamientoEtapa) {
-            if($newStatus === 'Finalizado'){
-                PacienteEtapas::where('paciente_id', $pacienteId)
-                ->where('etapa_id', $tratamientoEtapa->etapa_id)
-                ->update(['status' => $newStatus, 'fecha_fin' => now()]);
-            }else{
-                PacienteEtapas::where('paciente_id', $pacienteId)
-                ->where('etapa_id', $tratamientoEtapa->etapa_id)
-                ->update(['status' => $newStatus]);
-            }
-
-            $this->mostrarMenu = false; // Cerrar el menú
-            $this->dispatch('estadoActualizado');
-            $this->loadEtapas($this->tratamientoId);
-
-            $trat = Tratamiento::find($this->tratamientoId);
-            $etapa = Etapa::find($etapaId);
-
-            Mail::to($this->paciente->clinica->email)->send(new CambioEstado($this->paciente, $newStatus, $trat,$etapa));
+        if($newStatus === 'Finalizado'){
+            $etapa->update(['status' => $newStatus, 'fecha_fin' => now()]);
+        }else{
+            $etapa->status = $newStatus;
         }
+        $etapa->save();
+        $this->mostrarMenu = false; // Cerrar el menú
+        $this->dispatch('estadoActualizado');
+        $this->resetPage();
+
+        // Enviar email a la clínica
+        // $paciente = Paciente::find($pacienteId);
+        // $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
+        // $etapa = Etapa::find($etapaId);
+        // $trat = Tratamiento::find($tratamientoEtapa->trat_id);
+
+        // if ($clinica && $clinica->email) {
+        //     Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $trat));
+        // }
     }
 
     // REVISIÓN FECHA
@@ -176,7 +167,7 @@ class HistorialPaciente extends Component
     public function revisionEtapa(){
 
         // Actualizar la revisión en la tabla paciente_etapas
-        $etapaPaciente = PacienteEtapas::find($this->etapaId);
+        $etapaPaciente = Etapa::find($this->etapaId);
 
         if ($etapaPaciente) {
             $etapaPaciente->revision = $this->revision; // Actualiza el campo 'revision'
@@ -194,7 +185,7 @@ class HistorialPaciente extends Component
     public function verificarUltimaEtapa()
     {
         // Verificar si la última etapa está finalizada
-        $this->ultimaEtapa = PacienteEtapas::where('paciente_id', $this->pacienteId)
+        $this->ultimaEtapa = Etapa::where('paciente_id', $this->pacienteId)
                         ->orderBy('created_at', 'desc')
                         ->first();
 
@@ -204,7 +195,7 @@ class HistorialPaciente extends Component
     public function nuevaEtapa()
     {
         // Obtener la última etapa para el paciente y tratamiento dado
-        $ultimaEtapa = PacienteEtapas::where('paciente_id', $this->pacienteId)
+        $ultimaEtapa = Etapa::where('paciente_id', $this->pacienteId)
                 // ->where('tratamiento_id', $this->selectedTratamiento) // Ajusta según tu modelo
                 ->orderBy('created_at', 'desc')
                 ->first();
@@ -222,13 +213,13 @@ class HistorialPaciente extends Component
         ]);
 
         // Asociar la nueva etapa al tratamiento en la tabla tratamiento_etapa
-        TratamientoEtapa::create([
+        Etapa::create([
             'trat_id' => $this->tratamientoId,
             'etapa_id' => $etapa->id
         ]);
 
         // Asociar la nueva etapa al paciente en la tabla paciente_etapas
-        PacienteEtapas::create([
+        Etapa::create([
             'paciente_id' => $this->pacienteId,
             'etapa_id' => $etapa->id,
             'fecha_ini' => now(),
