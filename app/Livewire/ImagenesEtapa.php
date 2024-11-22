@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Archivos;
+use App\Models\Archivo;
 use Livewire\Component;
 
 class ImagenesEtapa extends Component
@@ -12,9 +12,9 @@ class ImagenesEtapa extends Component
     public function mount($etapa, $paciente){
         $this->etapa = $etapa;
         $this->paciente = $paciente;
-        $this->archivos = Archivos::where('paciente_etapa_id', $this->etapa->id)
-        ->where('paciente_id', $paciente->id)->get();
-        // dd($this->archivos, $this->etapa, $this->paciente);
+        $this->archivos = Archivo::where('etapa_id', $this->etapa->id)
+            ->whereIn('tipo', ['jpg', 'jpeg', 'png'])
+            ->get();
     }
 
     public function render()
