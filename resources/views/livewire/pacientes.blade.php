@@ -1,6 +1,5 @@
 <div>
     @can('paciente_view')
-
         <div class="px-4 py-4 flex justify-between items-center">
             <div class="flex justify-start items-center">
                 <span class="uppercase text-base text-azul font-light">Ordenar por: </span>
@@ -33,7 +32,7 @@
                 <div class="flex items-center">
                     <x-input class="text-azul" type="text"
                         wire:model.live="search"
-                        placeholder="Buscar paciente" />
+                        placeholder="Buscar paciente.." />
                 </div>
 
                 @can('doctor_admin')
@@ -63,59 +62,64 @@
                     </thead>
                     <tbody class="bg-gray-200 ">
                         @foreach($pacientes as $paciente)
-                            <tr>
-                                {{-- <td class="text-center px-4 py-2">{{ $paciente->id }}</td> --}}
-                                <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
-                                <td class="text-center px-4 py-2 cursor-pointer" wire:click='showPaciente({{$paciente->id}})'>{{ $paciente->name . " " . $paciente->apellidos }}</td>
-                                <td class="text-center px-4 py-2">{{ $paciente->telefono }}</td>
+                        <tr>
+                            {{-- <td class="text-center px-4 py-2">{{ $paciente->id }}</td> --}}
+                            <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
+                            <td class="text-center px-4 py-2 cursor-pointer" wire:click='showPaciente({{$paciente->id}})'>{{ $paciente->nombre . " " . $paciente->apellidos }}</td>
+                            <td class="text-center px-4 py-2">{{ $paciente->telefono }}</td>
+                            <td class="text-center px-4 py-2">{{ $paciente->tratamiento_name}} - {{ $paciente->tratamiento_descripcion }}</td>
+                            @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
+                                @if ($paciente->etapa_status == $status)
+                                    <td class="p-3 text-center flex justify-center items-center mt-4">
+                                        @if ($status === 'Finalizado')
+                                            <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
+                                                <span>{{ $status }}</span>
+                                            </span>
+                                        @else
+                                            <button wire:click="toggleMenu({{ $paciente->etapa_id }})"
+                                                class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $paciente->etapa_status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                @if ($paciente->etapa_status == 'Finalizado') disabled @endif>
+                                                <span>{{ $status }}</span>
+                                            </button>
+                                            <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
 
-                                <td class="text-center px-4 py-2">{{ $paciente->tratamiento_name }} - {{ $paciente->tratamiento_descripcion }}</td>
-                                @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
-                                    @if ($paciente->etapa_status == $status)
-                                        <td class="p-3 text-center flex justify-center items-center mt-4">
-                                            @if ($status === 'Finalizado')
-                                                <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
-                                                    <span>{{ $status }}</span>
-                                                </span>
-                                            @else
-                                                <button wire:click="toggleMenu" class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
-                                                    <span>{{ $status }}</span>
-                                                </button>
-                                                <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
-
-                                                @if ($mostrar)
-                                                    <div class="ml-2">
-                                                        @foreach ($statuses as $optionStatus => $optionColor)
-                                                            <div wire:click="estado({{ $paciente->id }}, {{ $paciente->etapa_id }}, '{{ $optionStatus }}')"
-                                                                class="cursor-pointer text-white {{ $optionColor }} my-2 rounded-lg hover:bg-opacity-75 px-2">
-                                                                {{ $optionStatus }}
-                                                            </div>
-                                                        @endforeach
+                                            @if ($paciente->etapa_status != 'Finalizado' && !empty($mostrarMenu[$paciente->etapa_id]))
+                                            <div class="ml-8 mt-2 space-y-1">
+                                                @foreach ($statuses as $optionStatus => $optionColor)
+                                                    <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
+                                                        wire:click="estado({{ $paciente->etapa_id }}, '{{ $optionStatus }}')">
+                                                        {{ $optionStatus }}
                                                     </div>
-                                                @endif
-                                            @endif
-                                        </td>
-                                    @endif
-                                @endforeach
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @endif
+                                    </td>
+                                @endif
+                            @endforeach
 
-                                <td class="text-center px-4 py-2">{{ $paciente->etapa_name }}</td>
-                                <td class="text-center border px-4 py-2">
-                                    <button wire:click="showHistorial({{ $paciente->id }})">
-                                        <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
-                                    </button>
-                                </td>
-                            </tr>
+                            <td class="text-center px-4 py-2">{{ $paciente->fase_name }} <br> {{$paciente->etapa_name}}</td>
+                            <td class="text-center border px-4 py-2">
+                                <button wire:click="showHistorial({{ $paciente->id }})">
+                                    <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
+                                </button>
+                            </td>
+                        </tr>
+
                         @endforeach
                     </tbody>
                 </table>
             @else
-                <div class="px-6 py-4 mt-4">
-                    No existe ningún registro.
+                <div class="px-6 py-4 mt-4 text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+                    </svg>
+                    <span class="font-medium">No existe ningún registro.</span>
                 </div>
             @endif
-            @if ($pacientes->hasPages())
+            {{-- @if ($pacientes->hasPages())
                 {{ $pacientes->links('vendor.pagination.paginacion') }}
-            @endif
+            @endif --}}
         </x-tabla>
 
         {{-- Añadir paciente --}}
@@ -148,12 +152,12 @@
 
                                     <div class="col-span-2 sm:col-span-1 mb-4">
                                         <x-label for="name" value="Nombre*" class="text-azul text-base"/>
-                                        <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" placeholder="Strat" />
+                                        <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" placeholder="Nombre" />
                                         <x-input-error for="name" />
                                     </div>
                                     <div class="col-span-2 sm:col-span-1 mb-4">
                                         <x-label for="name" value="Apellidos*" class="text-azul text-base"/>
-                                        <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="apellidos" placeholder="clinica" />
+                                        <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="apellidos" placeholder="Apellidos" />
                                         <x-input-error for="apellidos" />
                                     </div>
 
@@ -191,7 +195,7 @@
                                         <x-input-error for="observacion" />
                                     </div>
                                     <div class="col-span-2 mb-3">
-                                        <x-label for="img_paciente" class="block text-md text-azul capitalize">Foto paciente</x-label>
+                                        <x-label for="img_paciente" class="block text-md text-azul capitalize">Foto paciente*</x-label>
                                         <x-input wire:model="img_paciente" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                         <x-input-error for="img_paciente" />
                                     </div>

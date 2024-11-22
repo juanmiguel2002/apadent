@@ -27,7 +27,7 @@ class Pacientes extends Component
     public $tratamientos, $clinica_id, $paciente, $paciente_id;
     public $num_paciente, $name, $apellidos, $email, $telefono, $fecha_nacimiento;
     public $observacion, $obser_cbct;
-    public $showModal = false, $mostrar = false;
+    public $showModal = false, $mostrarMenu = [];
     public $imagenes = [], $cbct = [], $img_paciente;
     public $selectedTratamiento, $status = "Set Up", $activo = false;
 
@@ -99,50 +99,36 @@ class Pacientes extends Component
                 break;
         }
 
+        // Consulta para obtener los pacientes con sus tratamientos, fases y etapas relacionadas
         $pacientes = Paciente::select(
             'pacientes.*',
-            'tratamientos.id as tratamiento_id',
+            'pacientes.name as nombre',
             'tratamientos.name as tratamiento_name',
             'tratamientos.descripcion as tratamiento_descripcion',
             'etapas.id as etapa_id',
-            'etapas.name as etapa_name',
-            'etapas.status as etapa_status'
+            'etapas.status as etapa_status',
+            'fases.name as fase_name',
+            'etapas.name as etapa_name'
         )
-        ->where(function ($query) {  // Búsqueda
+        ->join('clinicas', 'pacientes.clinica_id', '=', 'clinicas.id')
+        ->join('paciente_trat', function ($join) {
+            $join->on('pacientes.id', '=', 'paciente_trat.paciente_id')
+                ->whereRaw('paciente_trat.id = (SELECT MAX(id) FROM paciente_trat WHERE paciente_id = pacientes.id)');
+        })
+        ->join('tratamientos', 'paciente_trat.trat_id', '=', 'tratamientos.id')
+        ->join('fases', 'tratamientos.id', '=', 'fases.trat_id')
+        ->join('etapas', 'fases.id', '=', 'etapas.fases_id')
+        ->where(function ($query) {
+            $query->where('etapas.status', '<>', 'Finalizado') // Mostrar solo etapas no finalizadas
+                ->orWhere('etapas.status', '=', 'Finalizado'); // Incluir las etapas finalizadas con indicación
+        })
+        ->where(function ($query) { // Búsqueda por nombre, apellidos o teléfono
             $query->where('pacientes.name', 'like', '%' . $this->search . '%')
                 ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%')
                 ->orWhere('pacientes.telefono', 'like', '%' . $this->search . '%');
         })
-        ->join('clinicas', 'pacientes.clinica_id', '=', 'clinicas.id') // Relación entre clínicas y pacientes
-        ->leftJoin('paciente_trat', function ($join) {
-            $join->on('pacientes.id', '=', 'paciente_trat.paciente_id')
-                ->whereRaw('paciente_trat.id = (SELECT MAX(id) FROM paciente_trat WHERE paciente_id = pacientes.id)');
-        })
-        ->leftJoin('tratamientos', 'paciente_trat.trat_id', '=', 'tratamientos.id')
-        ->leftJoin('fases', 'tratamientos.id', '=', 'fases.trat_id')
-        ->leftJoin('etapas', 'fases.id', '=', 'etapas.fases_id')
-        ->leftJoin('archivos', 'etapas.id', '=', 'archivos.etapa_id') // Archivos relacionados con etapas
-        ->where('pacientes.activo', $this->activo ? 0 : 1)  // Filtrar solo pacientes activos o inactivos
-        ->where(function ($query) {
-            $query->where(function ($subquery) {
-                // Buscar etapas que no estén finalizadas
-                $subquery->where('etapas.status', '!=', 'Finalizado')
-                        ->orWhereNull('etapas.status');
-            })
-            ->orWhere(function ($subquery) {
-                // Mostrar la última etapa finalizada si no hay etapas activas
-                $subquery->where('etapas.status', '=', 'Finalizado')
-                        ->whereNotExists(function ($subSubquery) {
-                            // Verificar si hay etapas no finalizadas
-                            $subSubquery->select(DB::raw(1))
-                                        ->from('etapas as e')
-                                        ->whereColumn('e.fases_id', 'fases.id')
-                                        ->where('e.status', '!=', 'Finalizado');
-                        });
-            });
-        })
-        ->groupBy('pacientes.id')
-        ->orderBy($orderByColumn, $orderByDirection)
+        ->where('pacientes.activo', $this->activo ? 0 : 1) // Filtrar por pacientes activos o inactivos
+        ->orderBy($orderByColumn, $orderByDirection) // Ordenar por columna seleccionada
         ->paginate($this->perPage);
 
         return view('livewire.pacientes', [
@@ -172,13 +158,8 @@ class Pacientes extends Component
             'telefono' => $this->telefono,
             'observacion' => $this->observacion,
             'obser_cbct' => $this->obser_cbct,
+            'clinica_id' => Auth::user()->clinicas->first()->id,
         ]);
-
-        // Obtener la clínica del usuario autenticado
-        $clinica = Auth::user()->clinicas()->first();
-
-        // Asociar el paciente con la clínica
-        $clinica->pacientes()->attach($paciente->id);
 
         // 2. Asociar tratamiento al paciente
         PacienteTrat::create([
@@ -186,8 +167,15 @@ class Pacientes extends Component
             'trat_id' => $this->selectedTratamiento,
         ]);
 
-        // // 3. Obtener las etapas del tratamiento seleccionado y asociarlas al paciente
+        // 3. Obtener las etapas del tratamiento seleccionado y asociarlas al paciente
         $etapas = Fase::where('trat_id', $this->selectedTratamiento)->get();
+
+        Etapa::create([
+            'name' => 'Inicio',
+            'fecha_ini' => now(),
+            'status' => 'Set Up', // Por defecto, las etapas están en estado "Set Up"
+            'fases_id' => $etapas->first()->id,
+        ]);
 
         // 4. Crear carpetas para el paciente (si es necesario)
         $this->createPacienteFolders($paciente->id);
@@ -220,7 +208,7 @@ class Pacientes extends Component
                     $archivo = Archivo::create([
                         'ruta' => $path,
                         'tipo' => $extension,
-                        'etapa_id' => $etapa->etapa_id,
+                        'etapa_id' => $etapa->id,
                     ]);
                 }
             }
@@ -244,6 +232,7 @@ class Pacientes extends Component
         }
 
         // Enviar email a la clínica
+        $clinica = Clinica::find($paciente->clinica_id);
         if ($clinica && $clinica->email) {
             Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($paciente));
         }
@@ -293,34 +282,29 @@ class Pacientes extends Component
     }
 
     // CAMBIAR ESTADO PACIENTE ETAPA
-    public function estado($pacienteId, $etapaId, $newStatus)
+    public function estado($etapaId, $newStatus)
     {
-        $tratamientoEtapa = TratamientoEtapa::where('etapa_id', $etapaId)->first();
+        $etapa = Etapa::find($etapaId);
 
-        if ($tratamientoEtapa) {
-            if($newStatus === 'Finalizado'){
-                Etapa::where('id', $tratamientoEtapa->etapa_id)
-                ->update(['status' => $newStatus, 'fecha_fin' => now()]);
-            }else{
-                Etapa::where('id', $tratamientoEtapa->etapa_id)
-                ->update(['status' => $newStatus]);
-            }
-
-            $this->mostrar = false; // Cerrar el menú
-            $this->dispatch('estadoActualizado');
-            $this->resetPage();
-
-            // Enviar email a la clínica
-            $paciente = Paciente::find($pacienteId);
-            $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
-            $etapa = Etapa::find($etapaId);
-            $trat = Tratamiento::find($tratamientoEtapa->trat_id);
-
-            if ($clinica && $clinica->email) {
-                Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $trat));
-            }
-
+        if($newStatus === 'Finalizado'){
+            $etapa->update(['status' => $newStatus, 'fecha_fin' => now()]);
+        }else{
+            $etapa->status = $newStatus;
         }
+        $etapa->save();
+        $this->mostrarMenu = false; // Cerrar el menú
+        $this->dispatch('estadoActualizado');
+        $this->resetPage();
+
+        // Enviar email a la clínica
+        // $paciente = Paciente::find($pacienteId);
+        // $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
+        // $etapa = Etapa::find($etapaId);
+        // $trat = Tratamiento::find($tratamientoEtapa->trat_id);
+
+        // if ($clinica && $clinica->email) {
+        //     Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $trat));
+        // }
     }
 
     public function showPaciente($id_paciente){
@@ -350,8 +334,8 @@ class Pacientes extends Component
         $this->showModal = false;
     }
 
-    public function toggleMenu()
+    public function toggleMenu($etapaId)
     {
-        $this->mostrar = !$this->mostrar;
+        $this->mostrarMenu[$etapaId] = isset($this->mostrarMenu[$etapaId]) ? !$this->mostrarMenu[$etapaId] : true;
     }
 }
