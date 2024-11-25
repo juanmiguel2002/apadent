@@ -2,9 +2,6 @@
 
 namespace App\Mail;
 
-use App\Models\Paciente;
-use App\Models\PacienteEtapas;
-use App\Models\TratamientoEtapa;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -20,7 +17,7 @@ class NotificacionMensaje extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(Paciente $paciente, $etapa, $trat, $mensaje)
+    public function __construct($paciente, $etapa, $trat, $mensaje)
     {
         $this->paciente = $paciente;
         $this->etapa = $etapa;

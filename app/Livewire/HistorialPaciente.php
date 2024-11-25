@@ -13,6 +13,7 @@ use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
 use App\Mail\NotificacionMensaje;
 use App\Mail\NotificacionRevision;
+use App\Models\Fase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,7 +21,7 @@ class HistorialPaciente extends Component
 {
     use WithFileUploads;
 
-    public $paciente, $pacienteId;
+    public $clinica, $paciente, $pacienteId;
     public $tratamiento, $tratamientos, $tratamientoId;
     public $etapa_paciente = [], $etapas;
     public $mensajes = [], $revision;
@@ -50,14 +51,14 @@ class HistorialPaciente extends Component
         $this->pacienteId = $this->paciente->id;
         $this->tratId = $tratId; // Tratamiento pasado por la URL (si existe)
         $this->tratamiento = $tratamiento; // Tratamiento pasado por la URL (si existe)
-
+        $this->clinica = Clinica::find($this->paciente->clinica_id);
         // Cargar las etapas asociadas al tratamiento seleccionado (si existe un tratamiento)
         if($this->tratId){
             $this->loadFases($tratId);
         }
 
         $this->archivo = Archivo::where('etapa_id', $this->pacienteId)->where('tipo', 'zip')->get();
-        dd($this->archivo);
+        // dd($this->archivo);
     }
 
     public function loadFases($trat = null)
@@ -83,6 +84,7 @@ class HistorialPaciente extends Component
             // dd($this->etapas);
         }
     }
+
     public function toggleAcordeon($faseName)
     {
         // Alternar la visibilidad del acordeón para la fase
@@ -156,20 +158,20 @@ class HistorialPaciente extends Component
         $Tmensaje = Mensaje::create([
             'user_id' => auth()->id(),
             'mensaje' => $mensaje,
-            'tratamientos_id' => $this->tratId ? $this->tratId : $this->tratamientoId,
-            'paciente_trat_id' => $paciente_trat->id,
-            'paciente_etapas_id' => $etapaId,
+            'etapa_id' => $etapaId,
         ]);
         $Tmensaje->save();
 
         // Limpiar el campo de mensaje
         $this->mensajes[$etapaId] = '';
-        $this->loadEtapas($this->tratId ? $this->tratId : $this->tratamientoId);
+        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
         $this->dispatch('mensaje');
+
         $etapa = Etapa::find($etapaId);
+        // $fase = Fase::find($this->tratId ? $this->tratId : $this->tratamientoId);
         $trat = Tratamiento::find($this->tratId ? $this->tratId : $this->tratamientoId);
 
-        Mail::to($this->paciente->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
+        Mail::to($this->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
 
     }
 
@@ -219,7 +221,7 @@ class HistorialPaciente extends Component
             $this->modalOpen = false;
             Mail::to($this->paciente->clinica->email)->send(new NotificacionRevision($this->paciente, $etapaPaciente));
 
-            $this->loadEtapas($this->selectedTratamiento);
+            $this->loadFases($this->selectedTratamiento);
         }
     }
 
@@ -269,7 +271,7 @@ class HistorialPaciente extends Component
         ]);
         // Emitir un evento para actualizar la vista
         $this->dispatch('etapa');
-        $this->loadEtapas($this->selectedTratamiento);
+        $this->loadFases($this->selectedTratamiento);
     }
 
     // GESTIÓN NEW TRATAMIENTO
@@ -321,7 +323,7 @@ class HistorialPaciente extends Component
             // Resetear el tratamiento seleccionado y cerrar el modal
             $this->reset('selectedNewTratamiento');
             $this->closeModal();
-            $this->loadEtapas($this->selectedNewTratamiento);
+            $this->loadFases($this->selectedNewTratamiento);
             // Emitir un evento para actualizar la lista de tratamientos en la vista principal si es necesario
             $this->dispatch('tratamientoAsignado', 'Tratamiento asignado.');
         } catch (\Exception $e) {
@@ -428,7 +430,7 @@ class HistorialPaciente extends Component
             $this->showTratamientoModal = false;
             // $this->reset(['selectedNewTratamiento']);
         }
-        $this->loadEtapas($this->selectedTratamiento);
+        $this->loadFases($this->selectedTratamiento);
     }
 
     public function toggleMenu($etapaId)

@@ -41,7 +41,7 @@
                     </button>
                     @if($mostrarMenu[$etapa->fase->name] ?? false)
                         <div class="px-4 py-2">
-                            <table class="min-w-full bg-gray-50 rounded-md">
+                            <table class="min-w-full bg-gray-50 rounded-t-md">
                                 <thead>
                                     <tr>
                                         <th class="px-4 py-2 bg-azul">ID</th>
@@ -127,7 +127,7 @@
                                             <td class="px-4 py-2">
                                                 <div class="flex justify-center items-center">
                                                     @if ($this->tieneArchivos($etapa->id, true) == true)
-                                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo->ruta]) }}" class="flex items-center">
+                                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}" class="flex items-center">
                                                             <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
                                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3"/>
                                                             </svg>

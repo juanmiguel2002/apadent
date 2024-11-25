@@ -25,7 +25,6 @@
 </head>
 
 <body style="box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; position: relative; -webkit-text-size-adjust: none; background-color: #ffffff; color: #718096; height: 100%; line-height: 1.4; margin: 0; padding: 0; width: 100% !important;">
-
     <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation"
         style="box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #edf2f7; margin: 0; padding: 0; width: 100%;">
         <tr>
@@ -50,17 +49,15 @@
                                 <!-- Body content -->
                                 <tr>
                                     <td class="content-cell" style="box-sizing: border-box; max-width: 100vw; padding: 32px;">
-                                        {{-- <img src="{{ $url }}" alt="Laboratorio Strat" style="box-sizing: border-box; max-width: 100%; margin-bottom: 20px;"> --}}
-
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
                                             ¡Hola!
                                         </p>
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
-                                            Has recibido un nuevo mensaje del tratamiento <strong>{{ $trat->name }} - {{ $trat->descripcion }}</strong> de la {{$etapa->name }} del paciente <strong>{{ $paciente->name }} {{ $paciente->apellidos }}</strong>
+                                            Has recibido un nuevo mensaje del tratamiento <strong>{{ $trat->name }} - {{ $trat->descripcion }}</strong> de la {{$etapa->fase->name }} de la etapa {{$etapa->name}} del paciente <strong>{{ $paciente->name }} {{ $paciente->apellidos }}</strong>
                                         </p>
 
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
-                                            Este es el mensaje: <strong>{{ $mensaje->mensaje }}</strong>
+                                            Este es el mensaje: <strong>{{ $mensaje }}</strong>
                                         </p>
 
                                         <table class="action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation"
