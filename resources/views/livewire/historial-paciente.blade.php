@@ -36,8 +36,18 @@
         <div class="space-y-4">
             @foreach($etapas as $etapa)
                 <div class="bg-white shadow-md rounded-md space-y-4">
-                    <button wire:click="toggleAcordeon('{{ $etapa->fase->name }}')" class="w-full text-left px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
-                        {{$etapa->fase->name}}
+                    <button wire:click="toggleAcordeon('{{ $etapa->fase->name }}')"
+                        class="w-full flex justify-between items-center px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none">
+                        <span>{{ $etapa->fase->name }}</span>
+                        <!-- Flecha que cambia su orientación -->
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 transform transition-transform duration-200 {{ ($mostrarMenu[$etapa->fase->name] ?? false) ? 'rotate-180' : '' }}"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
                     @if($mostrarMenu[$etapa->fase->name] ?? false)
                         <div class="px-4 py-2">
@@ -84,32 +94,31 @@
                                             <td class="p-3 text-center flex justify-center items-center h-full mt-4">
                                                 @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
                                                     @if ($etapa->status == $status)
-                                                        <div class="flex items-center space-x-2">
-                                                            <button wire:click="toggleMenu({{ $etapa->id }})"
-                                                                class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                                @if ($etapa->status == 'Finalizado') disabled @endif>
-                                                                <span>{{ $status }}</span>
-                                                            </button>
+                                                        <td class="p-3 text-center flex justify-center items-center mt-4">
+                                                            @if ($status === 'Finalizado')
+                                                                <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
+                                                                    <span>{{ $status }}</span>
+                                                                </span>
+                                                            @else
+                                                                <button wire:click="toggleMenu({{ $etapa->id }})"
+                                                                    class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                    @if ($etapa->status == 'Finalizado') disabled @endif>
+                                                                    <span>{{ $status }}</span>
+                                                                </button>
+                                                                <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
 
-                                                            <!-- Icono de flecha solo si se puede mostrar el submenú -->
-                                                            @if ($etapa->etapa_status != 'Finalizado')
-                                                                <img class="ml-2 w-3 cursor-pointer" alt="Icono desplegable"
-                                                                    src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}"
-                                                                    wire:click="toggleMenu({{ $etapa->id }})">
-                                                            @endif
-                                                        </div>
-
-                                                        <!-- Submenú con visibilidad específica para cada etapa -->
-                                                        @if ($etapa->status != 'Finalizado' && !empty($mostrarMenu[$etapa->id]))
-                                                            <div class="ml-8 mt-2 space-y-1">
-                                                                @foreach ($statuses as $optionStatus => $optionColor)
-                                                                    <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
-                                                                        wire:click="estado({{ $pacienteId }}, {{ $etapa->id }}, '{{ $optionStatus }}')">
-                                                                        {{ $optionStatus }}
+                                                                @if ($etapa->status != 'Finalizado' && !empty($mostrarMenu[$etapa->id]))
+                                                                    <div class="ml-8 mt-2 space-y-1">
+                                                                        @foreach ($statuses as $optionStatus => $optionColor)
+                                                                            <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
+                                                                                wire:click="estado({{ $etapa->id }}, '{{ $optionStatus }}')">
+                                                                                {{ $optionStatus }}
+                                                                            </div>
+                                                                        @endforeach
                                                                     </div>
-                                                                @endforeach
-                                                            </div>
-                                                        @endif
+                                                                @endif
+                                                            @endif
+                                                        </td>
                                                     @endif
                                                 @endforeach
                                             </td>
@@ -170,7 +179,6 @@
             @endforeach
         </div>
     @endif
-  </div>
 
     {{-- Añadir Tratamiento --}}
     @if ($showTratamientoModal)
@@ -241,7 +249,6 @@
                 </button>
             </x-slot>
         </x-dialog-modal>
-
     @endif
 
     {{-- Documentación --}}

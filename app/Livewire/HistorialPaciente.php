@@ -47,11 +47,13 @@ class HistorialPaciente extends Component
 
     public function mount($paciente, $tratamiento = null, $tratId = null)
     {
+
         $this->paciente = $paciente;
+        $this->clinica = Clinica::find($this->paciente->clinica_id);
         $this->pacienteId = $this->paciente->id;
         $this->tratId = $tratId; // Tratamiento pasado por la URL (si existe)
         $this->tratamiento = $tratamiento; // Tratamiento pasado por la URL (si existe)
-        $this->clinica = Clinica::find($this->paciente->clinica_id);
+
         // Cargar las etapas asociadas al tratamiento seleccionado (si existe un tratamiento)
         if($this->tratId){
             $this->loadFases($tratId);
@@ -150,17 +152,12 @@ class HistorialPaciente extends Component
             'mensajes.' . $etapaId . '.max' => 'El mensaje no puede tener más de 255 caracteres.',
         ]);
 
-        $paciente_trat =  PacienteTrat::where('paciente_id', $this->pacienteId)
-            ->where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
-            ->first();
-
         // Crear el mensaje
-        $Tmensaje = Mensaje::create([
+        Mensaje::create([
             'user_id' => auth()->id(),
             'mensaje' => $mensaje,
             'etapa_id' => $etapaId,
         ]);
-        $Tmensaje->save();
 
         // Limpiar el campo de mensaje
         $this->mensajes[$etapaId] = '';
@@ -168,7 +165,6 @@ class HistorialPaciente extends Component
         $this->dispatch('mensaje');
 
         $etapa = Etapa::find($etapaId);
-        // $fase = Fase::find($this->tratId ? $this->tratId : $this->tratamientoId);
         $trat = Tratamiento::find($this->tratId ? $this->tratId : $this->tratamientoId);
 
         Mail::to($this->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
@@ -188,17 +184,15 @@ class HistorialPaciente extends Component
         $etapa->save();
         $this->mostrarMenu = false; // Cerrar el menú
         $this->dispatch('estadoActualizado');
-        $this->resetPage();
+        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
 
         // Enviar email a la clínica
-        // $paciente = Paciente::find($pacienteId);
-        // $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
-        // $etapa = Etapa::find($etapaId);
-        // $trat = Tratamiento::find($tratamientoEtapa->trat_id);
+        $etapa = Etapa::find($etapaId);
+        $trat = Tratamiento::find($this->tratId ? $this->tratId : $this->tratamientoId);
 
-        // if ($clinica && $clinica->email) {
-        //     Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $trat));
-        // }
+        if ($this->clinica && $this->clinica->email) {
+            Mail::to($this->clinica->email)->send(new CambioEstado($this->paciente, $newStatus, $etapa, $trat));
+        }
     }
 
     // REVISIÓN FECHA
@@ -210,18 +204,19 @@ class HistorialPaciente extends Component
 
     public function revisionEtapa(){
 
-        // Actualizar la revisión en la tabla paciente_etapas
-        $etapaPaciente = Etapa::find($this->etapaId);
+        // Actualizar la revisión en la tabla etapas
+        $etapa = Etapa::find($this->etapaId);
 
-        if ($etapaPaciente) {
-            $etapaPaciente->revision = $this->revision; // Actualiza el campo 'revision'
-            $etapaPaciente->save(); // Guarda los cambios
+        if ($etapa) {
+            $etapa->revision = $this->revision; // Actualiza el campo 'revision'
+            $etapa->save(); // Guarda los cambios
 
             $this->dispatch('revision');
             $this->modalOpen = false;
-            Mail::to($this->paciente->clinica->email)->send(new NotificacionRevision($this->paciente, $etapaPaciente));
+            $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
 
-            $this->loadFases($this->selectedTratamiento);
+            Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa));
+
         }
     }
 
