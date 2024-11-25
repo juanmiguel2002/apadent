@@ -115,7 +115,10 @@ class Pacientes extends Component
         })
         ->join('tratamientos', 'paciente_trat.trat_id', '=', 'tratamientos.id')
         ->join('fases', 'tratamientos.id', '=', 'fases.trat_id')
-        ->join('etapas', 'fases.id', '=', 'etapas.fases_id')
+        ->join('etapas', function ($join) {
+            $join->on('fases.id', '=', 'etapas.fases_id')
+                 ->whereRaw('etapas.id = (SELECT MAX(id) FROM etapas WHERE fases_id = fases.id)');
+        })
         ->where(function ($query) {
             $query->where('etapas.status', '<>', 'Finalizado') // Mostrar solo etapas no finalizadas
                 ->orWhere('etapas.status', '=', 'Finalizado'); // Incluir las etapas finalizadas con indicación
@@ -127,6 +130,7 @@ class Pacientes extends Component
         })
         ->where('pacientes.activo', $this->activo ? 0 : 1) // Filtrar por pacientes activos o inactivos
         ->orderBy($orderByColumn, $orderByDirection) // Ordenar por columna seleccionada
+        ->groupBy('pacientes.id')
         ->paginate($this->perPage);
 
         return view('livewire.pacientes', [
