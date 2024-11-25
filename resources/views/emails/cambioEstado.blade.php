@@ -28,7 +28,6 @@
 </head>
 
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; line-height: 1.4; margin: 0; padding: 0; width: 100% !important;">
-
     <!-- Wrapper -->
     <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #edf2f7; width: 100%; margin: 0; padding: 0;">
         <tr>
@@ -49,7 +48,6 @@
                     <tr>
                         <td class="body" width="100%" cellpadding="0" cellspacing="0" style="background-color: #edf2f7; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7;">
                             <table class="inner-body" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #ffffff; border-radius: 2px; box-shadow: 0 2px 0 rgba(0, 0, 150, 0.025), 2px 4px 0 rgba(0, 0, 150, 0.015); margin: 0 auto; padding: 32px; width: 570px;">
-
                                 <!-- Contenido del cuerpo -->
                                 <tr>
                                     <td class="content-cell" style="padding: 32px;">
@@ -57,16 +55,17 @@
                                             ¡Hola!
                                         </p>
                                         <p style="color: #4a5568; font-size: 16px;">
-                                            Nos ponemos en contacto para informarle que se ha registrado un cambio en el tratamiento del paciente <strong>{{ $paciente->name }} {{ $paciente->apellidos }}</strong>.
+                                            Nos ponemos en contacto para informarle que se ha registrado un cambio de estado en el tratamiento del paciente <strong>{{ $paciente->name }} {{ $paciente->apellidos }}</strong>.
                                         </p>
                                         <ul style="color: #4a5568; font-size: 16px; list-style: none; padding: 0;">
                                             <li><strong>Tratamiento:</strong> {{ $trat->name }}</li>
+                                            <li><strong>Fase:</strong> {{ $etapa->fase->name }}</li>
                                             <li><strong>Etapa:</strong> {{ $etapa->name }}</li>
                                             <li><strong>Nuevo estado:</strong> {{ $estado }}</li>
                                         </ul>
 
                                         <!-- Botón de acción -->
-                                        <table class="action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 30px auto; text-align: center; width: 100%;">
+                                        {{-- <table class="action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 30px auto; text-align: center; width: 100%;">
                                             <tr>
                                                 <td align="center">
                                                     <table border="0" cellpadding="0" cellspacing="0" role="presentation">
@@ -80,7 +79,7 @@
                                                     </table>
                                                 </td>
                                             </tr>
-                                        </table>
+                                        </table> --}}
                                         <!-- Fin botón de acción -->
                                     </td>
                                 </tr>

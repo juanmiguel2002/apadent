@@ -47,6 +47,7 @@ class CambioEstado extends Mailable
                         'paciente' => $this->paciente,
                         'estado' => $this->estado,
                         'etapa' => $this->etapa,
+                        'trat' => $this->trat
                     ]);
     }
 
