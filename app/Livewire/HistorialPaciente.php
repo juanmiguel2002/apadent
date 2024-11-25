@@ -47,7 +47,6 @@ class HistorialPaciente extends Component
 
     public function mount($paciente, $tratamiento = null, $tratId = null)
     {
-
         $this->paciente = $paciente;
         $this->clinica = Clinica::find($this->paciente->clinica_id);
         $this->pacienteId = $this->paciente->id;
@@ -65,6 +64,9 @@ class HistorialPaciente extends Component
 
     public function loadFases($trat = null)
     {
+        $this->fases = Fase::where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
+            ->whereHas('etapas') // Filtra las fases que tienen etapas asignadas
+            ->get();
         if ($trat) {
             $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
             ->whereHas('fase.tratamiento', function ($query) use ($trat) {
@@ -73,17 +75,11 @@ class HistorialPaciente extends Component
             ->get();
         } else {
             $this->tratId = null;
-            // $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
-            // ->whereHas('fase.tratamiento', function ($query) {
-            //     $query->where('id', $this->tratamientoId);
-            // })
-            // ->get();
             $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
                 ->whereHas('fase.tratamiento', function ($query) {
                     $query->where('id', $this->tratamientoId);
                 })
                 ->get();
-            // dd($this->etapas);
         }
     }
 
@@ -105,38 +101,13 @@ class HistorialPaciente extends Component
     }
 
     // COMPRUEBA SI TIENE ARCHIVO UNA ETAPA
-    public function tieneArchivos($etapaId)
+    public function tieneArchivos($etapaId, $archivo)
     {
-        // Obtener la etapa con sus archivos y la fase relacionada
-        $etapa = Etapa::with(['archivos', 'fase'])
-            ->where('id', $etapaId)
-            ->first();
-
-        // Verificar si se encontró la etapa
-        if (!$etapa) {
-            return [
-                'tieneArchivos' => false,
-                'faseName' => null,
-            ];
+        if($archivo){
+           return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
         }
-
-        // Verificar si tiene archivos asociados
-        $tieneArchivos = $etapa->archivos->isNotEmpty();
-
-        // Devolver el resultado con el nombre de la fase
-        return [
-            'tieneArchivos' => $tieneArchivos,
-            'faseName' => $etapa->fase ? $etapa->fase->name : null,
-        ];
+        return Archivo::where('etapa_id', $etapaId)->exists();
     }
-
-    // public function tieneArchivos($etapaId, $archivo)
-    // {
-    //     if($archivo){
-    //        return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
-    //     }
-    //     return Archivo::where('etapa_id', $etapaId)->exists();
-    // }
 
     // ENVIAR MENSAJE TRATAMIENTO ETAPA PACIENTE
     public function enviarMensaje($etapaId)
@@ -221,52 +192,26 @@ class HistorialPaciente extends Component
     }
 
     // Nueva etapa
-    public function verificarUltimaEtapa()
-    {
-        // Verificar si la última etapa está finalizada
-        $this->ultimaEtapa = Etapa::where('paciente_id', $this->pacienteId)
-                        ->orderBy('created_at', 'desc')
-                        ->first();
-
-        $this->mostrarBotonNuevaEtapa = $this->ultimaEtapa && $this->ultimaEtapa->status == "Finalizado";
-    }
-
     public function nuevaEtapa()
     {
-        // Obtener la última etapa para el paciente y tratamiento dado
-        $ultimaEtapa = Etapa::where('paciente_id', $this->pacienteId)
-                // ->where('tratamiento_id', $this->selectedTratamiento) // Ajusta según tu modelo
-                ->orderBy('created_at', 'desc')
-                ->first();
+        // Buscar la fase asociada
+        $fase = Fase::where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
+            ->first();
 
-        // Determinar el número de la nueva etapa
-        $j = 1;
-        if ($ultimaEtapa && preg_match('/Etapa (\d+)/', $ultimaEtapa->etapa->name, $matches)) {
-            $i = (int)$matches[1];
-            $j = $i + 1;
-        }
+        // Obtener el número de la última etapa asociada a esta fase
+        $ultimoNumero = $fase->etapas()->count() + 1;
 
-        // Crear una nueva etapa
-        $etapa = Etapa::create([
-            'name' => "Etapa " . $j,
-        ]);
-
-        // Asociar la nueva etapa al tratamiento en la tabla tratamiento_etapa
+        // Crear la nueva etapa
         Etapa::create([
-            'trat_id' => $this->tratamientoId,
-            'etapa_id' => $etapa->id
-        ]);
-
-        // Asociar la nueva etapa al paciente en la tabla paciente_etapas
-        Etapa::create([
-            'paciente_id' => $this->pacienteId,
-            'etapa_id' => $etapa->id,
+            'name' => "Etapa $ultimoNumero",
             'fecha_ini' => now(),
-            'status' => 'Set Up', // O el estado que prefieras
+            'status' => 'Set Up', // Estado inicial
+            'fases_id' => $fase->id,
         ]);
+
         // Emitir un evento para actualizar la vista
         $this->dispatch('etapa');
-        $this->loadFases($this->selectedTratamiento);
+        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
     }
 
     // GESTIÓN NEW TRATAMIENTO

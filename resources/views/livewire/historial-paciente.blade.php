@@ -34,14 +34,14 @@
 
     @if($etapas)
         <div class="space-y-4">
-            @foreach($etapas as $etapa)
+            @foreach($fases as $fase)
                 <div class="bg-white shadow-md rounded-md space-y-4">
-                    <button wire:click="toggleAcordeon('{{ $etapa->fase->name }}')"
+                    <button wire:click="toggleAcordeon('{{ $fase->name }}')"
                         class="w-full flex justify-between items-center px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none">
-                        <span>{{ $etapa->fase->name }}</span>
+                        <span>{{ $fase->name }}</span>
                         <!-- Flecha que cambia su orientación -->
                         <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 transform transition-transform duration-200 {{ ($mostrarMenu[$etapa->fase->name] ?? false) ? 'rotate-180' : '' }}"
+                            class="h-5 w-5 transform transition-transform duration-200 {{ ($mostrarMenu[$fase->name] ?? false) ? 'rotate-180' : '' }}"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -49,7 +49,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    @if($mostrarMenu[$etapa->fase->name] ?? false)
+                    @if($mostrarMenu[$fase->name] ?? false)
                         <div class="px-4 py-2">
                             <table class="min-w-full bg-gray-50 rounded-t-md">
                                 <thead>
