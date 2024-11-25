@@ -31,6 +31,7 @@ class HistorialPaciente extends Component
     public $modalImg, $imagenes = [], $modalArchivo = false, $archivos = [];
     public $selectedEtapa, $documentacion;
     public $mostrarBotonNuevaEtapa = false, $ultimaEtapa;
+    public $fases;
 
     public $statuses = [
         'En proceso' => 'bg-green-600',
@@ -52,15 +53,14 @@ class HistorialPaciente extends Component
 
         // Cargar las etapas asociadas al tratamiento seleccionado (si existe un tratamiento)
         if($this->tratId){
-            $this->loadEtapas($tratId);
+            $this->loadFases($tratId);
         }
 
         $this->archivo = Archivo::where('etapa_id', $this->pacienteId)->where('tipo', 'zip')->get();
-        $clinica = Clinica::find(Auth::user()->clinicas->first()->id);
-        $this->tratamientos = $clinica->tratamientos; // Obtiene todos los tratamientos relacionados
+        dd($this->archivo);
     }
 
-    public function loadEtapas($trat = null)
+    public function loadFases($trat = null)
     {
         if ($trat) {
             $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
@@ -70,11 +70,28 @@ class HistorialPaciente extends Component
             ->get();
         } else {
             $this->tratId = null;
+            // $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
+            // ->whereHas('fase.tratamiento', function ($query) {
+            //     $query->where('id', $this->tratamientoId);
+            // })
+            // ->get();
             $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
-            ->whereHas('fase.tratamiento', function ($query) {
-                $query->where('id', $this->tratamientoId);
-            })
-            ->get();
+                ->whereHas('fase.tratamiento', function ($query) {
+                    $query->where('id', $this->tratamientoId);
+                })
+                ->get();
+            // dd($this->etapas);
+        }
+    }
+    public function toggleAcordeon($faseName)
+    {
+        // Alternar la visibilidad del acordeón para la fase
+        if (isset($this->mostrarMenu[$faseName])) {
+            // Si ya está abierto, cerrarlo
+            unset($this->mostrarMenu[$faseName]);
+        } else {
+            // Si no está abierto, abrirlo
+            $this->mostrarMenu[$faseName] = true;
         }
     }
 
@@ -84,13 +101,38 @@ class HistorialPaciente extends Component
     }
 
     // COMPRUEBA SI TIENE ARCHIVO UNA ETAPA
-    public function tieneArchivos($etapaId, $archivo)
+    public function tieneArchivos($etapaId)
     {
-        if($archivo){
-           return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
+        // Obtener la etapa con sus archivos y la fase relacionada
+        $etapa = Etapa::with(['archivos', 'fase'])
+            ->where('id', $etapaId)
+            ->first();
+
+        // Verificar si se encontró la etapa
+        if (!$etapa) {
+            return [
+                'tieneArchivos' => false,
+                'faseName' => null,
+            ];
         }
-        return Archivo::where('etapa_id', $etapaId)->exists();
+
+        // Verificar si tiene archivos asociados
+        $tieneArchivos = $etapa->archivos->isNotEmpty();
+
+        // Devolver el resultado con el nombre de la fase
+        return [
+            'tieneArchivos' => $tieneArchivos,
+            'faseName' => $etapa->fase ? $etapa->fase->name : null,
+        ];
     }
+
+    // public function tieneArchivos($etapaId, $archivo)
+    // {
+    //     if($archivo){
+    //        return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
+    //     }
+    //     return Archivo::where('etapa_id', $etapaId)->exists();
+    // }
 
     // ENVIAR MENSAJE TRATAMIENTO ETAPA PACIENTE
     public function enviarMensaje($etapaId)
@@ -324,7 +366,7 @@ class HistorialPaciente extends Component
                 $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
-                $archivo = Archivos::create([
+                $archivo = Archivo::create([
                     'ruta' => $path,
                     'tipo' => $extension,
                     'paciente_id' => $this->pacienteId,

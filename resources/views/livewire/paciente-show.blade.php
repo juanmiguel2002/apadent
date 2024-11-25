@@ -91,7 +91,7 @@
                                 <div class="grid grid-cols-2">
                                     <div class="px-4 py-2 font-semibold">Email</div>
                                     <div class="px-4 py-2">
-                                        <a class="text-azul" href="mailto:{{$paciente->email}}">{{$paciente->email}}</a>
+                                        <a class="text-azul" href="mailto:{{$paciente->email}}">{{ $paciente->email }}</a>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2">

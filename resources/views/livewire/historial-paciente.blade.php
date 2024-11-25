@@ -23,7 +23,7 @@
     @else
         <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Tratamientos</h2>
-            <select wire:model="tratamientoId" wire:change="loadEtapas" class="w-full p-3 border rounded-md">
+            <select wire:model="tratamientoId" wire:change="loadFases" class="w-full p-3 border rounded-md">
                 <option value="">Seleccione un tratamiento</option>
                 @foreach($tratamiento as $trat)
                     <option value="{{ $trat->tratamiento->id }}">{{ $trat->tratamiento->name }} - {{ $trat->tratamiento->descripcion }}</option>
@@ -33,129 +33,144 @@
     @endif
 
     @if($etapas)
-        <x-tabla>
-            <table class="min-w-full bg-gris">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2 bg-azul">ID</th>
-                        <th class="px-4 py-2 bg-azul">Nº de Fase</th>
-                        <th class="px-4 py-2 bg-azul">Mensaje</th>
-                        <th class="px-4 py-2 bg-azul">Estado</th>
-                        <th class="px-4 py-2 bg-azul">Revisión</th>
-                        <th class="px-4 py-2 bg-azul">Archivos</th>
-                        <th class="px-4 py-2 bg-azul">Imágenes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($etapas as $etapa)
-                        <tr>
-                            <td class="px-4 text-center">{{$etapa->id}}</td>
-                            <td class="px-4 py-2 text-center">{{ $etapa->name }}</td>
-                            <td class="px-4 py-2">
-                                @foreach ($etapa->mensajes as $mensaje)
-                                    <div class="text-left mb-2">
-                                        <p class="text-azul font-light text-md rounded-md">{{ $mensaje->mensaje }}</p>
-                                        <p class="text-xs font-normal p-2">{{ $mensaje->user->name }}</p>
-                                        <div class="flex justify-between items-center">
-                                            <p class="text-xs font-light text-gray-500">{{ $mensaje->created_at->format('d-m-Y H:i') }}</p>
-                                        </div>
-                                    </div>
-                                @endforeach
-
-                                <div class="flex items-center mt-2">
-                                    <input wire:model="mensajes.{{$etapa->id}}" name="mensaje" id="mensaje" placeholder="Escribe tu mensaje..." type="text" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-azul-light focus:border-transparent font-light text-xs">
-                                    <button wire:click="enviarMensaje({{ $etapa->id }})" class="ml-2 px-3 py-1 bg-azul text-white rounded-md text-xs font-semibold hover:bg-azul-dark focus:outline-none focus:ring-2 focus:ring-azul-light focus:ring-opacity-50">
-                                        Enviar
-                                    </button>
-                                </div>
-                                <!-- Mostrar mensaje de error -->
-                                @error('mensajes.' . $etapa->id)
-                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
-                                @enderror
-                            </td>
-                            <td class="p-3 text-center flex justify-center items-center h-full mt-4">
-                                @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
-                                    @if ($etapa->status == $status)
-                                        <div class="flex items-center space-x-2">
-                                            <button wire:click="toggleMenu({{ $etapa->id }})"
-                                                class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                @if ($etapa->status == 'Finalizado') disabled @endif>
-                                                <span>{{ $status }}</span>
-                                            </button>
-
-                                            <!-- Icono de flecha solo si se puede mostrar el submenú -->
-                                            @if ($etapa->etapa_status != 'Finalizado')
-                                                <img class="ml-2 w-3 cursor-pointer" alt="Icono desplegable"
-                                                    src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}"
-                                                    wire:click="toggleMenu({{ $etapa->id }})">
-                                            @endif
-                                        </div>
-
-                                        <!-- Submenú con visibilidad específica para cada etapa -->
-                                        @if ($etapa->status != 'Finalizado' && !empty($mostrarMenu[$etapa->id]))
-                                            <div class="ml-8 mt-2 space-y-1">
-                                                @foreach ($statuses as $optionStatus => $optionColor)
-                                                    <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
-                                                        wire:click="estado({{ $pacienteId }}, {{ $etapa->id }}, '{{ $optionStatus }}')">
-                                                        {{ $optionStatus }}
+        <div class="space-y-4">
+            @foreach($etapas as $etapa)
+                <div class="bg-white shadow-md rounded-md space-y-4">
+                    <button wire:click="toggleAcordeon('{{ $etapa->fase->name }}')" class="w-full text-left px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
+                        {{$etapa->fase->name}}
+                    </button>
+                    @if($mostrarMenu[$etapa->fase->name] ?? false)
+                        <div class="px-4 py-2">
+                            <table class="min-w-full bg-gray-50 rounded-md">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-2 bg-azul">ID</th>
+                                        <th class="px-4 py-2 bg-azul">Nº de Fase</th>
+                                        <th class="px-4 py-2 bg-azul">Mensaje</th>
+                                        <th class="px-4 py-2 bg-azul">Estado</th>
+                                        <th class="px-4 py-2 bg-azul">Revisión</th>
+                                        <th class="px-4 py-2 bg-azul">Archivos</th>
+                                        <th class="px-4 py-2 bg-azul">Imágenes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($etapas as $etapa)
+                                        <tr class="hover:bg-gray-200 transition duration-300">
+                                            <td class="px-4 text-center">{{$etapa->id}}</td>
+                                            <td class="px-4 py-2 text-center">{{ $etapa->name }}</td>
+                                            <td class="px-4 py-2">
+                                                @foreach ($etapa->mensajes as $mensaje)
+                                                    <div class="text-left mb-2">
+                                                        <p class="text-azul font-light text-md rounded-md">{{ $mensaje->mensaje }}</p>
+                                                        <p class="text-xs font-normal p-2">{{ $mensaje->user->name }}</p>
+                                                        <div class="flex justify-between items-center">
+                                                            <p class="text-xs font-light text-gray-500">{{ $mensaje->created_at->format('d-m-Y H:i') }}</p>
+                                                        </div>
                                                     </div>
                                                 @endforeach
-                                            </div>
-                                        @endif
-                                    @endif
-                                @endforeach
-                            </td>
-                            <td class="px-4 py-2 text-center">
-                                @if($etapa->revision)
-                                    <span class="text-sm font-semibold">{{ \Carbon\Carbon::parse($etapa->revision)->format('d-m-Y') }}</span>
-                                @else
-                                    <button wire:click="abrirModalRevision({{ $etapa->id }})" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
-                                        Asignar Fecha
-                                    </button>
-                                @endif
-                            </td>
-                            {{-- Archivos --}}
-                            <td class="px-4 py-2">
-                                <div class="flex justify-center items-center">
-                                    @if ($this->tieneArchivos($etapa->id, true) == true)
-                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}" class="flex items-center">
-                                            <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3"/>
-                                            </svg>
-                                            <span class="cursor-pointer font-light text-sm">Descargar</span>
-                                        </a>
-                                    @else
-                                        <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}" alt="">
-                                        <span wire:click="showModalArchivo()" class="mr-2 cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
-                                    @endif
-                                </div>
-                            </td>
 
-                            {{-- Imágenes --}}
-                            <td class="px-4 py-2">
-                                <div class="flex justify-center items-center">
-                                    @if ($this->tieneArchivos($etapa->id, false) == true)
-                                        <!-- Mostrar botón 'Ver' si tiene archivos -->
-                                        <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
-                                        <span wire:click="verImg({{ $etapa->id }})" class="cursor-pointer font-light text-sm">Ver</span>
-                                    @else
-                                        <!-- Mostrar botón 'Añadir' si no tiene archivos -->
-                                        <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                        <span wire:click="showModalImg()" class="cursor-pointer font-light text-sm">Añadir</span>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
-                <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
-                <strong wire:click='nuevaEtapa'>Añadir etapa</strong>
-            </div>
-        </x-tabla>
-        <div class="mb-5"></div>
+                                                <div class="flex items-center mt-2">
+                                                    <input wire:model="mensajes.{{$etapa->id}}" name="mensaje" id="mensaje" placeholder="Escribe tu mensaje..." type="text" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-azul-light focus:border-transparent font-light text-xs">
+                                                    <button wire:click="enviarMensaje({{ $etapa->id }})" class="ml-2 px-3 py-1 bg-azul text-white rounded-md text-xs font-semibold hover:bg-azul-dark focus:outline-none focus:ring-2 focus:ring-azul-light focus:ring-opacity-50">
+                                                        Enviar
+                                                    </button>
+                                                </div>
+
+                                                <!-- Mostrar mensaje de error -->
+                                                @error('mensajes.' . $etapa->id)
+                                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                                @enderror
+                                            </td>
+                                            <td class="p-3 text-center flex justify-center items-center h-full mt-4">
+                                                @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
+                                                    @if ($etapa->status == $status)
+                                                        <div class="flex items-center space-x-2">
+                                                            <button wire:click="toggleMenu({{ $etapa->id }})"
+                                                                class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                @if ($etapa->status == 'Finalizado') disabled @endif>
+                                                                <span>{{ $status }}</span>
+                                                            </button>
+
+                                                            <!-- Icono de flecha solo si se puede mostrar el submenú -->
+                                                            @if ($etapa->etapa_status != 'Finalizado')
+                                                                <img class="ml-2 w-3 cursor-pointer" alt="Icono desplegable"
+                                                                    src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}"
+                                                                    wire:click="toggleMenu({{ $etapa->id }})">
+                                                            @endif
+                                                        </div>
+
+                                                        <!-- Submenú con visibilidad específica para cada etapa -->
+                                                        @if ($etapa->status != 'Finalizado' && !empty($mostrarMenu[$etapa->id]))
+                                                            <div class="ml-8 mt-2 space-y-1">
+                                                                @foreach ($statuses as $optionStatus => $optionColor)
+                                                                    <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
+                                                                        wire:click="estado({{ $pacienteId }}, {{ $etapa->id }}, '{{ $optionStatus }}')">
+                                                                        {{ $optionStatus }}
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
+                                                    @endif
+                                                @endforeach
+                                            </td>
+                                            <td class="px-4 py-2 text-center">
+                                                @if($etapa->revision)
+                                                    <span class="text-sm font-semibold">{{ \Carbon\Carbon::parse($etapa->revision)->format('d-m-Y') }}</span>
+                                                @else
+                                                    <button wire:click="abrirModalRevision({{ $etapa->id }})" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
+                                                        Asignar Fecha
+                                                    </button>
+                                                @endif
+                                            </td>
+
+                                            {{-- Archivos --}}
+                                            <td class="px-4 py-2">
+                                                <div class="flex justify-center items-center">
+                                                    @if ($this->tieneArchivos($etapa->id, true) == true)
+                                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo->ruta]) }}" class="flex items-center">
+                                                            <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3"/>
+                                                            </svg>
+                                                            <span class="cursor-pointer font-light text-sm">Descargar</span>
+                                                        </a>
+                                                    @else
+                                                        <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}" alt="">
+                                                        <span wire:click="showModalArchivo()" class="mr-2 cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+
+                                            {{-- Imágenes --}}
+                                            <td class="px-4 py-2">
+                                                <div class="flex justify-center items-center">
+                                                    @if ($this->tieneArchivos($etapa->id, false) == true)
+                                                        <!-- Mostrar botón 'Ver' si tiene archivos -->
+                                                        <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
+                                                        <span wire:click="verImg({{ $etapa->id }})" class="cursor-pointer font-light text-sm">Ver</span>
+                                                    @else
+                                                        <!-- Mostrar botón 'Añadir' si no tiene archivos -->
+                                                        <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
+                                                        <span wire:click="showModalImg()" class="cursor-pointer font-light text-sm">Añadir</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+
+                                </tbody>
+                            </table>
+                            <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
+                                <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
+                                <strong wire:click='nuevaEtapa'>Añadir etapa</strong>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="mb-5"></div>
+                </div>
+            @endforeach
+        </div>
     @endif
+  </div>
 
     {{-- Añadir Tratamiento --}}
     @if ($showTratamientoModal)
@@ -230,7 +245,7 @@
     @endif
 
     {{-- Documentación --}}
-        @if ($documents)
+    @if ($documents)
         <x-dialog-modal wire:model="documents" >
             <x-slot name="title">
                 <div class="flex justify-between items-center">

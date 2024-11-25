@@ -14,9 +14,7 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use App\Models\TratamientoEtapa;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -167,14 +165,14 @@ class Pacientes extends Component
             'trat_id' => $this->selectedTratamiento,
         ]);
 
-        // 3. Obtener las etapas del tratamiento seleccionado y asociarlas al paciente
-        $etapas = Fase::where('trat_id', $this->selectedTratamiento)->get();
+        // 3. Obtener las fases del tratamiento seleccionado y asociarlas al paciente
+        $fase = Fase::where('trat_id', $this->selectedTratamiento)->get();
 
-        Etapa::create([
+        $etapa = Etapa::create([
             'name' => 'Inicio',
             'fecha_ini' => now(),
             'status' => 'Set Up', // Por defecto, las etapas están en estado "Set Up"
-            'fases_id' => $etapas->first()->id,
+            'fases_id' => $fase->first()->id,
         ]);
 
         // 4. Crear carpetas para el paciente (si es necesario)
@@ -198,21 +196,18 @@ class Pacientes extends Component
 
         // Subir múltiples imágenes del paciente, si existen
         if ($this->imagenes && is_array($this->imagenes)) {
-            foreach ($this->imagenes as $key => $imagen) {
-                foreach ($etapas as $etapa) {
-                    $extension = $imagen->getClientOriginalExtension();
-                    $fileName = "EtapaInicio". $key . '.' . $extension;
-                    $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
+            foreach ($this->imagenes as $imagen) {
+                $extension = $imagen->getClientOriginalExtension();
+                $fileName = "EtapaInicio_". $etapa->id . '.' . $extension;
+                $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
-                    // Guardar la ruta de la imagen en la tabla de archivos
-                    $archivo = Archivo::create([
-                        'ruta' => $path,
-                        'tipo' => $extension,
-                        'etapa_id' => $etapa->id,
-                    ]);
-                }
+                // Guardar la ruta de la imagen en la tabla de archivos
+                Archivo::create([
+                    'ruta' => $path,
+                    'tipo' => $extension,
+                    'etapa_id' => $etapa->id,
+                ]);
             }
-            $archivo->save();
         }
 
         // Subir múltiples CBCT, si existen
@@ -222,13 +217,12 @@ class Pacientes extends Component
                 $extension = $cbctFile->getClientOriginalExtension();
 
                 // Guardar la ruta del CBCT en la tabla de archivos
-                $archivo= Archivo::create([
+                Archivo::create([
                     'ruta' => $path,
                     'tipo' => $extension,
-                    'etapa_id' => $etapas->etapa_id,
+                    'etapa_id' => $etapa->id,
                 ]);
             }
-            $archivo->save();
         }
 
         // Enviar email a la clínica
