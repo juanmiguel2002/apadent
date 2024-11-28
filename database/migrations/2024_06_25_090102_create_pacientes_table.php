@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('observacion')->nullable();
             $table->string('obser_cbct')->nullable();
             $table->string('odontograma_obser')->nullable();
+            $table->string('url_img')->nullable();
+            $table->integer('activo')->default(1);
 
             $table->unsignedBigInteger('clinica_id');
             $table->timestamps();

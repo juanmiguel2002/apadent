@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Clinica;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -18,84 +17,88 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
 
-        $this->call(RolesTableSeeder::class);
+        // $this->call(TratamientosSeeder::class);
+        // $this->call(ClinicasTableSeeder::class);
 
         // // Crear usuarios
-        $admin = User::factory()->create([
+        $adminUser = User::factory()->create([
             'name' => 'admin',
             'colegiado' => '123456',
             'password' => bcrypt('admin123'),
             'email' => 'admin@admin.com',
         ]);
 
-        $doctor = User::factory()->create([
-            'name' => 'doctor',
-            'colegiado' => '1234546',
-            'password' => bcrypt('doctor123'),
-            'email' => 'doctor@doctor.com',
-        ]);
-
-        $clinica = User::factory()->create([
-            'name' => 'clinica',
-            'colegiado' => '1233456',
-            'password' => bcrypt('clinica123'),
-            'email' => 'clinica@clinica.com',
-        ]);
-
-        $clinicaAd = User::factory()->create([
+        $doctorAdminUser = User::factory()->create([
             'name' => 'ClinicaAdmin',
             'colegiado' => '1238456',
             'password' => bcrypt('juanmi1234'),
             'email' => 'juanmi0802@gmail.com',
         ]);
 
-        $clinica1 = Clinica::findOrFail(1);
-        $clinica1->users()->sync([2, 3, 4]); // IDs de usuarios clinica y doctor para Clinica 1
+       // Crear los roles
+        $admin = Role::create(['name' => 'admin']);
+        $doctor = Role::create(['name' => 'doctor']);
+        $clinica = Role::create(['name' => 'clinica']);
+        $doctorAdmin = Role::create(['name' => 'doctor_admin']);
 
-        // Bucamos los roles
-        $adminRole = Role::findById(1);
-        $doctorRole = Role::findById(2);
-        $clinicaUserRole = Role::findById(3);
-        $clinicaAdmin = Role::findById(4);
-
-        $this->call(PermissionsTableSeeder::class);
-
-        $permissions = Permission::all();
-
-        // Asignar permisos a los roles super admin y admin clinica
-        $adminRole->syncPermissions($permissions);
-        $clinicaAdmin->syncPermissions($permissions);
-
-        // Filtrar permisos para el rol de doctor
-        $doctorRole->syncPermissions(Permission::whereIn('name', [
-            'doctor_user',
-            'paciente_view',
-            'paciente_create',
-            'paciente_modify',
-            'etapa_view',
+        // Definir permisos
+        $permissions = [
             'clinica_view',
             'factura_view',
-            'documentacion_add',
-        ])->get());
-
-        $clinicaUserRole->syncPermissions(Permission::whereIn('name', [
-            'clinica_access',
-            'clinica_view',
-            'paciente_view',
             'paciente_create',
-            'paciente_modify',
+            'paciente_update',
+            'etapa_view',
             'etapa_create',
-            'etapa_view',
+            'documentacion_add',
+            'stripping',
+            'usuario_read',
+            'usuario_create',
+            'usuario_update',
+            'usuario_delete', //eliminar cuenta user administration
+            'rol_create',
+            'rol_update',
+            'rol_view'
+        ];
+
+        // Crear los permisos
+        foreach ($permissions as $permission) {
+            Permission::create(['name' => $permission]);
+        }
+
+        // Asignar permisos al rol "admin" (todos los permisos)
+        $admin->syncPermissions(Permission::all());
+
+        // Asignar permisos específicos al rol "doctor"
+        $doctorPermissions = [
             'clinica_view',
             'factura_view',
-            'documentacion_add',
-        ])->get());
-        // $this->call(ClinicasTableSeeder::class);
+            'paciente_create',
+            'paciente_update',
+            'etapa_view',
+        ];
+        $doctor->syncPermissions(Permission::whereIn('name', $doctorPermissions)->get());
 
-        // Asignar roles a los usuarios
-        $admin->assignRole('admin');
-        $clinicaAd->assignRole('doctor_admin');
-        $doctor->assignRole('doctor');
-        $clinica->assignRole('clinica_user');
+        // Asignar permisos específicos al rol "clinica"
+        $clinicaPermissions = [
+            'clinica_view',
+            'paciente_create',
+            'paciente_update',
+            'documentacion_add',
+            'etapa_view',
+            'etapa_create'
+        ];
+        $clinica->syncPermissions(Permission::whereIn('name', $clinicaPermissions)->get());
+
+        // Asignar permisos al rol "doctor_admin" (los permisos del admin pero relacionados con la clínica)
+        $doctorAdminPermissions = Permission::all()->filter(function ($permission) {
+            return !in_array($permission->name, ['rol_create', 'rol_update', 'rol_view']); // Opcional: Excluir ciertos permisos si aplica.
+        });
+        $doctorAdmin->syncPermissions($doctorAdminPermissions);
+
+        // Asignar roles a usuarios
+        $adminUser->assignRole('admin');
+        $doctorAdminUser->assignRole('doctor_admin');
+        // $doctorUser->assignRole('doctor');
+        // $clinicaUser->assignRole('clinica');
     }
 }

@@ -14,13 +14,15 @@ return new class extends Migration
         //
         Schema::create('etapas', function (Blueprint $table) {
             $table->bigIncrements('id'); // id - bigint(20) UNSIGNED NOT NULL
-            $table->unsignedBigInteger('trat_id'); // trat_id - bigint(20) UNSIGNED NOT NULL
             $table->string('name'); // name - varchar(255) NOT NULL
-            // $table->enum('status', ['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->default('Set Up'); // status - enum
+            $table->date('fecha_ini');
+            $table->date('fecha_fin');
+            $table->enum('status', ['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->default('Set Up'); // status - enum
+            $table->date('revision');
+            $table->unsignedBigInteger('fases_id'); // trat_id - bigint(20) UNSIGNED NOT NULL
             $table->timestamps(); // created_at and updated_at - timestamp NULL DEFAULT NULL
 
-            // Foreign key constraint (if 'trat_id' references another table)
-             $table->foreign('trat_id')->references('id')->on('tratamientos')->onDelete('cascade');
+            $table->foreign('fases_id')->references('id')->on('fases')->onDelete('cascade');
         });
     }
 
@@ -30,5 +32,6 @@ return new class extends Migration
     public function down(): void
     {
         //
+        Schema::dropIfExists('etapas');
     }
 };

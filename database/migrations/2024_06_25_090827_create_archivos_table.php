@@ -15,12 +15,11 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('ruta', 255);
             $table->string('tipo', 45);
-            $table->timestamps();
-            $table->unsignedBigInteger('paciente_id');
-            $table->unsignedBigInteger('paciente_etapa_id');
+            $table->unsignedBigInteger('etapa_id');
 
-            $table->foreign('paciente_id')->references('id')->on('pacientes')->onDelete('cascade');
-            $table->foreign('paciente_etapa_id')->references('id')->on('paciente_etapa')->onDelete('cascade');
+            $table->timestamps();
+
+            $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
         });
     }
 
