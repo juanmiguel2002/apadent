@@ -41,13 +41,13 @@
         <table class="min-w-full">
             <thead class="text-white">
                 <tr class="bg-azul">
-                    {{-- <th scope="col"
+                    <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
                         ID
                         <button wire:click="sortable('id')">
                             <span class="fa fa{{ $camp === 'id' ? $icon : '-sort' }}"></span>
                         </button>
-                    </th> --}}
+                    </th>
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 ">
                         Nombre
@@ -86,7 +86,7 @@
             <tbody>
                 @forelse($users as $user)
                     <tr>
-                        {{-- <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <div class="flex items-center">
                                 <div class="ml-3">
                                     <p class="text-gray-900 whitespace-no-wrap">
@@ -94,7 +94,7 @@
                                     </p>
                                 </div>
                             </div>
-                        </td> --}}
+                        </td>
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <p class="text-gray-900 whitespace-no-wrap">
                                 {{ $user->name }}
@@ -102,7 +102,7 @@
                         </td>
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <p class="text-gray-900 whitespace-no-wrap">
-                                {{ $user->email ?? 'admin' }}
+                                {{ $user->email }}
                             </p>
                         </td>
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
@@ -128,7 +128,7 @@
                                         <i class="fas fa-edit mr-2"></i> Editar
                                     </a>
                                 @endcan
-                                @can('role_create')
+                                @can('rol_create')
                                     <a href="#" wire:click="verPermisos({{ $user }}, {{$user->roles()->first()->id}})"
                                         class="flex items-center justify-center px-4 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
                                         <i class="fas fa-plus mr-2"></i> Permisos

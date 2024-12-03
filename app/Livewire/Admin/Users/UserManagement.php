@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Users;
 
 use App\Models\Clinica;
+use App\Models\ClinicaUser;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -21,9 +22,11 @@ class UserManagement extends Component
     public $icon = '-sort'; //Para el ícono
     public $user_role = ''; //Para filtrado por rol
     public $roles = []; //Para roles
-    public $clinicas;
 
-    public $permissions, $user, $role;
+    public $clinicas; // todas las clínicas (admin)
+    public $clinica_id, $user_clinica; // clinica id del usuario admin de la clínica
+
+    public $permissions, $user, $role; //permissions
     public $showModal = false;
     public $showPermisos = false, $selectedPermissions = [];
     public $isEditing = false;
@@ -34,13 +37,24 @@ class UserManagement extends Component
     {
         return [
             'name' => 'required|string|max:50',
-            'colegiado' => 'required|string|max:50',
-            'email' => 'required|email|max:255|unique:users,email,' . ($this->isEditing ? $this->userId : 'NULL') . ',id',
+            'colegiado' => 'required|string|max:50|unique:users,colegiado,' . ($this->isEditing ? $this->userId : 'NULL') . ',id',
+            'email' => 'required|email|max:255|unique:users,email,' . ($this->isEditing ? $this->userId : 'NULL') . 'id',
             'password' => !$this->isEditing ? 'required|string|min:8|confirmed' : 'nullable|string|min:8|confirmed',
             'selectedRole' => 'required|exists:roles,name',
-            'selectedClinica' => 'required|exists:clinicas,id',
+            'selectedClinica' => $this->selectedClinica ? 'required|exists:clinicas,id' : '',
         ];
     }
+    protected function messages()
+    {
+        return [
+            'colegiado.unique' => 'El número de colegiado ya está registrado. Por favor, verifica la información.',
+            'name.required' => 'El nombre es obligatorio.',
+            'email.unique' => 'El correo electrónico ya está en uso.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            // Agrega otros mensajes personalizados según sea necesario.
+        ];
+    }
+
 
     /*Para mantener persistente los filtros y la búsqueda */
     protected $queryString = [
@@ -61,17 +75,20 @@ class UserManagement extends Component
 
     public function mount()
     {
+        $this->user_clinica = auth()->user();
+        $this->clinica_id = $this->user_clinica->clinicas()->first()?->id;
+
         $this->icon = $this->iconDirection($this->order);
         // Verificar si el usuario autenticado es 'admin'
         if (auth()->user()->hasRole('admin')) {
             // Si es admin, puede ver todos los roles
             $this->roles = Role::all();
         } elseif (auth()->user()->hasRole('doctor_admin')) {
-            // Si es 'doctor' o 'doctor_admin', solo puede ver 'doctor' y 'clinica_user'
+            // Si es 'doctor_admin', solo puede ver 'doctor' y 'clinica'
             $this->roles = Role::whereIn('name', ['doctor', 'clinica'])->get();
         }
         $this->permissions = Permission::all();
-        // dd($this->permissions);
+        // dd($this->clinica_id);
     }
 
     public function render()
@@ -115,7 +132,6 @@ class UserManagement extends Component
 
         // Paginación
         $users = $usersQuery->paginate($this->perPage);
-
         // Devolvemos la vista con los usuarios filtrados
         return view('livewire.admin.users.user-management', [
                     'users' => $users,
@@ -179,9 +195,9 @@ class UserManagement extends Component
                 'password' => Hash::make($this->password),
             ]);
             $user->assignRole($this->selectedRole);
-            $user->clinicas()->attach($this->selectedClinica);
+            $user->clinicas()->attach($this->selectedClinica ? $this->selectedClinica : $this->clinica_id);
 
-            $user->sendEmailVerificationNotification();
+            // $user->sendEmailVerificationNotification();
             $this->dispatch('userSaved', 'Usuario Añadido');  // Emite un evento para que otros componentes puedan escuchar
 
         }
