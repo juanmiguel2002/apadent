@@ -48,6 +48,7 @@ class UserManagement extends Component
         'camp' => ['except' => null],
         'order' => ['except' => ''],
     ];
+
     /* Método para resetear el url de paginación **/
     public function updatingSearch()
     {
@@ -60,7 +61,6 @@ class UserManagement extends Component
 
     public function mount()
     {
-        $this->authorize('usuario_create');
         $this->icon = $this->iconDirection($this->order);
         // Verificar si el usuario autenticado es 'admin'
         if (auth()->user()->hasRole('admin')) {
@@ -68,7 +68,7 @@ class UserManagement extends Component
             $this->roles = Role::all();
         } elseif (auth()->user()->hasRole('doctor_admin')) {
             // Si es 'doctor' o 'doctor_admin', solo puede ver 'doctor' y 'clinica_user'
-            $this->roles = Role::whereIn('name', ['doctor', 'clinica_user'])->get();
+            $this->roles = Role::whereIn('name', ['doctor', 'clinica'])->get();
         }
         $this->permissions = Permission::all();
         // dd($this->permissions);
@@ -220,7 +220,6 @@ class UserManagement extends Component
         $this->close();
     }
 
-
     public function close()
     {
         if($this->showModal){
@@ -241,6 +240,7 @@ class UserManagement extends Component
         $this->selectedRole = '';
         $this->selectedClinica = '';
     }
+
     public function sortable($camp)
     {
         if ($camp !== $this->camp) {

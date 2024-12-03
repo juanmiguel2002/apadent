@@ -6,7 +6,7 @@
     </x-slot>
     <div class="py-2">
         <div class="max-w-[90%] mx-auto sm:px-6 lg:px-8">
-            @livewire('admin.users.live-user-table')
+            @livewire('admin.users.user-management')
         </div>
     </div>
 </x-app-layout>

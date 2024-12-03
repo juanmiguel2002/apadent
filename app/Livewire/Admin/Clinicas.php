@@ -2,14 +2,13 @@
 
 namespace App\Livewire\Admin;
 
+use Livewire\Component;
+use Livewire\WithPagination;
 use App\Mail\CredencialesClinica;
 use App\Models\Clinica;
 use App\Models\ClinicaUser;
 use App\Models\User;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
-use Livewire\Component;
-use Livewire\WithPagination;
 use Illuminate\Support\Str;
 
 class Clinicas extends Component
@@ -145,18 +144,18 @@ class Clinicas extends Component
             // Asignar el rol 'doctor_admin' al usuario
             $user->assignRole('doctor_admin');
 
-            $clinica_user = ClinicaUser::create([
+            ClinicaUser::create([
                 'clinica_id' => $clinica->id,
                 'user_id' => $user->id
             ]);
 
-            $clinica_user->save();
             // Enviar los datos de acceso al correo del usuario
             Mail::to($this->email)->send(new CredencialesClinica($this->name, $this->email, $password));
 
             $this->dispatch('clinicaSaved', 'Clinica '. $this->name . ' creada');
         }
         $this->close();
+        $this->mount();
     }
 
     public function showClinica($clinicaId){
