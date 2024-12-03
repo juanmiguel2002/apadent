@@ -32,7 +32,7 @@ class HistorialPaciente extends Component
     public $modalImg, $imagenes = [], $modalArchivo = false, $archivos = [];
     public $selectedEtapa, $documentacion;
     public $mostrarBotonNuevaEtapa = false, $ultimaEtapa;
-    public $fases;
+    public $fases, $faseId;
 
     public $statuses = [
         'En proceso' => 'bg-green-600',
@@ -65,34 +65,44 @@ class HistorialPaciente extends Component
     public function loadFases($trat = null)
     {
         $this->fases = Fase::where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
-            ->whereHas('etapas') // Filtra las fases que tienen etapas asignadas
+            // ->whereHas('etapas') // Filtra las fases que tienen etapas asignadas
             ->get();
+        // $this->loadEtapas();
+    }
+    public function loadEtapas($trat = null){
         if ($trat) {
             $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
-            ->whereHas('fase.tratamiento', function ($query) use ($trat) {
-                $query->where('trat_id', $trat);
-            })
-            ->get();
+                ->whereHas('fase.tratamiento', function ($query) use ($trat) {
+                    $query->where('trat_id', $trat);
+                })
+                ->where('fases_id', $this->faseId) // Filtra por fase_id
+                ->get();
         } else {
             $this->tratId = null;
             $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
                 ->whereHas('fase.tratamiento', function ($query) {
-                    $query->where('id', $this->tratamientoId);
+                    $query->where('id', $this->tratamientoId); // Filtra por tratamiento
                 })
+                ->where('fases_id', $this->faseId) // Filtra por fase_id
                 ->get();
         }
     }
 
-    public function toggleAcordeon($faseName)
+    public function toggleAcordeon($faseName, $faseId)
     {
         // Alternar la visibilidad del acordeón para la fase
         if (isset($this->mostrarMenu[$faseName])) {
             // Si ya está abierto, cerrarlo
             unset($this->mostrarMenu[$faseName]);
+            $this->faseId = null;
         } else {
             // Si no está abierto, abrirlo
             $this->mostrarMenu[$faseName] = true;
+            $this->faseId = $faseId;
+            $this->loadEtapas($this->tratId ? $this->tratId : $this->tratamientoId);
+
         }
+
     }
 
     public function render()
@@ -308,16 +318,16 @@ class HistorialPaciente extends Component
                 $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
-                $archivo = Archivo::create([
+                Archivo::create([
                     'ruta' => $path,
                     'tipo' => $extension,
-                    'paciente_id' => $this->pacienteId,
-                    'paciente_etapa_id' => $etapaId,
+                    'etapa_id' => $etapaId,
                 ]);
             }
-            $archivo->save();
         }
         $this->modalImg = false;
+        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
+
     }
 
     // GESTIONAR ARCHIVOS ETAPA PACIENTE TRATAMIENTO

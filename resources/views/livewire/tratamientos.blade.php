@@ -1,7 +1,12 @@
 <div>
-    <div class="px-6 py-4 flex justify-end items-center">
-        <div class="flex justify-end">
-            <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded ml-2"><i class="fas fa-plus mr-2"></i> Crear Tratamiento</button>
+    <div class="px-6 py-4 flex justify-between items-center">
+        <div class="flex">
+            <strong>Tratamientos asignados a la clínica {{$clinica[0]->name}}</strong>
+        </div>
+        <div class="flex">
+            <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded ml-2">
+                <i class="fas fa-plus mr-2"></i> Crear Tratamiento
+            </button>
         </div>
     </div>
     <x-tabla>

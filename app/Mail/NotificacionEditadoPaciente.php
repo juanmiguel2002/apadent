@@ -3,26 +3,22 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CredencialesClinica extends Mailable
+class NotificacionEditadoPaciente extends Mailable
 {
     use Queueable, SerializesModels;
-
-    public $name;
-    public $email;
-    public $password;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($name, $email, $password)
+    public function __construct()
     {
-        $this->name = $name;
-        $this->email = $email;
-        $this->password = $password;
+        //
     }
 
     /**
@@ -31,7 +27,7 @@ class CredencialesClinica extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Credenciales Clinica',
+            subject: 'Paciente Editado',
         );
     }
 
@@ -40,7 +36,18 @@ class CredencialesClinica extends Mailable
      */
     public function build()
     {
-        return $this->subject('Datos de acceso a la clínica')
-                    ->markdown('emails.credenciales-clinica');
+
+        return $this->subject('Nuevo Mensaje')
+            ->view('emails.mensaje');
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 }

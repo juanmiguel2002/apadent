@@ -15,7 +15,7 @@ class DashboardController extends Controller
 
         if ($user->hasRole('admin')){
             // Dashboard for admin
-            return view('clinicas');
+            return view('admin.clinicas');
         }elseif ($user->hasRole('doctor')) {
             // Dashboard for doctor (related to a clinica)
             $clinica = $user->clinica;

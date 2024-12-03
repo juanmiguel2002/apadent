@@ -16,6 +16,12 @@
             </svg>
             <span>Documentación</span>
         </button>
+        <button wire:click="showDocumentacionModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            <span>Añadir fase</span>
+        </button>
     </div>
 
     @if ($tratId)
@@ -32,19 +38,17 @@
         </div>
     @endif
 
-    @if($etapas)
+    @if($fases)
         <div class="space-y-4">
             @foreach($fases as $fase)
                 <div class="bg-white shadow-md rounded-md space-y-4">
-                    <button wire:click="toggleAcordeon('{{ $fase->name }}')"
+                    <button wire:click="toggleAcordeon('{{ $fase->name }}', {{ $fase->id }})"
                         class="w-full flex justify-between items-center px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none">
                         <span>{{ $fase->name }}</span>
                         <!-- Flecha que cambia su orientación -->
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="h-5 w-5 transform transition-transform duration-200 {{ ($mostrarMenu[$fase->name] ?? false) ? 'rotate-180' : '' }}"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -55,7 +59,7 @@
                                 <thead>
                                     <tr>
                                         <th class="px-4 py-2 bg-azul">ID</th>
-                                        <th class="px-4 py-2 bg-azul">Nº de Fase</th>
+                                        <th class="px-4 py-2 bg-azul">Etapa</th>
                                         <th class="px-4 py-2 bg-azul">Mensaje</th>
                                         <th class="px-4 py-2 bg-azul">Estado</th>
                                         <th class="px-4 py-2 bg-azul">Revisión</th>
@@ -165,7 +169,6 @@
                                             </td>
                                         </tr>
                                     @endforeach
-
                                 </tbody>
                             </table>
                             <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">

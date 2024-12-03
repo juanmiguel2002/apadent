@@ -1,11 +1,11 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
 
-// import Alpine from 'alpinejs';
+import Alpine from 'alpinejs';
 
-// window.Alpine = Alpine;
+window.Alpine = Alpine;
 
-// Alpine.start();
+Alpine.start();
 window.onload = function(){
     Livewire.on('clinicaSaved', message => {
         Swal.fire({
@@ -58,29 +58,6 @@ window.onload = function(){
         });
     });
 
-    // Livewire.on('deleteClinic', ({ clinicaId }) => {
-    //     Swal.fire({
-    //         title: '¿Estás seguro?',
-    //         text: "¡No podrás revertir esto!",
-    //         icon: 'warning',
-    //         showCancelButton: true,
-    //         confirmButtonColor: '#3085d6',
-    //         cancelButtonColor: '#d33',
-    //         confirmButtonText: 'Sí',
-    //         cancelButtonText: 'Cancelar'
-    //     }).then((result) => {
-    //         if (result.isConfirmed) {
-    //             this.emit('deleteClinicConfirmed', clinicaId); // Cambiado a window.Livewire.emit
-    //         } else {
-    //             Swal.fire(
-    //                 'Cancelado',
-    //                 'La Clínica no fue eliminada.',
-    //                 'info'
-    //             );
-    //         }
-    //     });
-    // });
-
     Livewire.on('clinicaEliminada', message => {
         Swal.fire(
             'Eliminado',
@@ -89,42 +66,10 @@ window.onload = function(){
         );
     });
 
-    // Livewire.on('deletePaciente', id => {
-    //     Swal.fire({
-    //         title: '¿Estás seguro?',
-    //         text: "¡No podrás revertir esto!",
-    //         icon: 'warning',
-    //         showCancelButton: true,
-    //         confirmButtonColor: '#3085d6',
-    //         cancelButtonColor: '#d33',
-    //         confirmButtonText: 'Sí'
-    //     }).then((result) => {
-    //         if (result.isConfirmed) {
-    //             Livewire.emit('deletePacienteConfirmed', id);
-    //         }else {
-    //             Swal.fire(
-    //                 'Cancelado',
-    //                 'El/la Paciente no fue eliminad@.',
-    //                 'info'
-    //             );
-    //         }
-    //     });
-    // });
-
-    // Livewire.on('deletedPaciente', () => {
-    //     Swal.fire({
-    //         position: 'top-end',
-    //         icon: 'success',
-    //         title: 'Paciente Eliminado correctamente',
-    //         showConfirmButton: false,
-    //         timer: 2500
-    //     });
-    // });
-
-    Livewire.on('pacienteError', () => {
+    Livewire.on('error', message => {
         Swal.fire(
             'Error!',
-            'En la clínica no hay pacientes',
+            message,
             'warning'
         )
     });
@@ -259,11 +204,4 @@ window.onload = function(){
         });
     });
 
-    Livewire.on('tratamientoEliminado', message => {
-        Swal.fire(
-            'Eliminado!',
-            message,
-            'success'
-        );
-    });
 }

@@ -8,7 +8,7 @@ use App\Http\Controllers\PacienteHistorial;
 use App\Http\Controllers\Pacientes;
 use App\Http\Controllers\PacienteShowController;
 use App\Http\Controllers\TratamientoController;
-use App\Http\Controllers\UsersClinica;
+use App\Http\Controllers\UsersController;
 use App\Livewire\ClinicaShow;
 use Illuminate\Support\Facades\Route;
 
@@ -16,7 +16,11 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])->group(function () {
+    Route::get('/dashboard',[DashboardController::class, 'show'])->name('dashboard');;
+});
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('/dashboard',[DashboardController::class, 'show'])->name('dashboard');
 
     Route::get('/paciente/{paciente}/etapa/{etapa}/imagenes', [ImagenesController::class, 'verImagenes'])
     ->middleware('check.role:doctor_admin, doctor, clinica_user')->name('imagenes.ver');
@@ -27,8 +31,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/etapa/descargar/{filePath}', [ArchivoController::class, 'archivo'])
     ->name('archivo.descargar')->where('filePath', '.*');
 
-    Route::get('/dashboard',[DashboardController::class, 'show'])->name('dashboard');
-
     // Rutas del administrador
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/clinicas', [DashboardController::class, 'show'])->name('admin.clinica');
@@ -37,7 +39,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // Rutas del doctor Administrador
     Route::middleware(['role:doctor_admin|admin'])->group(function(){
-        Route::get('/users', [UsersClinica::class, 'index'])->name('users');
+        Route::get('/users', [UsersController::class, 'index'])->name('users');
     });
 
     Route::middleware(['role:doctor_admin'])->group(function () {
@@ -66,6 +68,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/paciente/{id}/perfil/', [PacienteShowController::class, 'show'])->name('pacientes-show');
     Route::get('/paciente/{id}/historial/{tratId?}', [PacienteHistorial::class, 'index'])->name('paciente-historial');
     Route::get('/clinica/{id}/', [ClinicaController::class, 'index'])->name('clinica');
-
 });
+// Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+
+
+// });
 

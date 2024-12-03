@@ -12,9 +12,7 @@ class Mensaje extends Model
     protected $fillable = [
         'user_id',
         'mensaje',
-        'tratamientos_id',
-        'paciente_trat_id',
-        'etapas_id',
+        'etapa_id',
     ];
 
 

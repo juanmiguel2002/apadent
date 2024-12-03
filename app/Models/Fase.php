@@ -16,12 +16,11 @@ class Fase extends Model
     // Relaciones
     public function tratamiento()
     {
-        return $this->belongsTo(Tratamiento::class);
+        return $this->belongsTo(Tratamiento::class, 'trat_id');  // 'trat_id' es la columna que referencia 'tratamientos' en 'fases'
     }
 
     public function etapas()
     {
-        return $this->hasMany(Etapa::class);
+        return $this->hasMany(Etapa::class, 'fases_id');
     }
-
 }

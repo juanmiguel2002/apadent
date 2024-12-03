@@ -13,9 +13,12 @@
                         if ($user->hasRole('admin')) {
                             $route = route('admin.clinica');
                         }
-                        if ($user->hasRole('doctor')) {
+                        elseif ($user->hasRole('doctor')) {
                             $route = route('doctor.pacientes');
-                        } elseif ($user->hasRole('clinica_user')) {
+                        }
+                        elseif ($user->hasRole('doctor_admin')) {
+                            $route = route('doctor-admin.pacientes');
+                        } elseif ($user->hasRole('clinica')) {
                             $route = route('clinica.pacientes');
                         }
                     } else {
@@ -38,7 +41,35 @@
                             </x-nav-link>
                         </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')">
+                            <x-nav-link href="{{ route('users') }}" :active="request()->routeIs('users.*')">
+                                {{ __('Usuarios') }}
+                            </x-nav-link>
+                        </div>
+                    @endif
+
+                    @if (Auth::user()->hasRole('doctor_admin'))
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            @if ($clinicaId)
+                                <x-nav-link href="{{ route('clinica', ['id' => $clinicaId]) }}" :active="request()->routeIs('clinica')">
+                                    {{ __('Clínica') }}
+                                </x-nav-link>
+                            @else
+                                {{ abort(403, 'Clinica No asignada') }}
+                            @endif
+
+                        </div>
+                        {{-- <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('doctor-admin.pacientes') }}" :active="request()->routeIs('doctor.pacientes')">
+                                {{ __('Pacientes') }}
+                            </x-nav-link>
+                        </div> --}}
+                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('doctor-admin.tratamientos') }}" :active="request()->routeIs('doctor.tratamientos')">
+                                {{ __('Tratamientos') }}
+                            </x-nav-link>
+                        </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('users') }}" :active="request()->routeIs('users')">
                                 {{ __('Usuarios') }}
                             </x-nav-link>
                         </div>
@@ -50,19 +81,14 @@
                                 {{ __('Clínica') }}
                             </x-nav-link>
                         </div>
-                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                        {{-- <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('doctor.pacientes') }}" :active="request()->routeIs('doctor.pacientes')">
                                 {{ __('Pacientes') }}
                             </x-nav-link>
-                        </div>
+                        </div> --}}
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('doctor.tratamientos') }}" :active="request()->routeIs('doctor.tratamientos')">
                                 {{ __('Tratamientos') }}
-                            </x-nav-link>
-                        </div>
-                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <x-nav-link href="{{ route('doctor.users') }}" :active="request()->routeIs('doctor.users')">
-                                {{ __('Usuarios') }}
                             </x-nav-link>
                         </div>
                     @endif
@@ -138,7 +164,7 @@
                         <x-slot name="trigger">
                             @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
                                 <button class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
-                                    <img class="h-8 w-8 rounded-full object-cover" src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
+                                    <img class="h-8 w-8 rounded-full object-cover" src="{{ $user->profile_photo_url }}" alt="{{ Auth::user()->name }}" />
                                 </button>
                             @else
                                 <span class="inline-flex rounded-md">
@@ -199,7 +225,7 @@
             <x-responsive-nav-link href="{{ route('admin.clinica') }}" :active="request()->routeIs('admin.clinica')">
                 {{ __('Clinicas') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('user.*')">
+            <x-responsive-nav-link href="{{ route('users') }}" :active="request()->routeIs('user.*')">
                 {{ __('Users') }}
             </x-responsive-nav-link>
         </div>

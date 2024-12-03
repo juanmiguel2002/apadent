@@ -14,14 +14,12 @@ class CheckUserRole
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle($request, Closure $next, ...$roles)
+    public function handle($request, Closure $next, $role)
     {
-        // Verifica si el usuario autenticado tiene uno de los roles permitidos
-        if (!Auth::check() || !Auth::user()->hasAnyRole($roles)) {
-            // Si no tiene permisos, redirige o muestra un error
-            abort(403, 'Acceso denegado');
+        if (!Auth::check() || !$request->user()->hasRole($role)) {
+            abort(403, 'Unauthorized');
         }
-
         return $next($request);
     }
+
 }

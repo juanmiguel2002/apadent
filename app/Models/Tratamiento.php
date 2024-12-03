@@ -21,6 +21,6 @@ class Tratamiento extends Model
     }
     public function fases()
     {
-        return $this->hasMany(Fase::class);
+        return $this->hasMany(Fase::class, 'trat_id');
     }
 }
