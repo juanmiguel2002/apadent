@@ -19,6 +19,7 @@ class Etapa extends Model
         'status',
         'revision',
         'fases_id',
+        'paciente_id'
     ];
 
     // Relaciones
@@ -27,9 +28,14 @@ class Etapa extends Model
         return $this->belongsTo(Fase::class, 'fases_id');
     }
 
+    public function paciente()
+    {
+        return $this->belongsTo(Paciente::class);
+    }
+
     public function archivos()
     {
-        return $this->hasMany(Archivo::class);
+        return $this->hasMany(Archivo::class, 'etapa_id');
     }
 
     public function mensajes()

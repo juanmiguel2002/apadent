@@ -66,7 +66,7 @@ class User extends Authenticatable implements MustVerifyEmail
     // Relaciones
     public function clinicas()
     {
-        return $this->belongsToMany(Clinica::class, 'clinica_user', 'user_id', 'clinica_id');
+        return $this->belongsToMany(Clinica::class, 'clinica_user');
     }
 
     public function facturas()

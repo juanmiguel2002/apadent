@@ -21,6 +21,6 @@ class Fase extends Model
 
     public function etapas()
     {
-        return $this->hasMany(Etapa::class, 'fases_id');
+        return $this->hasMany(Etapa::class);
     }
 }

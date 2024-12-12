@@ -19,6 +19,22 @@ class Clinica extends Model
         'cuenta'
 
     ];
+
+    public function users() {
+        return $this->belongsToMany(User::class, 'clinica_user', 'clinica_id', 'user_id');
+    }
+
+    public function pacientes()
+    {
+        return $this->hasMany(Paciente::class, 'clinica_id');
+    }
+
+    public function facturas()
+    {
+        return $this->hasMany(Factura::class, 'clinica_id');
+    }
+
+
     // Definir los eventos de Eloquent en el modelo
     protected static function boot()
     {
@@ -56,17 +72,4 @@ class Clinica extends Model
         }
     }
 
-    public function users() {
-        return $this->belongsToMany(User::class, 'clinica_user', 'clinica_id', 'user_id');
-    }
-
-    public function pacientes()
-    {
-        return $this->hasMany(Paciente::class, 'clinica_id');
-    }
-
-    public function facturas()
-    {
-        return $this->hasMany(Factura::class, 'clinica_id');
-    }
 }
