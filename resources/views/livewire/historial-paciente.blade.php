@@ -28,6 +28,11 @@
         <h2 class="px-2 mb-4 font-semibold text-lg text-gray-800">Tratamiento seleccionado: {{ $tratamiento->tratamiento->name }} - {{ $tratamiento->tratamiento->descripcion }}</h2>
     @else
         <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+            @if (session()->has('error'))
+                <div class="alert alert-error">
+                    {{ session('error') }}
+                </div>
+            @endif
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Tratamientos</h2>
             <select wire:model="tratamientoId" wire:change="loadFases" class="w-full p-3 border rounded-md">
                 <option value="">Seleccione un tratamiento</option>
@@ -173,7 +178,7 @@
                             </table>
                             <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
                                 <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
-                                <strong wire:click='nuevaEtapa'>Añadir etapa</strong>
+                                <strong wire:click='nuevaEtapa({{$fase->id}})'>Añadir etapa</strong>
                             </div>
                         </div>
                     @endif

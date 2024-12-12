@@ -23,8 +23,7 @@ class HistorialPaciente extends Component
 
     public $clinica, $paciente, $pacienteId;
     public $tratamiento, $tratamientos, $tratamientoId;
-    public $etapa_paciente = [], $etapas;
-    public $mensajes = [], $revision;
+    public $etapas, $mensajes = [], $revision;
     public $selectedTratamiento, $selectedNewTratamiento, $tratId;
     public $showTratamientoModal = false, $mostrarMenu = [], $modalOpen = false, $documents = false;
     public $etapaId; // para guardar el ID de la etapa correspondiente
@@ -84,6 +83,8 @@ class HistorialPaciente extends Component
             ->where('fase_id', $faseId)
             ->where('paciente_id', $this->pacienteId)
             ->get();
+        $this->mostrarMenu[$faseId] = true;
+
     }
 
     public function toggleAcordeon($faseName, $faseId)
@@ -94,6 +95,7 @@ class HistorialPaciente extends Component
         } else {
             $this->mostrarMenu = []; // Cerrar otros menús
             $this->mostrarMenu[$faseId] = true;
+            $this->faseId = $faseId;
             $this->loadEtapas($faseId);
         }
     }
@@ -158,7 +160,7 @@ class HistorialPaciente extends Component
         $etapa->save();
         $this->mostrarMenu = false; // Cerrar el menú
         $this->dispatch('estadoActualizado');
-        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
+        $this->loadEtapas($this->faseId);
 
         // Enviar email a la clínica
         $etapa = Etapa::find($etapaId);
@@ -187,34 +189,39 @@ class HistorialPaciente extends Component
 
             $this->dispatch('revision');
             $this->modalOpen = false;
-            $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
+            $this->loadEtapas($this->faseId);
 
             Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa));
-
         }
     }
 
-    // Nueva etapa
-    public function nuevaEtapa()
+    // Nueva Etapa
+    public function nuevaEtapa($faseId)
     {
-        // Buscar la fase asociada
-        $fase = Fase::where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
-            ->first();
+        $fase = Fase::find($faseId);
 
-        // Obtener el número de la última etapa asociada a esta fase
-        $ultimoNumero = $fase->etapas()->count(-1)+1;
+        if (!$fase) {
+            session()->flash('error', 'La fase especificada no existe.');
 
-        // Crear la nueva etapa
+            return;
+        }
+
+        // Obtener el número consecutivo de la nueva etapa
+        $numeroEtapa = Etapa::where('fase_id', $fase->id)->count() + 1;
+        $nombreEtapa = "Etapa " . $numeroEtapa;
+
+        // Crear una nueva etapa
         Etapa::create([
-            'name' => "Etapa $ultimoNumero",
+            'name' => $nombreEtapa, // Nombre consecutivo
             'fecha_ini' => now(),
-            'status' => 'Set Up', // Estado inicial
-            'fases_id' => $fase->id,
+            'status' => 'Set Up', // Status inicial de la etapa
+            'fase_id' => $fase->id, // Relacionar con la fase seleccionada
+            'paciente_id' => $this->pacienteId, // Relacionar con el paciente seleccionado
         ]);
 
-        // Emitir un evento para actualizar la vista
         $this->dispatch('etapa');
-        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
+        // Recargar las etapas para reflejar los cambios
+        $this->loadEtapas($fase->tratamiento->id);
     }
 
     // GESTIÓN NEW TRATAMIENTO
