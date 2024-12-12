@@ -28,9 +28,9 @@ class HistorialPaciente extends Component
     public $showTratamientoModal = false, $mostrarMenu = [], $modalOpen = false, $documents = false;
     public $etapaId; // para guardar el ID de la etapa correspondiente
     public $archivo, $img = false, $completado;
-    public $modalImg, $imagenes = [], $modalArchivo = false, $archivos = [];
-    public $selectedEtapa, $documentacion;
-    public $mostrarBotonNuevaEtapa = false, $ultimaEtapa;
+    public $modalImg, $imagenes = [];
+    public $modalArchivo = false, $archivos = [];
+    public $mostrarAcordeon = [];
     public $fases, $faseId;
 
     public $statuses = [
@@ -56,6 +56,7 @@ class HistorialPaciente extends Component
         // Cargar las fases del tratamiento seleccionado (si existe un tratamiento)
         if ($this->tratId) {
             $this->loadFases($this->tratId);
+            $this->mostrarMenu = true;
         }
 
         // Cargar archivos relacionados con las etapas del paciente
@@ -83,18 +84,17 @@ class HistorialPaciente extends Component
             ->where('fase_id', $faseId)
             ->where('paciente_id', $this->pacienteId)
             ->get();
-        $this->mostrarMenu[$faseId] = true;
 
     }
 
     public function toggleAcordeon($faseName, $faseId)
     {
         // Alternar visibilidad del acordeón para las fases
-        if (isset($this->mostrarMenu[$faseId])) {
-            unset($this->mostrarMenu[$faseId]);
+        if (isset($this->mostrarAcordeon[$faseId])) {
+            unset($this->mostrarAcordeon[$faseId]);
         } else {
-            $this->mostrarMenu = []; // Cerrar otros menús
-            $this->mostrarMenu[$faseId] = true;
+            $this->mostrarAcordeon = []; // Cerrar otros menús
+            $this->mostrarAcordeon[$faseId] = true;
             $this->faseId = $faseId;
             $this->loadEtapas($faseId);
         }
@@ -143,7 +143,7 @@ class HistorialPaciente extends Component
         $etapa = Etapa::find($etapaId);
         $trat = Tratamiento::find($this->tratId ? $this->tratId : $this->tratamientoId);
 
-        Mail::to($this->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
+        // Mail::to($this->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
 
     }
 
