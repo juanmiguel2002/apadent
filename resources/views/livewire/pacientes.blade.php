@@ -69,7 +69,7 @@
                             <td class="text-center px-4 py-2">{{ $paciente->tratamiento_name}} - {{ $paciente->tratamiento_descripcion }}</td>
                             @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
                                 @if ($paciente->etapa_status == $status)
-                                    <td class="p-3 text-center flex justify-center items-center mt-4">
+                                    <td class="p-3 text-center flex justify-center items-center mt-2">
                                         @if ($status === 'Finalizado')
                                             <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
                                                 <span>{{ $status }}</span>
@@ -113,7 +113,9 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
                 </svg>
-                <span class="font-medium">No existe ningún registro.</span>
+                <span class="font-medium">
+                    {{ $pacientes->where('activo', false)->isEmpty() ? 'No existe ningún paciente desactivado' : 'No existe ningún paciente.' }}
+                </span>
             </div>
         @endif
         {{-- @if ($pacientes->hasPages())
