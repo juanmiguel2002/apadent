@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Models\Etapa;
 use App\Models\Fase;
 use App\Models\Paciente;
-use App\Models\Tratamiento;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -16,7 +15,7 @@ class PacienteShow extends Component
     public $paciente, $tratamientosAll, $tratamientos, $pacienteId, $imageUrl;
     public $showModal = false, $showModalPaciente = false;
     public $files = [];
-    public $uploadType = 'imagenes'; // Default to 'imagenes'
+    // public $uploadType = 'imagenes'; // Default to 'imagenes'
     public $isCreatingNew = false;
     public $num_paciente, $name, $apellidos, $email, $fecha_nacimiento, $telefono;
     public $observacion, $obser_cbct, $odontograma, $url_img;
@@ -26,31 +25,62 @@ class PacienteShow extends Component
     {
         $this->pacienteId = $id;
 
-        // Carga el paciente y sus relaciones con tratamientos, fases y etapas
-        $this->paciente = Paciente::with(['clinicas', 'tratamientos.fases.etapas'])
-            ->findOrFail($this->pacienteId);
+        // Cargar el paciente con relaciones necesarias
+        $this->paciente = Paciente::with([
+            'clinicas',
+            'tratamientos.fases.etapas.mensajes.user' // Carga las relaciones en cascada
+        ])->findOrFail($this->pacienteId);
 
-        // Cargar tratamientos relacionados
+        // Cargar tratamientos del paciente
         $this->tratamientos = $this->paciente->tratamientos;
 
-        // Cargar solo las fases que tienen etapas asignadas
-        $this->fases = Fase::where('trat_id', $this->tratamientos[0]->id)->whereHas('etapas')->get();
-        $this->etapas = Etapa::with(['fase', 'mensajes.user'])
-        ->whereHas('fase.tratamiento', function ($query) {
-            $query->where('trat_id', $this->tratamientos);
-        })
-        ->get();
+        // Cargar las fases con etapas asociadas para el primer tratamiento (si existe)
+        if ($this->tratamientos->isNotEmpty()) {
+            $this->fases = Fase::where('trat_id', $this->tratamientos->first()->id)
+                ->whereHas('etapas') // Solo fases con etapas asignadas
+                ->with('etapas.mensajes.user') // Cargar etapas y sus mensajes
+                ->get();
+
+            // Cargar todas las etapas de las fases del tratamiento actual
+            $this->etapas = Etapa::whereHas('fase', function ($query) {
+                $query->whereIn('id', $this->fases->pluck('id')); // Filtra por fases cargadas
+            })
+            ->with(['fase', 'mensajes.user', 'archivos']) // Carga relaciones necesarias
+            ->get();
+        } else {
+            // Si no hay tratamientos, inicializa las variables
+            $this->fases = collect();
+            $this->etapas = collect();
+        }
+
+        // Debugging opcional
         // dd($this->paciente, $this->tratamientos, $this->fases, $this->etapas);
     }
 
 
     public function toggleActivo()
     {
+        // Alternar el estado de "activo" del paciente
         $this->paciente->activo = !$this->paciente->activo;
         $this->paciente->save();
+
+        // Despachar evento después de guardar
         $this->dispatch('PacienteActivo');
+
+        // Establecer el nuevo estado basado en el estado del paciente
+        $nuevoStatus = $this->paciente->activo ? 'En proceso' : 'Pausado';
+
+        // Actualizar el estado de las etapas relacionadas con el paciente
+        Etapa::whereHas('fase.tratamiento.pacientes', function ($query) {
+            $query->where('id', $this->pacienteId);
+        })
+        ->where('status', '!=', 'Finalizado') // Solo actualizamos etapas que no estén "Finalizadas"
+        ->update(['status' => $nuevoStatus]);
+
+        // Redirigir al dashboard
         return redirect()->route('dashboard');
     }
+
 
     public function render()
     {
