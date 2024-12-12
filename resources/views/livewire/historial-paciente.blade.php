@@ -16,12 +16,12 @@
             </svg>
             <span>Documentación</span>
         </button>
-        <button wire:click="showDocumentacionModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
+        {{-- <button wire:click="showDocumentacionModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
             <span>Añadir fase</span>
-        </button>
+        </button> --}}
     </div>
 
     @if ($tratId)
@@ -40,7 +40,7 @@
 
     @if($fases)
         <div class="space-y-4">
-            @foreach($fases as $fase)
+            @foreach($fases as $key => $fase)
                 <div class="bg-white shadow-md rounded-md space-y-4">
                     <button wire:click="toggleAcordeon('{{ $fase->name }}', {{ $fase->id }})"
                         class="w-full flex justify-between items-center px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none">
@@ -53,12 +53,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    @if($mostrarMenu[$fase->name] ?? false)
+                    @if($mostrarMenu[$fase->id] ?? false)
                         <div class="px-4 py-2">
                             <table class="min-w-full bg-gray-50 rounded-t-md">
                                 <thead>
                                     <tr>
-                                        <th class="px-4 py-2 bg-azul">ID</th>
+                                        {{-- <th class="px-4 py-2 bg-azul">ID</th> --}}
                                         <th class="px-4 py-2 bg-azul">Etapa</th>
                                         <th class="px-4 py-2 bg-azul">Mensaje</th>
                                         <th class="px-4 py-2 bg-azul">Estado</th>
@@ -70,7 +70,7 @@
                                 <tbody>
                                     @foreach($etapas as $etapa)
                                         <tr class="hover:bg-gray-200 transition duration-300">
-                                            <td class="px-4 text-center">{{$etapa->id}}</td>
+                                            {{-- <td class="px-4 text-center">{{$key}}</td> --}}
                                             <td class="px-4 py-2 text-center">{{ $etapa->name }}</td>
                                             <td class="px-4 py-2">
                                                 @foreach ($etapa->mensajes as $mensaje)
@@ -98,7 +98,7 @@
                                             <td class="p-3 text-center flex justify-center items-center h-full mt-4">
                                                 @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
                                                     @if ($etapa->status == $status)
-                                                        <td class="p-3 text-center flex justify-center items-center mt-4">
+                                                        <div class="p-3 text-center flex justify-center items-center">
                                                             @if ($status === 'Finalizado')
                                                                 <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
                                                                     <span>{{ $status }}</span>
@@ -122,7 +122,7 @@
                                                                     </div>
                                                                 @endif
                                                             @endif
-                                                        </td>
+                                                        </div>
                                                     @endif
                                                 @endforeach
                                             </td>

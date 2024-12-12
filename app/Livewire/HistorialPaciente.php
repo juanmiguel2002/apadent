@@ -50,59 +50,52 @@ class HistorialPaciente extends Component
         $this->paciente = $paciente;
         $this->clinica = Clinica::find($this->paciente->clinica_id);
         $this->pacienteId = $this->paciente->id;
-        $this->tratId = $tratId; // Tratamiento pasado por la URL (si existe)
-        $this->tratamiento = $tratamiento; // Tratamiento pasado por la URL (si existe)
 
-        // Cargar las etapas asociadas al tratamiento seleccionado (si existe un tratamiento)
-        if($this->tratId){
-            $this->loadFases($tratId);
+        $this->tratId = $tratId;// comprobar si existe tratamiento asignado por url
+        $this->tratamiento = $tratamiento;//se pasa el tratamiento seleccionado por url
+
+        // Cargar las fases del tratamiento seleccionado (si existe un tratamiento)
+        if ($this->tratId) {
+            $this->loadFases($this->tratId);
         }
 
-        $this->archivo = Archivo::where('etapa_id', $this->pacienteId)->where('tipo', 'zip')->get();
-        // dd($this->archivo);
+        // Cargar archivos relacionados con las etapas del paciente
+        $this->archivo = Archivo::whereHas('etapas', function ($query) {
+            $query->where('paciente_id', $this->pacienteId);
+        })->where('tipo', 'zip')->get();
     }
 
-    public function loadFases($trat = null)
+    public function loadFases($tratId = null)
     {
-        $this->fases = Fase::where('trat_id', $this->tratId ? $this->tratId : $this->tratamientoId)
-            // ->whereHas('etapas') // Filtra las fases que tienen etapas asignadas
+        // Cargar las fases únicas asociadas al tratamiento
+        $this->fases = Fase::where('trat_id', $tratId ? $tratId : $this->tratamientoId)
+            ->with(['etapas' => function ($query) {
+                $query->where('paciente_id', $this->pacienteId);
+            }])
+            ->distinct()
             ->get();
-        // $this->loadEtapas();
+
     }
-    public function loadEtapas($trat = null){
-        if ($trat) {
-            $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
-                ->whereHas('fase.tratamiento', function ($query) use ($trat) {
-                    $query->where('trat_id', $trat);
-                })
-                ->where('fases_id', $this->faseId) // Filtra por fase_id
-                ->get();
-        } else {
-            $this->tratId = null;
-            $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
-                ->whereHas('fase.tratamiento', function ($query) {
-                    $query->where('id', $this->tratamientoId); // Filtra por tratamiento
-                })
-                ->where('fases_id', $this->faseId) // Filtra por fase_id
-                ->get();
-        }
+
+    public function loadEtapas($faseId)
+    {
+        // Cargar las etapas específicas para la fase activa
+        $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
+            ->where('fase_id', $faseId)
+            ->where('paciente_id', $this->pacienteId)
+            ->get();
     }
 
     public function toggleAcordeon($faseName, $faseId)
     {
-        // Alternar la visibilidad del acordeón para la fase
-        if (isset($this->mostrarMenu[$faseName])) {
-            // Si ya está abierto, cerrarlo
-            unset($this->mostrarMenu[$faseName]);
-            $this->faseId = null;
+        // Alternar visibilidad del acordeón para las fases
+        if (isset($this->mostrarMenu[$faseId])) {
+            unset($this->mostrarMenu[$faseId]);
         } else {
-            // Si no está abierto, abrirlo
-            $this->mostrarMenu[$faseName] = true;
-            $this->faseId = $faseId;
-            $this->loadEtapas($this->tratId ? $this->tratId : $this->tratamientoId);
-
+            $this->mostrarMenu = []; // Cerrar otros menús
+            $this->mostrarMenu[$faseId] = true;
+            $this->loadEtapas($faseId);
         }
-
     }
 
     public function render()
@@ -209,7 +202,7 @@ class HistorialPaciente extends Component
             ->first();
 
         // Obtener el número de la última etapa asociada a esta fase
-        $ultimoNumero = $fase->etapas()->count() + 1;
+        $ultimoNumero = $fase->etapas()->count(-1)+1;
 
         // Crear la nueva etapa
         Etapa::create([
