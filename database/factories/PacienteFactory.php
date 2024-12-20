@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Etapa;
+use App\Models\Fase;
 use App\Models\Paciente;
-use App\Models\PacienteEtapas;
 use App\Models\Tratamiento;
-use App\Models\TratamientoEtapa;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,14 +18,15 @@ class PacienteFactory extends Factory
     public function definition()
     {
         return [
-            'num_paciente' => $this->faker->unique()->randomNumber(),
+            'num_paciente' => $this->faker->unique()->numberBetween(1000, 9999),
             'name' => $this->faker->firstName,
             'apellidos' => $this->faker->lastName,
             'fecha_nacimiento' => $this->faker->date(),
-            'email' => $this->faker->email,
             'telefono' => $this->faker->phoneNumber,
-            'observacion' => $this->faker->sentence(),
-            'clinica_id' => 1, // Relación con clínica
+            'observacion' => $this->faker->text(50),
+            'obser_cbct' => $this->faker->text(50),
+            'activo' => $this->faker->boolean,
+            'clinica_id' => 1, // Ajusta este valor según el ID de las clínicas
         ];
     }
 
@@ -39,13 +40,14 @@ class PacienteFactory extends Factory
             $paciente->tratamientos()->attach($tratamiento->id);
 
             // Obtener las etapas del tratamiento
-            $etapasTratamiento = TratamientoEtapa::where('trat_id', $tratamiento->id)->get();
+            $fases = Fase::where('trat_id', $tratamiento->id)->get();
 
             // Asignar cada etapa del tratamiento al paciente en la tabla paciente_etapas
-            foreach ($etapasTratamiento as $etapaTratamiento) {
-                PacienteEtapas::create([
+            foreach ($fases as $fase) {
+                Etapa::create([
+                    'name' => 'Inicio',
                     'paciente_id' => $paciente->id,
-                    'etapa_id' => 1,
+                    'fase_id' => $fase->id,
                     'fecha_ini' => $this->faker->date(),
                     'fecha_fin' => $this->faker->optional()->date(),
                     'status' => $this->faker->randomElement(['Set Up', 'En progreso', 'Pausado','Finalizado']),
