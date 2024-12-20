@@ -1,9 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-3xl text-gray-800">
-            {{ 'Historial de ' }} <span class="text-azul"> {{$paciente->name}} - {{ $paciente->num_paciente }}</span>
+            {{ 'Historial de ' }}
+            <a href="{{ route('pacientes-show', $paciente->id) }}" class="text-azul hover:underline">
+                {{ $paciente->name }} - {{ $paciente->num_paciente }}
+            </a>
         </h2>
     </x-slot>
+
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="w-4/5 flex justify-start items-center mb-5">
