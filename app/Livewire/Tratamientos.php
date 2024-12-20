@@ -5,9 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Tratamiento;
 use App\Mail\NewTratamiento;
-use App\Models\Etapa;
 use App\Models\Fase;
-use App\Models\TratamientoEtapa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
@@ -23,9 +21,13 @@ class Tratamientos extends Component
 
         // Filtrar los tratamientos por la clinica del usuario logueado (solo salen los que los usuarios de la clinica estan asignados)
         $user = Auth::user();
-        $this->tratamientos = Tratamiento::whereHas('pacientes.paciente.clinicas', function ($query) use ($user) {
-            $query->whereIn('id', $user->clinicas->pluck('id'));
-        })->get();
+        // $this->tratamientos = Tratamiento::whereHas('pacientes.paciente.clinicas', function ($query) use ($user) {
+        //     $query->whereIn('id', $user->clinicas->pluck('id'));
+        // })->get();
+
+        // saca todos los tratamientos
+        $this->tratamientos = Tratamiento::all();
+
         //sacar el nombre de la clinica
         $this->clinica = $user->clinicas;
         // dd($this->tratamientos);
@@ -38,16 +40,22 @@ class Tratamientos extends Component
 
     public function showCreateModal($tratamientoId = null)
     {
-        $this->reset([
-            'name', 'descripcion'
-        ]);
         $this->trat_id = $tratamientoId;
-        if ($this->trat_id) {
-            $this->isEditing = true;
-        }else{
-            $this->isEditing = false;
-        }
+        $this->isEditing = $this->trat_id !== null;
         $this->showModal = true;
+
+        if ($this->isEditing) {
+            $tratamiento = Tratamiento::find($this->trat_id);
+            if ($tratamiento) {
+                $this->name = $tratamiento->name;
+                $this->descripcion = $tratamiento->descripcion;
+            } else {
+                $this->dispatch('error', 'Tratamiento no encontrado.');
+                $this->close();
+            }
+        } else {
+            $this->reset(['name', 'descripcion']);
+        }
     }
 
     public function save()
@@ -63,16 +71,11 @@ class Tratamientos extends Component
             'name' => $this->name,
             'descripcion' => $this->descripcion,
         ]);
-        if(!$this->trat_id){
-            $etapaInicio = Etapa::create([
-                'name' => 'Inicio',
-                'fecha_ini' => now(),
-                'status' => 'Set Up',
-            ]);
 
+        if(!$this->trat_id){
             Fase::create([
+                'name' => 'Fase 1',
                 'trat_id' => $tratamiento->id,
-                'etapa_id' => $etapaInicio->id,
             ]);
         }
 
@@ -88,5 +91,8 @@ class Tratamientos extends Component
     public function close()
     {
         $this->showModal = false;
+        $this->reset([
+            'name', 'descripcion'
+        ]);
     }
 }

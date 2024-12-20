@@ -1,10 +1,10 @@
 <div>
-    <div class="px-6 py-4 flex justify-between items-center">
+    <div class="px-2 py-4 flex justify-between items-center">
         <div class="flex">
-            <strong>Tratamientos asignados a la clínica {{$clinica[0]->name}}</strong>
+            {{-- <strong>Tratamientos asignados a la clínica {{$clinica[0]->name}}</strong> --}}
         </div>
         <div class="flex">
-            <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded ml-2">
+            <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded">
                 <i class="fas fa-plus mr-2"></i> Crear Tratamiento
             </button>
         </div>
