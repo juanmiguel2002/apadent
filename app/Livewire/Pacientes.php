@@ -5,6 +5,10 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use App\Mail\CambioEstado;
 use App\Mail\NotificacionNuevoPaciente;
 use App\Models\Archivo;
@@ -14,15 +18,11 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 
 class Pacientes extends Component
 {
     use WithFileUploads, WithPagination;
-
+    public $menuVisible = null;
     public $tratamientos, $clinica_id, $paciente, $paciente_id;
     public $num_paciente, $name, $apellidos, $email, $telefono, $fecha_nacimiento;
     public $observacion, $obser_cbct;
@@ -80,58 +80,73 @@ class Pacientes extends Component
 
     public function render()
     {
-        // Definir la columna y dirección de ordenación predeterminadas
+        // Configuración de la ordenación
+        $orderByColumn = $this->ordenar === 'recientes' ? 'pacientes.created_at' : ($this->ordenar === 'name' ? 'pacientes.name' : 'pacientes.id');
+        $orderByDirection = $this->ordenar === 'recientes' ? 'desc' : 'asc';
+
+        // Consulta optimizada
+        $pacientes = Paciente::with([
+            'clinicas',
+            'tratamientos' => function ($query) {
+                $query->latest('paciente_trat.id'); // Último tratamiento asociado al paciente
+            },
+            'tratamientos.fases' => function ($query) {
+                $query->latest('fases.id'); // Última fase asociada al tratamiento
+            },
+            'tratamientos.fases.etapas' => function ($query) {
+                $query->latest('etapas.id'); // Última etapa asociada a la fase
+            },
+        ])
+        ->whereHas('tratamientos.fases.etapas', function ($query) {
+            $query->where('etapas.status', '<>', 'Finalizado') // Solo etapas no finalizadas
+                ->orWhere('etapas.status', '=', 'Finalizado'); // También incluir las finalizadas
+        })
+        ->where(function ($query) { // Búsqueda
+            $query->where('name', 'like', '%' . $this->search . '%')
+                ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                ->orWhere('telefono', 'like', '%' . $this->search . '%');
+        })
+        ->where('activo', $this->activo ? 0 : 1) // Filtrar por pacientes activos o inactivos
+        ->orderBy($orderByColumn, $orderByDirection) // Orden dinámico
+        ->paginate($this->perPage);
+
+        // dd($pacientes);
+        return view('livewire.pacientes', [
+            'pacientes' => $pacientes,
+        ]);
+    }
+
+
+    public function render2()
+    {
+        // Definir columna y dirección de ordenación por defecto
         $orderByColumn = 'id';
         $orderByDirection = 'asc';
 
-        // Determinar la columna de ordenación basada en la selección del usuario
-        switch ($this->ordenar) {
-            case 'recientes':
-                $orderByColumn = 'created_at';
-                $orderByDirection = 'desc';
-                break;
-            case 'name':
-                $orderByColumn = 'name';
-                $orderByDirection = 'asc';
-                break;
-            default:
-                break;
+        // Determinar columna de ordenación basada en la selección del usuario
+        if ($this->ordenar === 'recientes') {
+            $orderByColumn = 'created_at';
+            $orderByDirection = 'desc';
+        } elseif ($this->ordenar === 'name') {
+            $orderByColumn = 'name';
+            $orderByDirection = 'asc';
         }
 
-        // Consulta para obtener los pacientes con sus tratamientos, fases y etapas relacionadas
-        $pacientes = Paciente::select(
-            'pacientes.*',
-            'pacientes.name as nombre',
-            'tratamientos.name as tratamiento_name',
-            'tratamientos.descripcion as tratamiento_descripcion',
-            'etapas.id as etapa_id',
-            'etapas.status as etapa_status',
-            'fases.name as fase_name',
-            'etapas.name as etapa_name'
-        )
-        ->join('clinicas', 'pacientes.clinica_id', '=', 'clinicas.id')
-        ->join('paciente_trat', function ($join) {
-            $join->on('pacientes.id', '=', 'paciente_trat.paciente_id')
-                ->whereRaw('paciente_trat.id = (SELECT MAX(id) FROM paciente_trat WHERE paciente_id = pacientes.id)');
-        })
-        ->join('tratamientos', 'paciente_trat.trat_id', '=', 'tratamientos.id')
-        ->join('fases', 'tratamientos.id', '=', 'fases.trat_id')
-        ->join('etapas', function ($join) {
-            $join->on('fases.id', '=', 'etapas.fases_id')
-                 ->whereRaw('etapas.id = (SELECT MAX(id) FROM etapas WHERE fases_id = fases.id)');
-        })
-        ->where(function ($query) {
-            $query->where('etapas.status', '<>', 'Finalizado') // Mostrar solo etapas no finalizadas
-                ->orWhere('etapas.status', '=', 'Finalizado'); // Incluir las etapas finalizadas con indicación
-        })
+        // Consulta optimizada para obtener pacientes con sus etapas relacionadas
+        $pacientes = Paciente::with([
+            'tratamientos.fases.etapas' => function ($query) {
+                $query->where('etapas.status', '<>', 'Finalizado') // Mostrar solo etapas no finalizadas
+                    ->orWhere('etapas.status', '=', 'Finalizado');
+            },
+            'clinicas',
+        ])
         ->where(function ($query) { // Búsqueda por nombre, apellidos o teléfono
-            $query->where('pacientes.name', 'like', '%' . $this->search . '%')
-                ->orWhere('pacientes.apellidos', 'like', '%' . $this->search . '%')
-                ->orWhere('pacientes.telefono', 'like', '%' . $this->search . '%');
+            $query->where('name', 'like', '%' . $this->search . '%')
+                ->orWhere('apellidos', 'like', '%' . $this->search . '%')
+                ->orWhere('telefono', 'like', '%' . $this->search . '%');
         })
-        ->where('pacientes.activo', $this->activo ? 0 : 1) // Filtrar por pacientes activos o inactivos
-        ->orderBy($orderByColumn, $orderByDirection) // Ordenar por columna seleccionada
-        ->groupBy('pacientes.id')
+        ->where('activo', $this->activo ? 0 : 1) // Filtrar por pacientes activos o inactivos
+        ->orderBy($orderByColumn, $orderByDirection) // Ordenar según selección
         ->paginate($this->perPage);
 
         return view('livewire.pacientes', [
@@ -272,9 +287,9 @@ class Pacientes extends Component
             $fases = Fase::where('trat_id', $this->selectedTratamiento)->get();
 
             foreach ($fases as $fase) {
-                Etapa::firstOrCreate(
+                $etapa = Etapa::firstOrCreate(
                     [
-                        'fases_id' => $fase->id,
+                        'fase_id' => $fase->id,
                         'paciente_id' => $paciente->id,
                     ],
                     [
@@ -300,22 +315,23 @@ class Pacientes extends Component
                 $fileName = $pacienteName . '.' . $extension;
                 $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'public');
 
-                $paciente->update(['url_img' => $path]);
+                $paciente->url_img = $path;
+                $paciente->save();
+            }else{
+                $paciente->save(['url_img' => storage_path('recursos/imagenes/foto_perfil.jpg')]);
             }
 
             // 6. Subir múltiples imágenes del paciente (asociadas a la primera etapa)
             if ($this->imagenes && is_array($this->imagenes)) {
                 foreach ($this->imagenes as $key => $imagen) {
                     $extension = $imagen->getClientOriginalExtension();
-                    $fileName = "Imagen_" . $key . '.' . $extension;
+                    $fileName = "Imagen_" . $key . '.' . $extension;//nombre del archivo
                     $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
 
                     Archivo::create([
                         'ruta' => $path,
                         'tipo' => $extension,
-                        'etapa_id' => Etapa::where('fases_id', $fases->first()->id)
-                                        ->where('paciente_id', $paciente->id)
-                                        ->first()->id, // Asociar a la primera etapa creada
+                        'etapa_id' => $etapa->id, // Asociar a la primera etapa creada
                     ]);
                 }
             }
@@ -329,7 +345,7 @@ class Pacientes extends Component
                     Archivo::create([
                         'ruta' => $path,
                         'tipo' => $extension,
-                        'etapa_id' => Etapa::where('fases_id', $fases->first()->id)
+                        'etapa_id' => Etapa::where('fase_id', $fases->first()->id)
                                         ->where('paciente_id', $paciente->id)
                                         ->first()->id,
                     ]);
@@ -371,7 +387,7 @@ class Pacientes extends Component
         $pacienteFolder = $nombreClinica . '/pacientes/' . $nombrePaciente;
 
         // Lista de subcarpetas que deseas crear dentro de la carpeta del paciente
-        $subFolders = ['imgEtapa', 'CBCT', 'archivoEtapa', 'Stripping']; // imgPaciente se a eliminado 
+        $subFolders = ['imgEtapa', 'CBCT', 'archivoEtapa', 'Stripping']; // imgPaciente se a eliminado
 
         // Crear la carpeta de pacientes si no existe
         if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
@@ -388,29 +404,48 @@ class Pacientes extends Component
     }
 
     // CAMBIAR ESTADO PACIENTE ETAPA
-    public function estado($etapaId, $newStatus)
+    public function estado($pacienteId, $newStatus)
     {
-        $etapa = Etapa::find($etapaId);
+        // Encuentra al paciente y su etapa actual
+        $paciente = Paciente::find($pacienteId);
 
-        if($newStatus === 'Finalizado'){
-            $etapa->update(['status' => $newStatus, 'fecha_fin' => now()]);
-        }else{
-            $etapa->status = $newStatus;
+        if (!$paciente) {
+            session()->flash('error', 'Paciente no encontrado.');
+            return;
         }
-        $etapa->save();
-        $this->mostrarMenu = false; // Cerrar el menú
+
+        $etapa = Etapa::where('paciente_id', $pacienteId)->first();
+
+        if (!$etapa) {
+            session()->flash('error', 'Etapa no encontrada para el paciente.');
+            return;
+        }
+
+        // Actualizar el estado de la etapa
+        if ($newStatus === 'Finalizado') {
+            $etapa->update(['status' => $newStatus, 'fecha_fin' => now()]);
+        } else {
+            $etapa->status = $newStatus;
+            $etapa->save();
+        }
+
+        // Cerrar el menú y notificar
+        $this->menuVisible = null;
         $this->dispatch('estadoActualizado');
         $this->resetPage();
 
-        // Enviar email a la clínica
-        // $paciente = Paciente::find($pacienteId);
-        // $clinica = Clinica::find($paciente->clinica_id); // Obtener la clínica asociada al paciente
-        // $etapa = Etapa::find($etapaId);
-        // $trat = Tratamiento::find($tratamientoEtapa->trat_id);
+        // Opcional: Enviar email a la clínica
+        /*
+        $clinica = Clinica::find($paciente->clinica_id);
+        if ($clinica && $clinica->email) {
+            Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa));
+        }
+        */
+    }
 
-        // if ($clinica && $clinica->email) {
-        //     Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $trat));
-        // }
+    public function toggleMenu($pacienteId)
+    {
+        $this->menuVisible = $this->menuVisible === $pacienteId ? null : $pacienteId;
     }
 
     public function showPaciente($id_paciente){
@@ -440,8 +475,8 @@ class Pacientes extends Component
         $this->showModal = false;
     }
 
-    public function toggleMenu($etapaId)
-    {
-        $this->mostrarMenu[$etapaId] = isset($this->mostrarMenu[$etapaId]) ? !$this->mostrarMenu[$etapaId] : true;
-    }
+    // public function toggleMenu($etapaId)
+    // {
+    //     $this->mostrarMenu[$etapaId] = isset($this->mostrarMenu[$etapaId]) ? !$this->mostrarMenu[$etapaId] : true;
+    // }
 }
