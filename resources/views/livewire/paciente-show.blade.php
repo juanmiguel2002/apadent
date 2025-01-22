@@ -8,7 +8,7 @@
 
         <!-- Contenedor de los botones -->
         <div class="flex space-x-4">
-            <!-- Primer botón -->
+            <!-- Añadir stripping -->
             @can('stripping')
                 <button wire:click="stripping" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -17,7 +17,7 @@
                     <span>Añadir Stripping</span>
                 </button>
             @endcan
-            <!-- botón Editar-->
+            <!-- Botón Editar-->
             <button wire:click="edit" class="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -36,11 +36,11 @@
                     <div class="bg-white p-3 border-t-4 border-green-500">
                         <div class="image overflow-hidden rounded-lg">
                             <img class="h-auto w-full mx-auto"
-                                src="{{ asset('storage/'. $paciente->url_img) }}"
+                                src="{{ $paciente->url_img ? asset('storage/'. $paciente->url_img) : asset('storage/recursos/imagenes/foto_perfil.jpg')}}"
                                 alt="Foto {{$paciente->name}}">
                         </div>
                         <h1 class="text-gray-900 font-bold text-xl leading-8 my-1">{{$paciente->name}} {{$paciente->apellidos}}</h1>
-                        {{-- <h3 class="text-gray-600 font-semibold text-azul leading-6">{{$paciente->clinicas[0]->name}}</h3> --}}
+                        <h3 class="text-gray-600 font-semibold text-azul leading-6">{{ $paciente->clinicas->name }}</h3>
                         <ul class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:shadow py-2 px-3 mt-3 divide-y rounded shadow-sm">
                             <li class="flex items-center py-3">
                                 <span>Status</span>
@@ -135,7 +135,7 @@
 
                                     <!-- Fases y Etapas -->
                                     <div class="space-y-6 ">
-                                        @foreach ($tratamiento->fases as $fase)
+                                        @foreach ($fases as $fase)
                                             <div class="border-t pt-4">
                                                 <!-- Fase -->
                                                 <div class="flex justify-between items-center">

@@ -14,8 +14,6 @@ class PacienteShow extends Component
 
     public $paciente, $tratamientosAll, $tratamientos, $pacienteId, $imageUrl;
     public $showModal = false, $showModalPaciente = false;
-    public $files = [];
-    // public $uploadType = 'imagenes'; // Default to 'imagenes'
     public $isCreatingNew = false;
     public $num_paciente, $name, $apellidos, $email, $fecha_nacimiento, $telefono;
     public $observacion, $obser_cbct, $odontograma, $url_img;
@@ -25,39 +23,36 @@ class PacienteShow extends Component
     {
         $this->pacienteId = $id;
 
-        // Cargar el paciente con relaciones necesarias
+        // Cargar el paciente con las relaciones necesarias
         $this->paciente = Paciente::with([
             'clinicas',
-            'tratamientos.fases.etapas.mensajes.user' // Carga las relaciones en cascada
+            'tratamientos'
         ])->findOrFail($this->pacienteId);
 
-        // Cargar tratamientos del paciente
+        // Cargar los tratamientos del paciente
         $this->tratamientos = $this->paciente->tratamientos;
 
-        // Cargar las fases con etapas asociadas para el primer tratamiento (si existe)
         if ($this->tratamientos->isNotEmpty()) {
-            $this->fases = Fase::where('trat_id', $this->tratamientos->first()->id)
-                ->whereHas('etapas') // Solo fases con etapas asignadas
-                ->with('etapas.mensajes.user') // Cargar etapas y sus mensajes
-                ->get();
-
-            // Cargar todas las etapas de las fases del tratamiento actual
-            $this->etapas = Etapa::whereHas('fase', function ($query) {
-                $query->whereIn('id', $this->fases->pluck('id')); // Filtra por fases cargadas
+            // Filtrar las fases y etapas por el paciente actual
+            $this->fases = Fase::whereHas('etapas', function ($query) {
+                $query->where('paciente_id', $this->pacienteId); // Filtrar etapas del paciente
             })
-            ->with(['fase', 'mensajes.user', 'archivos']) // Carga relaciones necesarias
+            ->with([
+                'etapas' => function ($query) {
+                    $query->where('paciente_id', $this->pacienteId) // Filtrar etapas del paciente
+                        ->with(['mensajes.user', 'archivos']); // Cargar relaciones necesarias
+                }
+            ])
             ->get();
+            // dd($this->paciente->clinicas);
+            // Consolidar las etapas de las fases
+            $this->etapas = $this->fases->flatMap->etapas;
         } else {
             // Si no hay tratamientos, inicializa las variables
             $this->fases = collect();
             $this->etapas = collect();
         }
-
-        // Debugging opcional
-        // dd($this->paciente, $this->tratamientos, $this->fases, $this->etapas);
     }
-
-
     public function toggleActivo()
     {
         // Alternar el estado de "activo" del paciente
@@ -122,7 +117,7 @@ class PacienteShow extends Component
         ]);
         $this->dispatch('pacienteEdit');
         $this->showModalPaciente = false;
-        $this->loadTratamientos();
+        // $this->loadTratamientos();
 
     }
 
