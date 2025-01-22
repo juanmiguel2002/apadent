@@ -64,7 +64,7 @@
                         <tr>
                             {{-- <td class="text-center px-4 py-2">{{ $paciente->id }}</td> --}}
                             <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
-                            <td class="text-center px-4 py-2 cursor-pointer" wire:click='showPaciente({{$paciente->id}})'>{{ $paciente->name . " " . $paciente->apellidos }}</td>
+                            <td class="text-center px-4 py-2 cursor-pointer"><a href="{{ route('pacientes-show', $paciente->id) }}"> {{ $paciente->name . " " . $paciente->apellidos }}</a></td>
                             <td class="text-center px-4 py-2">{{ $paciente->telefono }}</td>
                             <td class="text-center px-4 py-2">{{ $paciente->tratamientos[0]->name ?? "Sin tratamiento"}} - {{ $paciente->tratamientos[0]->descripcion }}</td>
                             @foreach ($statuses as $status => $color)
