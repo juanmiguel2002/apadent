@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('pageTitle', 'Lista de Usuarios')
+@section('pageTitle', 'Gestor de Archivos')
 @section('header')
     <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        {{ __('Listado de Usuarios') }}
+        {{ __('Gestor de Archivos') }}
     </h2>
 @endsection
 @section('content')
-    @livewire('admin.users.user-management')
+    @livewire('archivos.dashboard')
 @endsection
