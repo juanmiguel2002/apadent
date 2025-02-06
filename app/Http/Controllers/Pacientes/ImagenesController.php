@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pacientes;
 
+use App\Http\Controllers\Controller;
 use App\Models\Etapa;
 use App\Models\Paciente;
 use Illuminate\Http\Request;
