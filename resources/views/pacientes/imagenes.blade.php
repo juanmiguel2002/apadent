@@ -16,5 +16,5 @@
 @endsection
 
 @section('content')
-    <livewire:imagenes-etapa :etapa="$etapa" :paciente="$paciente"/>
+    <livewire:pacientes.imagenes-etapa :etapa="$etapa" :paciente="$paciente"/>
 @endsection

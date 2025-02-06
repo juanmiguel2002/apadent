@@ -7,5 +7,5 @@
 @endsection
 
 @section('content')
-    @livewire('pacientes')
+    @livewire('pacientes.pacientes')
 @endsection
