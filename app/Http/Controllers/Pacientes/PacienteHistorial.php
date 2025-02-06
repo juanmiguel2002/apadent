@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pacientes;
 
+use App\Http\Controllers\Controller;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 
@@ -10,7 +11,7 @@ class PacienteHistorial extends Controller
     public function index($id, $tratId = null)
     {
         // Obtener el paciente por su ID
-        $paciente = Paciente::findOrFail($id);
+        $paciente = Paciente::with('tratamientos')->findOrFail($id);
 
         // Si se pasa un tratamiento, buscar el tratamiento específico del paciente
         $tratamiento = null;

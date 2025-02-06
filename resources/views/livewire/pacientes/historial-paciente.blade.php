@@ -16,12 +16,6 @@
             </svg>
             <span>Documentación</span>
         </button>
-        {{-- <button wire:click="showDocumentacionModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-            </svg>
-            <span>Añadir fase</span>
-        </button> --}}
     </div>
 
     @if ($tratId)
@@ -45,16 +39,14 @@
 
     @if($fases)
         <div class="space-y-4">
-            @foreach($fases as $key => $fase)
+            @foreach($fases as $fase)
                 <div class="bg-white shadow-md rounded-md space-y-4">
-                    <button wire:click="toggleAcordeon('{{ $fase->name }}', {{ $fase->id }})"
+                    <button wire:click="toggleAcordeon({{ $fase->id }})"
                         class="w-full flex justify-between items-center px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none">
                         <span>{{ $fase->name }}</span>
                         <!-- Flecha que cambia su orientación -->
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 transform transition-transform duration-200 {{ ($mostrarAcordeon[$fase->name] ?? false) ? 'rotate-180' : '' }}"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 {{ ($mostrarAcordeon[$fase->id] ?? false) ? 'rotate-180' : '' }}"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -69,6 +61,7 @@
                                         <th class="px-4 py-2 bg-azul">Estado</th>
                                         <th class="px-4 py-2 bg-azul">Revisión</th>
                                         <th class="px-4 py-2 bg-azul">Archivos</th>
+                                        <th class="px-4 py-2 bg-azul">CBCT</th>
                                         <th class="px-4 py-2 bg-azul">Imágenes</th>
                                     </tr>
                                 </thead>
@@ -145,18 +138,35 @@
                                             <td class="px-4 py-2">
                                                 <div class="flex justify-center items-center">
                                                     @if ($this->tieneArchivos($etapa->id, true) == true)
-                                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}" class="flex items-center">
-                                                            <svg class="w-4 h-4 text-gray-800 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 18">
-                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3"/>
+                                                        <!-- Opción para descargar archivo -->
+                                                        <a href="{{ route('archivo.descargar', ['filePath' => $archivo[0]->ruta]) }}"
+                                                            class="flex items-center" >
+                                                            <svg  class="w-4 h-4 text-gray-800 mr-2"  aria-hidden="true" >
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 1v11m0 0 4-4m-4 4L4 8m11 4v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3" />
                                                             </svg>
                                                             <span class="cursor-pointer font-light text-sm">Descargar</span>
                                                         </a>
                                                     @else
-                                                        <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}" alt="">
-                                                        <span wire:click="showModalArchivo()" class="mr-2 cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
+                                                        <!-- Opción para añadir archivo -->
+                                                        <div class="flex items-center">
+                                                            <img
+                                                                class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                                src="{{ asset('storage/recursos/icons/suma_azul.png') }}"
+                                                                alt="Añadir archivo"
+                                                            >
+                                                            <span
+                                                                wire:click="{{ $etapa->status == 'Finalizado' ? '' : 'showModalArchivo' }}"
+                                                                class="mr-2 cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                            >
+                                                                Añadir
+                                                            </span>
+                                                        </div>
                                                     @endif
                                                 </div>
                                             </td>
+
+                                            {{-- CBCT --}}
+                                            <td class="px-4 py-2"></td>
 
                                             {{-- Imágenes --}}
                                             <td class="px-4 py-2">
@@ -168,7 +178,7 @@
                                                     @else
                                                         <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                         <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                        <span wire:click="showModalImg()" class="cursor-pointer font-light text-sm">Añadir</span>
+                                                        <span wire:click="showModalImg({{$etapa->id}})" class="cursor-pointer font-light text-sm">Añadir</span>
                                                     @endif
                                                 </div>
                                             </td>
@@ -279,7 +289,7 @@
                     <select wire:model="selectedEtapa" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                         <option value="">Seleccione una etapa</option>
                         @foreach ($etapas as $etapa)
-                            <option value="{{ $etapa->id }}">{{ $etapa->etapa->name }}</option>
+                            <option value="{{ $etapa->id }}">{{ $etapa->name }}</option>
                         @endforeach
                     </select>
                     <br>
@@ -290,7 +300,7 @@
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="button" wire:click="saveDocumentacion({{$tratamiento->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="button" wire:click="saveDocumentacion()" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>
@@ -321,7 +331,7 @@
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="submit" wire:click="saveImg({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="submit" wire:click="saveImg" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>

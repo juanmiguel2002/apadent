@@ -247,7 +247,7 @@
     </div>
 
     {{-- Añadir Stripping--}}
-    {{-- @if ($showModal)
+    @if ($showModal)
       <x-dialog-modal wire:model="showModal" maxWidth="lg">
           <x-slot name="title">
               <div class="flex justify-between items-center">
@@ -269,7 +269,7 @@
               <button type="submit" wire:click="save" class="bg-azul text-white px-4 py-2 rounded">Añadir</button>
           </x-slot>
       </x-dialog-modal>
-    @endif --}}
+    @endif
 
     {{-- Editar Paciente --}}
     @if ($showModalPaciente)

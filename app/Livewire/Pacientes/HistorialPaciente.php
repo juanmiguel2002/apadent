@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Pacientes;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -56,7 +56,14 @@ class HistorialPaciente extends Component
         // Cargar las fases del tratamiento seleccionado (si existe un tratamiento)
         if ($this->tratId) {
             $this->loadFases($this->tratId);
-            $this->mostrarMenu = true;
+            $this->loadEtapas($this->fases[0]->id);
+        }else{
+            $this->loadFases($this->tratamientoId);
+        }
+
+        // Inicializa el acordeón basado en el tratamiento pasado por URL
+        foreach ($this->fases as $fase) {
+            $this->mostrarAcordeon[$fase->id] = ($tratId && $fase->id == $this->tratId);
         }
 
         // Cargar archivos relacionados con las etapas del paciente
@@ -64,6 +71,7 @@ class HistorialPaciente extends Component
             $query->where('paciente_id', $this->pacienteId);
         })->where('tipo', 'zip')->get();
     }
+
 
     public function loadFases($tratId = null)
     {
@@ -74,7 +82,6 @@ class HistorialPaciente extends Component
             }])
             ->distinct()
             ->get();
-
     }
 
     public function loadEtapas($faseId)
@@ -87,7 +94,7 @@ class HistorialPaciente extends Component
 
     }
 
-    public function toggleAcordeon($faseName, $faseId)
+    public function toggleAcordeon($faseId)
     {
         // Alternar visibilidad del acordeón para las fases
         if (isset($this->mostrarAcordeon[$faseId])) {
@@ -102,11 +109,11 @@ class HistorialPaciente extends Component
 
     public function render()
     {
-        return view('livewire.historial-paciente');
+        return view('livewire.pacientes.historial-paciente');
     }
 
     // COMPRUEBA SI TIENE ARCHIVO UNA ETAPA
-    public function tieneArchivos($etapaId, $archivo)
+    public function tieneArchivos($etapaId, $archivo = false)
     {
         if($archivo){
            return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
@@ -191,7 +198,7 @@ class HistorialPaciente extends Component
             $this->modalOpen = false;
             $this->loadEtapas($this->faseId);
 
-            Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa));
+            Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa, $this->clinica));
         }
     }
 
@@ -207,7 +214,7 @@ class HistorialPaciente extends Component
         }
 
         // Obtener el número consecutivo de la nueva etapa
-        $numeroEtapa = Etapa::where('fase_id', $fase->id)->count() + 1;
+        $numeroEtapa = Etapa::where('fase_id', $fase->id)->where('paciente_id', $this->pacienteId)->count() + 1;
         $nombreEtapa = "Etapa " . $numeroEtapa;
 
         // Crear una nueva etapa
@@ -295,17 +302,20 @@ class HistorialPaciente extends Component
         return redirect()->route('imagenes.ver', ['paciente' => $this->pacienteId, 'etapa' => $etapaId]);
     }
 
-    public function showModalImg(){
+    public function showModalImg($etapaId){
+        $this->etapaId = $etapaId;
         $this->modalImg = true;
     }
 
-    public function saveImg($etapaId){
+    public function saveImg(){
 
         $this->validate([
-            'imagenes.*' => 'required|image',
+            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+        ], [
+            'imagenes.*' => 'Solo se admiten imágenes'
         ]);
 
-        $etapa = Etapa::find($etapaId);
+        $etapa = Etapa::find($this->etapaId);
         $clinicaName = preg_replace('/\s+/', '_', trim(Auth::user()->clinicas->first()->name));
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
         $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
@@ -321,13 +331,12 @@ class HistorialPaciente extends Component
                 Archivo::create([
                     'ruta' => $path,
                     'tipo' => $extension,
-                    'etapa_id' => $etapaId,
+                    'etapa_id' => $this->etapaId,
                 ]);
             }
         }
         $this->modalImg = false;
-        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
-
+        $this->loadEtapas($this->faseId);
     }
 
     // GESTIONAR ARCHIVOS ETAPA PACIENTE TRATAMIENTO
@@ -354,7 +363,7 @@ class HistorialPaciente extends Component
                 $path = $archivo->storeAs($pacienteFolder . '/archivoEtapa', $fileName, 'clinicas');
 
                 // Guardar la ruta de la imagen en la tabla de archivos
-                $archivo = Archivos::create([
+                $archivo = Archivo::create([
                     'ruta' => $path,
                     'tipo' => $extension,
                     'paciente_id' => $this->pacienteId,
@@ -369,6 +378,7 @@ class HistorialPaciente extends Component
     public function closeModal(){
         if($this->documents) {
             $this->documents = false;
+            $this->reset();
         }elseif ($this->modalOpen){
             $this->modalOpen = false;
             $this->reset(['revision']);
@@ -376,7 +386,7 @@ class HistorialPaciente extends Component
             $this->modalImg = false;
         }elseif($this->modalArchivo){
             $this->modalArchivo = false;
-        }else{
+        }else {
             $this->showTratamientoModal = false;
             // $this->reset(['selectedNewTratamiento']);
         }

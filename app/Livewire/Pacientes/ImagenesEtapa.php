@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Pacientes;
 
 use App\Models\Archivo;
 use Livewire\Component;
@@ -19,6 +19,6 @@ class ImagenesEtapa extends Component
 
     public function render()
     {
-        return view('livewire.imagenes-etapa');
+        return view('livewire.pacientes.imagenes-etapa');
     }
 }

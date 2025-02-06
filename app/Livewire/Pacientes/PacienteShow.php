@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Pacientes;
 
 use App\Models\Etapa;
 use App\Models\Fase;
@@ -76,10 +76,9 @@ class PacienteShow extends Component
         return redirect()->route('dashboard');
     }
 
-
     public function render()
     {
-        return view('livewire.paciente-show');
+        return view('livewire.pacientes.paciente-show');
     }
 
     public function historial($id, $tratId){

@@ -99,9 +99,9 @@
                             @endforeach
                             <td class="text-center px-4 py-2">{{ $paciente->tratamientos[0]->fases[0]->name }} <br> {{ $paciente->etapas[0]->name }}</td>
                             <td class="text-center border px-4 py-2">
-                                <button wire:click="showHistorial({{ $paciente->id }})">
+                                <a href="{{ route('paciente-historial', $paciente->id) }}">
                                     <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     @endforeach

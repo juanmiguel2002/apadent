@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Pacientes;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -22,17 +22,20 @@ use App\Models\Tratamiento;
 class Pacientes extends Component
 {
     use WithFileUploads, WithPagination;
-    public $menuVisible = null;
+
     public $tratamientos, $clinica_id, $paciente, $paciente_id;
     public $num_paciente, $name, $apellidos, $email, $telefono, $fecha_nacimiento;
     public $observacion, $obser_cbct;
-    public $showModal = false, $mostrarMenu = [];
+    public $showModal = false;
+    public $menuVisible = null;
+
     public $imagenes = [], $cbct = [], $img_paciente;
     public $selectedTratamiento, $status = "Set Up", $activo = false;
 
     public $search = '';
     public $ordenar = '';
     public $perPage = 25; //Para filtrar cuando se ve
+    public $clinicas; // todas las clínicas (admin)
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -76,12 +79,13 @@ class Pacientes extends Component
     public function mount()
     {
         $this->tratamientos = Tratamiento::all();
+        $this->clinicas = Clinica::all();
     }
 
     public function render()
     {
         // Configuración de la ordenación
-        $orderByColumn = $this->ordenar === 'recientes' ? 'pacientes.created_at' : ($this->ordenar === 'name' ? 'pacientes.name' : 'pacientes.id');
+        $orderByColumn = $this->ordenar === 'recientes' ? 'pacientes.created_at' : ($this->ordenar === 'name' ? 'pacientes.name' : 'pacientes.num_paciente');
         $orderByDirection = $this->ordenar === 'recientes' ? 'desc' : 'asc';
 
         // Consulta optimizada
@@ -111,45 +115,7 @@ class Pacientes extends Component
         ->paginate($this->perPage);
 
         // dd($pacientes);
-        return view('livewire.pacientes', [
-            'pacientes' => $pacientes,
-        ]);
-    }
-
-
-    public function render2()
-    {
-        // Definir columna y dirección de ordenación por defecto
-        $orderByColumn = 'id';
-        $orderByDirection = 'asc';
-
-        // Determinar columna de ordenación basada en la selección del usuario
-        if ($this->ordenar === 'recientes') {
-            $orderByColumn = 'created_at';
-            $orderByDirection = 'desc';
-        } elseif ($this->ordenar === 'name') {
-            $orderByColumn = 'name';
-            $orderByDirection = 'asc';
-        }
-
-        // Consulta optimizada para obtener pacientes con sus etapas relacionadas
-        $pacientes = Paciente::with([
-            'tratamientos.fases.etapas' => function ($query) {
-                $query->where('etapas.status', '<>', 'Finalizado') // Mostrar solo etapas no finalizadas
-                    ->orWhere('etapas.status', '=', 'Finalizado');
-            },
-            'clinicas',
-        ])
-        ->where(function ($query) { // Búsqueda por nombre, apellidos o teléfono
-            $query->where('name', 'like', '%' . $this->search . '%')
-                ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                ->orWhere('telefono', 'like', '%' . $this->search . '%');
-        })
-        ->where('activo', $this->activo ? 0 : 1) // Filtrar por pacientes activos o inactivos
-        ->orderBy($orderByColumn, $orderByDirection) // Ordenar según selección
-        ->paginate($this->perPage);
-
-        return view('livewire.pacientes', [
+        return view('livewire.pacientes.index', [
             'pacientes' => $pacientes,
         ]);
     }
@@ -317,8 +283,6 @@ class Pacientes extends Component
 
                 $paciente->url_img = $path;
                 $paciente->save();
-            }else{
-                $paciente->save(['url_img' => storage_path('recursos/imagenes/foto_perfil.jpg')]);
             }
 
             // 6. Subir múltiples imágenes del paciente (asociadas a la primera etapa)
@@ -340,14 +304,13 @@ class Pacientes extends Component
             if ($this->cbct && is_array($this->cbct)) {
                 foreach ($this->cbct as $cbctFile) {
                     $extension = $cbctFile->getClientOriginalExtension();
-                    $path = $cbctFile->store($pacienteFolder . '/CBCT', 'clinicas');
+                    $fileName = "CBCT_". $paciente->name . '.' . $extension; // nombre del archivo
+                    $path = $cbctFile->storeAs($pacienteFolder . '/CBCT', $fileName, 'clinicas');
 
                     Archivo::create([
                         'ruta' => $path,
                         'tipo' => $extension,
-                        'etapa_id' => Etapa::where('fase_id', $fases->first()->id)
-                                        ->where('paciente_id', $paciente->id)
-                                        ->first()->id,
+                        'etapa_id' => $etapa->id,
                     ]);
                 }
             }
