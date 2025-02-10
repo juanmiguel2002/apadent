@@ -13,6 +13,7 @@ class Archivo extends Model
     protected $fillable = [
         'ruta',
         'tipo',
+        'extension',
         'etapa_id',
     ];
 
