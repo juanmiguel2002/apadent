@@ -8,9 +8,6 @@ use App\Models\Paciente;
 use App\Models\Tratamiento;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Paciente>
- */
 class PacienteFactory extends Factory
 {
     protected $model = Paciente::class;
@@ -22,11 +19,13 @@ class PacienteFactory extends Factory
             'name' => $this->faker->firstName,
             'apellidos' => $this->faker->lastName,
             'fecha_nacimiento' => $this->faker->date(),
+            'email' => $this->faker->email,
             'telefono' => $this->faker->phoneNumber,
             'observacion' => $this->faker->text(50),
             'obser_cbct' => $this->faker->text(50),
-            'activo' => $this->faker->boolean,
-            'clinica_id' => 1, // Ajusta este valor según el ID de las clínicas
+            'url_img' => null,
+            'activo' => 1,
+            'clinica_id' => $this->faker->numberBetween(1, 2), // Ajusta este valor según el ID de las clínicas
         ];
     }
 
@@ -49,8 +48,8 @@ class PacienteFactory extends Factory
                     'paciente_id' => $paciente->id,
                     'fase_id' => $fase->id,
                     'fecha_ini' => $this->faker->date(),
-                    'fecha_fin' => $this->faker->optional()->date(),
-                    'status' => $this->faker->randomElement(['Set Up', 'En progreso', 'Pausado','Finalizado']),
+                    'fecha_fin' => null,
+                    'status' => $this->faker->randomElement(['Set Up', 'En proceso', 'Pausado','Finalizado']),
                 ]);
             }
         });

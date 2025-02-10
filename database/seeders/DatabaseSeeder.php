@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Etapa;
-use App\Models\Fase;
 use App\Models\Paciente;
-use App\Models\Tratamiento;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
