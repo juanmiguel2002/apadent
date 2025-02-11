@@ -1,5 +1,5 @@
 <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between">
         <!-- Contenedor del título -->
         <a href="javascript: history.go(-1)" class="flex items-center mr-4">
             <img class="w-6 mr-2" src="{{ asset('storage/recursos/icons/volver_naranja.png') }}" alt="Volver">
