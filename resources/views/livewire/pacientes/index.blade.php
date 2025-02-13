@@ -1,4 +1,7 @@
 <div>
+    @role('admin')
+        <x-input-select-clinicas  :options="$clinicas" label="Selecciona una clínica" name="clinicaSelected"/>
+    @endrole
     <div class="px-4 py-4 flex justify-between items-center">
         <div class="flex justify-start items-center">
             <span class="uppercase text-base text-azul font-light">Ordenar por: </span>
@@ -51,6 +54,9 @@
                     {{-- <th class="p-3 text-center">ID</th> --}}
                     <th class="p-3 text-center">Cód Paciente</th>
                     <th class="p-3 text-center">Nombre y Apellido</th>
+                    @if (auth()->user()->hasRole('admin'))
+                        <th class="p-3 text-center">Clínica</th>
+                    @endif
                     <th class="p-3 text-center">Teléfono</th>
                     <th class="p-3 text-center">Tratamiento</th>
                     <th class="p-3 text-center">Status</th>
@@ -65,24 +71,26 @@
                             {{-- <td class="text-center px-4 py-2">{{ $paciente->id }}</td> --}}
                             <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
                             <td class="text-center px-4 py-2 cursor-pointer"><a href="{{ route('pacientes-show', $paciente->id) }}"> {{ $paciente->name . " " . $paciente->apellidos }}</a></td>
+                            @if (auth()->user()->hasRole('admin'))
+                                <td class="text-center px-4 py-2">
+                                    {{ $paciente->clinicas->name ?? 'Sin clínica' }}
+                                </td>
+                            @endif
                             <td class="text-center px-4 py-2">{{ $paciente->telefono }}</td>
                             <td class="text-center px-4 py-2">{{ $paciente->tratamientos[0]->name ?? "Sin tratamiento"}} - {{ $paciente->tratamientos[0]->descripcion }}</td>
                             @foreach ($statuses as $status => $color)
                                 @if ($paciente->etapas[0]->status == $status)
                                     <td class="p-3 text-center flex justify-center items-center mt-2">
-                                        @if ($status === 'Finalizado')
-                                            <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
-                                                <span>{{ $status }}</span>
-                                            </span>
-                                        @else
+                                        @if (auth()->user()->hasRole('admin') || ($status !== 'Finalizado' && auth()->user()))
+                                            {{-- Si es admin o usuario normal (y el estado no es "Finalizado"), puede cambiarlo --}}
                                             <button
                                                 wire:click="toggleMenu({{ $paciente->id }})"
-                                                class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $paciente->etapas[0]->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                @if ($paciente->etapas[0]->status == 'Finalizado') disabled @endif>
+                                                class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
                                                 <span>{{ $status }}</span>
                                             </button>
                                             <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
 
+                                            {{-- Menú desplegable con opciones de cambio de estado --}}
                                             @if ($menuVisible === $paciente->id)
                                                 <div class="ml-8 mt-2 space-y-1">
                                                     @foreach ($statuses as $optionStatus => $optionColor)
@@ -93,6 +101,11 @@
                                                     @endforeach
                                                 </div>
                                             @endif
+                                        @else
+                                            {{-- Si el estado es "Finalizado" y no eres admin, solo lo ves sin opción de cambiarlo --}}
+                                            <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
+                                                <span>{{ $status }}</span>
+                                            </span>
                                         @endif
                                     </td>
                                 @endif
@@ -152,6 +165,18 @@
                         <form wire:submit.prevent="save">
                             @csrf
                             <div class="grid grid-cols-2 gap-4">
+                                @role('admin')
+                                    <div class="col-span-2 mb-4">
+                                        <x-label for="clinica_id" value="Clínica*" class="text-azul text-base"/>
+                                        <select name="clinica_id" wire:model="selectedClinica" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                            <option value="">Seleccione una Clínica</option>
+                                            @foreach($clinicas as $clinica)
+                                                <option value="{{ $clinica->id }}">{{ $clinica->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error for="clinica_id" />
+                                    </div>
+                                @endrole
                                 <div class="col-span-2 mb-4">
                                     <x-label for="num_paciente" value="Número Paciente*" class="text-azul text-base"/>
                                     <x-input type="text" id="num_paciente" class="w-full rounded-md" wire:model="num_paciente" placeholder="2002"/>
@@ -208,15 +233,19 @@
                                     <x-input-error for="img_paciente" />
                                 </div>
                                 <div class="col-span-2 mb-3">
-                                    <x-label for="imagenes" class="block text-md text-azul capitalize">Imágenes</x-label>
+                                    <x-label for="imagenes" class="block text-md text-azul capitalize">Fotografías</x-label>
                                     <x-input type="file" wire:model="imagenes" multiple class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
-                                    {{-- <x-input-error for="imagenes*" /> --}}
                                 </div>
 
                                 <div class="col-span-2 mb-4">
                                     <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT <i>(comprimidos .zip)</i></x-label>
                                     <x-input multiple wire:model="cbct" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                     {{-- <x-input-error for="cbcts.*" /> --}}
+                                </div>
+
+                                <div class="col-span-2 mb-3">
+                                    <x-label for="rx" class="block text-md text-azul capitalize">Archivos RX</x-label>
+                                    <x-input multiple wire:model="rayos" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                 </div>
 
                                 <div class="col-span-2 mb-4">

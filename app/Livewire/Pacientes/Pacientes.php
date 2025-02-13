@@ -19,6 +19,7 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
+use App\Models\User;
 
 class Pacientes extends Component
 {
@@ -39,6 +40,8 @@ class Pacientes extends Component
     public $ordenar = '';
     public $perPage = 25; //Para filtrar cuando se ve
     public $clinicas, $clinicaSelected;
+
+    public $pacienteFolder;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -165,7 +168,7 @@ class Pacientes extends Component
                 'telefono' => $this->telefono,
                 'observacion' => $this->observacion,
                 'obser_cbct' => $this->obser_cbct,
-                'clinica_id' => Auth::user()->clinicas->first()->id,
+                'clinica_id' => $this->clinica_id ? $this->clinica_id : Auth::user()->clinicas->first()->id,
             ]);
 
             // 2. Asociar tratamiento al paciente
@@ -176,99 +179,45 @@ class Pacientes extends Component
 
             // 3. Generar etapas iniciales para todas las fases del tratamiento seleccionado
             $fases = Fase::where('trat_id', $this->selectedTratamiento)->get();
-
             foreach ($fases as $fase) {
                 $etapa = Etapa::firstOrCreate(
                     [
-                    'fase_id' => $fase->id,
-                    'paciente_id' => $paciente->id,
+                        'fase_id' => $fase->id,
+                        'paciente_id' => $paciente->id,
                     ],
                     [
-                    'name' => 'Inicio',
-                    'fecha_ini' => now(),
-                    'status' => 'Set Up',
+                        'name' => 'Inicio',
+                        'fecha_ini' => now(),
+                        'status' => 'Set Up',
                     ]
                 );
             }
 
-            // 4. Crear carpetas para el paciente (si es necesario)
-            $this->createPacienteFolders($paciente->id);
-
-            // Generar nombres para las carpetas
-            $clinicaName = preg_replace('/\s+/', '_', trim(Auth::user()->clinicas->first()->name));
-            $pacienteName = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $paciente->apellidos));
-            $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
+            // 4. Crear carpetas para el paciente
+            $pacienteFolder = $this->createPacienteFolders($paciente);
 
             // 5. Subir la foto del paciente (si existe)
             if ($this->img_paciente) {
                 $extension = $this->img_paciente->getClientOriginalExtension();
-                $fileName = $pacienteName . '.' . $extension;
-                $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'public');
+                $fileName = 'foto_paciente.' . $extension;
+                $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'clinicas');
 
                 $paciente->url_img = $path;
                 $paciente->save();
             }
+            // 6. Subir archivos y asociarlos
+            $this->updatedArchivos($paciente, $pacienteFolder, $etapa);
 
-            // 6. Subir múltiples imágenes del paciente (asociadas a la primera etapa)
-            if ($this->imagenes && is_array($this->imagenes)) {
-                foreach ($this->imagenes as $key => $imagen) {
-                    $extension = $imagen->getClientOriginalExtension();
-                    $fileName = "Imagen_" . $key . '.' . $extension;//nombre del archivo
-                    $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
-
-                    Archivo::create([
-                        'ruta' => $path,
-                        'tipo' => 'fotografias',
-                        'extension' => $extension,
-                        'etapa_id' => $etapa->id, // Asociar a la primera etapa creada
-                    ]);
-                }
-            }
-
-            // 7. Subir múltiples CBCT del paciente
-            if ($this->cbct && is_array($this->cbct)) {
-                foreach ($this->cbct as $cbctFile) {
-                    $extension = $cbctFile->getClientOriginalExtension();
-                    $fileName = "CBCT_". $paciente->name . '.' . $extension; // nombre del archivo
-                    $path = $cbctFile->storeAs($pacienteFolder . '/CBCT', $fileName, 'clinicas');
-
-                    Archivo::create([
-                        'ruta' => $path,
-                        'tipo' => 'CBCT',
-                        'extension' => $extension,
-                        'etapa_id' => $etapa->id,
-                    ]);
-                }
-            }
-            // 8. Subida de archivos rayos
-            if ($this->rayos && is_array($this->rayos)) {
-                foreach ($this->rayos as $key => $rayo) {
-                    $extension = $rayo->getClientOriginalExtension();
-                    $fileName = "Rayos_" . $key . '.' . $extension;//nombre del archivo
-                    $path = $rayo->storeAs($pacienteFolder . '/Rayos', $fileName, 'clinicas');
-
-                    Archivo::create([
-                        'ruta' => $path,
-                        'tipo' => 'rayos',
-                        'extension' => $extension,
-                        'etapa_id' => $etapa->id, // Asociar a la primera etapa creada
-                    ]);
-                }
-            }
-
-            // 9. Enviar email de notificación a la clínica
+            // 7. Enviar email de notificación a la clínica y al admin
             $clinica = Clinica::find($paciente->clinica_id);
             $perfilPacienteUrl = route('pacientes-show', $paciente->id);
-
             if ($clinica && $clinica->email) {
-                Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente,null, null));
+                Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente, null, null));
             }
-            $admin = Clinica::where('email', 'juanmi0802@gmail.com')->first();
-            if ($admin) {
-                Mail::to($admin->email)->send(new NotificacionNuevoPaciente($admin, $paciente, $clinica, $perfilPacienteUrl));
-            }
+            $admin = User::role('admin')->first();
+            Mail::to($admin->email)->send(new NotificacionNuevoPaciente($admin, $paciente, $clinica, $perfilPacienteUrl));
 
-            // 10. Disparar evento y resetear formulario
+            // 7. Disparar evento y resetear formulario
             $this->dispatch('nuevoPaciente');
             $this->resetForm();
             $this->showModal = false;
@@ -276,61 +225,82 @@ class Pacientes extends Component
         });
     }
 
-    public function createPacienteFolders($pacienteId)
+    /**
+     * Crea la carpeta del paciente dentro de la clínica y sus subcarpetas.
+     */
+    public function createPacienteFolders($paciente)
     {
-        // Buscar al paciente por ID
-        $paciente = Paciente::findOrFail($pacienteId);
-
-        // Obtener la primera clínica asociada al usuario autenticado
         $clinica = Auth::user()->clinicas->first();
-
         if (!$clinica) {
             throw new \Exception("No se encontró ninguna clínica asociada al usuario.");
         }
 
-        // Normalizar nombres para evitar problemas con los directorios
+        // Normalizar nombres
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $paciente->apellidos));
 
-        // Ruta base para la carpeta del paciente
-        $pacienteFolder = $nombreClinica . '/pacientes/' . $nombrePaciente;
+        // Ruta de la carpeta del paciente
+        $pacienteFolder = "{$nombreClinica}/pacientes/{$nombrePaciente}";
 
-        // Lista de subcarpetas dentro de la carpeta del paciente
-        $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
-
-        // Verificar si la carpeta del paciente ya existe en la base de datos
-        $carpetaPaciente = Carpeta::where('nombre', $nombrePaciente)
-            ->whereHas('carpeta_id', function ($query) use ($nombreClinica) {
-                $query->where('nombre', $nombreClinica);
-            })->first();
-
-        if (!$carpetaPaciente) {
-            // Crear carpeta del paciente en el sistema de archivos si no existe
-            if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
-                Storage::disk('clinicas')->makeDirectory($pacienteFolder);
-            }
-
-            // Registrar la carpeta del paciente en la base de datos
-            $carpetaClinica = Carpeta::where('nombre', $nombreClinica)->first();
-            $carpetaPaciente = Carpeta::create([
-                'nombre' => $nombrePaciente,
-                'carpeta_id' => $carpetaClinica->id ?? null, // Relación con la clínica
-            ]);
+        // Crear carpeta en sistema de archivos si no existe
+        if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
+            Storage::disk('clinicas')->makeDirectory($pacienteFolder);
         }
 
-        // Crear subcarpetas dentro de la carpeta del paciente
-        foreach ($subFolders as $subFolder) {
-            $subFolderPath = $pacienteFolder . '/' . $subFolder;
+        // Guardar estructura en la base de datos
+        $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $nombreClinica, 'carpeta_id' => null]);
+        $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id]);
+        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $nombrePaciente, 'carpeta_id' => $carpetaPacientes->id]);
 
+        // Subcarpetas
+        $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
+        foreach ($subFolders as $subFolder) {
+            $subFolderPath = "{$pacienteFolder}/{$subFolder}";
             if (!Storage::disk('clinicas')->exists($subFolderPath)) {
                 Storage::disk('clinicas')->makeDirectory($subFolderPath);
             }
+            Carpeta::firstOrCreate(['nombre' => $subFolder, 'carpeta_id' => $carpetaPaciente->id]);
+        }
 
-            // Guardar subcarpeta en la base de datos si no existe
-            Carpeta::firstOrCreate([
-                'nombre' => $subFolder,
-                'carpeta_id' => $carpetaPaciente->id, // Relación con la carpeta del paciente
-            ]);
+        return $pacienteFolder;
+    }
+
+    /**
+     * Guarda los archivos subidos en la base de datos y en el almacenamiento.
+     */
+    public function updatedArchivos($paciente, $pacienteFolder, $etapa)
+    {
+        $carpetaPaciente = Carpeta::where('nombre', preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $paciente->apellidos)))
+            ->whereHas('parent', function ($query) {
+                $query->where('nombre', 'pacientes');
+            })->first();
+
+        $subCarpetas = [
+            'imgEtapa' => $this->imagenes,
+            'CBCT' => $this->cbct,
+            'Rayos' => $this->rayos,
+        ];
+
+        foreach ($subCarpetas as $nombreCarpeta => $archivos) {
+            if ($archivos && is_array($archivos)) {
+                $carpeta = Carpeta::where('nombre', $nombreCarpeta)
+                    ->where('carpeta_id', $carpetaPaciente->id)
+                    ->first();
+
+                foreach ($archivos as $key => $archivo) {
+                    $extension = $archivo->getClientOriginalExtension();
+                    $fileName = "{$nombreCarpeta}_" . ($key + 1) . '.' . $extension;
+                    $path = $archivo->storeAs($pacienteFolder . "/{$nombreCarpeta}", $fileName, 'clinicas');
+
+                    Archivo::create([
+                        'ruta' => $path,
+                        'tipo' => strtolower($nombreCarpeta),
+                        'extension' => $extension,
+                        'etapa_id' => $etapa->id,
+                        'carpeta_id' => $carpeta->id,
+                    ]);
+                }
+            }
         }
     }
 
@@ -366,10 +336,10 @@ class Pacientes extends Component
         $this->resetPage();
 
         // Opcional: Enviar email a la clínica
-        // $clinica = Clinica::find($paciente->clinica_id);
-        // if ($clinica && $clinica->email) {
-        //     Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa));
-        // }
+        $clinica = Clinica::find($paciente->clinica_id);
+        if ($clinica && $clinica->email) {
+            Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, null));
+        }
     }
 
     public function toggleMenu($pacienteId)
