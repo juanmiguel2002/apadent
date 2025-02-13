@@ -25,33 +25,39 @@ class PacienteFactory extends Factory
             'obser_cbct' => $this->faker->text(50),
             'url_img' => null,
             'activo' => 1,
-            'clinica_id' => $this->faker->numberBetween(1, 2), // Ajusta este valor según el ID de las clínicas
+            'clinica_id' => $this->faker->numberBetween(1, 2),
         ];
     }
 
     public function configure()
     {
         return $this->afterCreating(function (Paciente $paciente) {
-            // Asignar un tratamiento aleatorio de los ya existentes
-            $tratamiento = Tratamiento::inRandomOrder()->first();
+            // Obtener un ID de tratamiento aleatorio (mejor rendimiento que inRandomOrder()->first())
+            $tratamientoId = Tratamiento::query()->pluck('id')->random();
 
-            // Relacionar paciente con tratamiento en la tabla paciente_trat
-            $paciente->tratamientos()->attach($tratamiento->id);
+            // Relacionar paciente con tratamiento
+            $paciente->tratamientos()->attach($tratamientoId);
 
-            // Obtener las etapas del tratamiento
-            $fases = Fase::where('trat_id', $tratamiento->id)->get();
+            // Obtener todas las fases asociadas al tratamiento
+            $fases = Fase::where('trat_id', $tratamientoId)->get();
 
-            // Asignar cada etapa del tratamiento al paciente en la tabla paciente_etapas
-            foreach ($fases as $fase) {
-                Etapa::create([
+            // Insertar múltiples etapas en una sola consulta
+            $etapas = $fases->map(function ($fase) use ($paciente) {
+                return [
                     'name' => 'Inicio',
                     'paciente_id' => $paciente->id,
                     'fase_id' => $fase->id,
-                    'fecha_ini' => $this->faker->date(),
+                    'fecha_ini' => now(),
                     'fecha_fin' => null,
-                    'status' => $this->faker->randomElement(['Set Up', 'En proceso', 'Pausado','Finalizado']),
-                ]);
-            }
+                    'status' => collect(['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->random(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            })->toArray();
+
+            // Inserción masiva para mejor rendimiento
+            Etapa::insert($etapas);
         });
     }
+
 }
