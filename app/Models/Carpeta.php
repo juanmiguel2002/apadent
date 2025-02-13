@@ -15,6 +15,11 @@ class Carpeta extends Model
         'carpeta_id',
     ];
 
+    public function parent()
+    {
+        return $this->belongsTo(Carpeta::class, 'carpeta_id');
+    }
+    
     public function carpetasHija(){
         return $this->hasMany(Carpeta::class, 'carpeta_id');
     }

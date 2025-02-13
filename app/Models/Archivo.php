@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\DateFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,7 @@ class Archivo extends Model
 
     protected $table = 'archivos';
     protected $fillable = [
+        'name',
         'ruta',
         'tipo',
         'extension',
@@ -27,4 +29,8 @@ class Archivo extends Model
     public function carpeta(){
         return $this->belongsTo(Carpeta::class);
     }
+
+    protected $casts = [
+        'created_at' => DateFormat::class,
+    ];
 }
