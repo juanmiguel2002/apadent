@@ -16,7 +16,7 @@ class AuthServiceProvider extends ServiceProvider
     ];
     public function boot()
     {
-        $this->registerPolicies();
+        // $this->registerPolicies();
 
         // Si deseas definir dinámicamente los permisos de los roles, puedes hacerlo así:
         // if (Auth::check()) {
