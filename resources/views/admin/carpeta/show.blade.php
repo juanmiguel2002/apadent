@@ -6,6 +6,5 @@
     </h2>
 @endsection
 @section('content')
-    {{-- @livewire('carpeta.carpetaShow', $id) --}}
-    <livewire:carpeta.carpeta-show :id="$id"/>
+    <livewire:carpeta.carpeta-show :id="$id" />
 @endsection
