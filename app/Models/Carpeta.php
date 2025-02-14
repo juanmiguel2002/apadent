@@ -19,7 +19,7 @@ class Carpeta extends Model
     {
         return $this->belongsTo(Carpeta::class, 'carpeta_id');
     }
-    
+
     public function carpetasHija(){
         return $this->hasMany(Carpeta::class, 'carpeta_id');
     }
@@ -28,6 +28,11 @@ class Carpeta extends Model
         return $this->hasMany(Archivo::class);
     }
 
+    public function facturas()
+    {
+        return $this->hasMany(Factura::class, 'carpeta_id');
+    }
+    
     protected $casts = [
         'created_at' => DateFormat::class,
     ];

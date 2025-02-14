@@ -19,10 +19,15 @@ class Etapa extends Model
         'status',
         'revision',
         'fase_id',
-        'paciente_id'
+        'paciente_id',
+        'trat_id',
     ];
 
     // Relaciones
+    public function tratamiento()
+    {
+        return $this->belongsTo(Tratamiento::class, 'trat_id');
+    }
     public function fase()
     {
         return $this->belongsTo(Fase::class, 'fase_id');
