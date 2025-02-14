@@ -29,11 +29,15 @@ class Clinica extends Model
         return $this->hasMany(Paciente::class, 'clinica_id');
     }
 
+    public function carpetas()
+    {
+        return $this->hasMany(Carpeta::class, 'clinica_id');
+    }
+
     public function facturas()
     {
         return $this->hasMany(Factura::class, 'clinica_id');
     }
-
 
     // Definir los eventos de Eloquent en el modelo
     protected static function boot()
@@ -63,11 +67,12 @@ class Clinica extends Model
             $clinicaFolder = Carpeta::create([
                 'nombre' => $clinicaName,
                 'carpeta_id' => null, // Es la carpeta raíz
+                'clinica_id' => $this->id
             ]);
         }
 
         // Subcarpetas a crear
-        $subfolders = ['facturas', 'pacientes'];
+        $subfolders = ['Facturas', 'Pacientes'];
 
         foreach ($subfolders as $subfolder) {
             $subfolderPath = $clinicaName . '/' . $subfolder;
@@ -82,8 +87,16 @@ class Clinica extends Model
             Carpeta::create([
                 'nombre' => $subfolder,
                 'carpeta_id' => $clinicaFolder->id, // Relación con la carpeta principal
+                'clinica_id' => $this->id // Relación con la clínica
             ]);
         }
     }
 
+    // Obtener facturas dentro de la carpeta "facturas"
+    public function facturasEnCarpetaFacturas()
+    {
+        return $this->facturas()->whereHas('carpeta', function ($query) {
+            $query->where('nombre', 'Facturas');
+        });
+    }
 }

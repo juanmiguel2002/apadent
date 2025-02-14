@@ -13,6 +13,7 @@ class Carpeta extends Model
     protected $fillable = [
         'nombre',
         'carpeta_id',
+        'clinica_id'
     ];
 
     public function parent()
@@ -32,7 +33,11 @@ class Carpeta extends Model
     {
         return $this->hasMany(Factura::class, 'carpeta_id');
     }
-    
+    public function clinica()
+    {
+        return $this->belongsTo(Clinica::class, 'clinica_id');
+    }
+
     protected $casts = [
         'created_at' => DateFormat::class,
     ];
