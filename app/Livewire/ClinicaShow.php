@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Mail\NuevaFactura;
+use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\Factura;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,7 @@ class ClinicaShow extends Component
     public $users;
     public $name;
     public $factura;
+    public $carpeta;
 
     protected $rules = [
         'name' => 'required|string|max:50',
@@ -58,15 +60,22 @@ class ClinicaShow extends Component
         // Definir la ruta de almacenamiento para la factura y guardar el archivo con el nombre del usuario
         $filePath = $this->factura->storeAs($this->clinicaName . '/facturas', $fileName , 'clinicas');
 
+        $clinica = Clinica::findOrFail($this->clinica->id); // Obtener la clínica asociada
+
+        // Buscar la carpeta "Facturas" dentro de la clínica específica
+        $this->carpeta = Carpeta::where('nombre', 'Facturas')
+                                ->where('clinica_id', $clinica->id)
+                                ->firstOrFail(); // Asegura que la carpeta existe
+
         // Guardar los detalles en la base de datos
         $factura = Factura::create([
             'name' => $this->name,
-            'clinica_id' => $this->clinica->id,
-            'user_id' => Auth::id(),
             'ruta' => $filePath,
+            'clinica_id' => $clinica->id,
+            'user_id' => Auth::id(),
+            'carpeta_id' => $this->carpeta->id
         ]);
 
-        $clinica = Clinica::find($this->clinica->id); // Obtener la clínica asociada al paciente
         if ($clinica && $clinica->email) {
             Mail::to($clinica->email)->send(new NuevaFactura($clinica, $factura));
         }
@@ -79,9 +88,9 @@ class ClinicaShow extends Component
     public function download(Factura $factura)
     {
         // Verificar si el usuario tiene acceso a la clínica
-        if (Storage::disk('local')->exists($factura->ruta) && Auth::user()) {
+        if (Storage::disk('clinicas')->exists($factura->ruta) && Auth::user()) {
             // Descargar el archivo
-            return Storage::disk('local')->download($factura->ruta);
+            return Storage::disk('clinicas')->download($factura->ruta);
         }
 
         // Si el usuario no tiene acceso, devolver una respuesta de error
