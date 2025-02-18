@@ -15,22 +15,17 @@ class DashboardController extends Controller
 
         if ($user->hasRole('admin')){
             // Dashboard for admin
-            return view('admin.clinicas');
-        }elseif ($user->hasRole('doctor')) {
+            return view('clinicas.index');
+        }elseif ($user->hasRole('doctor') || $user->hasRole('doctor_admin')) {
             // Dashboard for doctor (related to a clinica)
             $clinica = $user->clinica;
-            return view('pacientes', compact('clinica'));
+            return view('pacientes.index', compact('clinica'));
         }
-        elseif ($user->hasRole('doctor_admin')) {
-            // Dashboard for doctor (related to a clinica)
-            $clinica = $user->clinica;
-            return view('pacientes', compact('clinica'));
-        }
-        elseif ($user->hasRole('clinica_user')) {
+        elseif ($user->hasRole('clinica')) {
             // Dashboard for clinica
             $pacientes = Paciente::where('clinica_id', $user->clinica_id)->get();
 
-            return view('pacientes', compact('pacientes'));
+            return view('pacientes.index', compact('pacientes'));
         }
 
         // Default case (redirect to login)

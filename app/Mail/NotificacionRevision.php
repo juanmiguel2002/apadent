@@ -13,15 +13,16 @@ class NotificacionRevision extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $paciente, $etapa, $url;
+    public $paciente, $etapa, $clinica;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($paciente, $etapa)
+    public function __construct($paciente, $etapa, $clinica)
     {
         $this->paciente = $paciente;
         $this->etapa = $etapa;
+        $this->clinica = $clinica;
     }
 
     /**

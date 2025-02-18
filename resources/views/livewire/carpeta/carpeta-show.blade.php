@@ -91,6 +91,39 @@
         </div>
     @endif
 
+    @if ($facturas->isNotEmpty())
+        <div class="max-w-7xl mx-auto x-4s m:px-6 lg:px-8 mt-6">
+            <x-tabla>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="text-white">
+                        <tr class="bg-azul">
+                            <th class="p-3 text-center uppercase">ID</th>
+                            <th class="p-3 text-center uppercase">Nombre</th>
+                            <th class="p-3 text-center uppercase">Clínica</th>
+                            <th class="p-3 text-center uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach ($facturas as $factura)
+                            <tr class="bg-gray-100 hover:bg-gray-200 transition">
+                                <td class="px-2 py-4 text-center border-b">{{ $factura->id }}</td>
+                                <td class="px-6 py-4 text-center border-b">
+                                    {!! \App\Helpers\FileHelper::getFileIcon($factura->extension) !!}
+                                    <span>{{ $factura->name }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center border-b">{{ $factura->created_at }}</td>
+                                <td class="px-6 py-4 text-center border-b">
+                                    <a href="{{ $factura['url'] }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </x-tabla>
+        </div>
+    @endif
+
+
     @if ($showModal)
         <x-dialog-modal maxWidth="lg">
             <div class="relative">

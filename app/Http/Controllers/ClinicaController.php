@@ -16,6 +16,6 @@ class ClinicaController extends Controller
             $query->where('name', 'doctor_admin'); // Filtrar por rol "doctor_admin"
         })->get();
 
-        return view('clinica', compact('clinica', 'users'));
+        return view('clinicas.clinica-show', compact('clinica', 'users'));
     }
 }

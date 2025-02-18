@@ -56,7 +56,7 @@
                                             ¡Hola!
                                         </p>
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
-                                            Se ha registrado una nueva factura.
+                                            Se ha registrado una nueva factura en la clínica.
                                         </p>
 
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
@@ -83,9 +83,9 @@
                                                                 <table border="0" cellpadding="0" cellspacing="0" role="presentation">
                                                                     <tr>
                                                                         <td>
-                                                                            <a href="{{ env('APP_URL')}}" class="button button-primary" target="_blank" rel="noopener"
+                                                                            <a href="{{ asset($factura->ruta)}}" class="button button-primary" target="_blank" rel="noopener"
                                                                                 style="box-sizing: border-box; border-radius: 4px; color: #fff; display: inline-block; text-decoration: none; background-color: #2d3748; border: 8px solid #2d3748; font-size: 16px; font-weight: bold;">
-                                                                                Acceso a clientes
+                                                                                Descargar Factura
                                                                             </a>
                                                                         </td>
                                                                     </tr>
@@ -102,8 +102,8 @@
                                             <tr>
                                                 <td>
                                                     <p style="box-sizing: border-box; font-size: 14px; line-height: 1.5em; margin-top: 0;">
-                                                        Si no puedes hacer clic en el botón "Acceso a clientes", copia y pega este enlace en tu navegador:
-                                                        <a href="{{ env('APP_URL')}}" style="color: #3869d4;">{{ env('APP_URL')}}</a>
+                                                        Si no puedes hacer clic en el botón "Descargar factura", copia y pega este enlace en tu navegador:
+                                                        <a href="{{ asset($factura->ruta) }}" target="_blank">{{asset($factura->ruta)}}</a>
                                                     </p>
                                                 </td>
                                             </tr>

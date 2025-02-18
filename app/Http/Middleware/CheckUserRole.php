@@ -17,7 +17,7 @@ class CheckUserRole
     public function handle($request, Closure $next, $role)
     {
         if (!Auth::check() || !$request->user()->hasRole($role)) {
-            abort(403, 'Unauthorized');
+            abort(403, 'NO tiene los permisos correspondientes');
         }
         return $next($request);
     }

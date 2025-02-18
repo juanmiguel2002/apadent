@@ -1,29 +1,32 @@
 <?php
 
 use App\Http\Controllers\ArchivoController;
+use App\Http\Controllers\CarpetaController;
+use App\Http\Controllers\CarpetasController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ImagenesController;
-use App\Http\Controllers\PacienteHistorial;
-use App\Http\Controllers\Pacientes;
-use App\Http\Controllers\PacienteShowController;
+
+use App\Http\Controllers\Pacientes\ImagenesController;
+use App\Http\Controllers\Pacientes\PacienteHistorial;
+use App\Http\Controllers\Pacientes\Pacientes;
+use App\Http\Controllers\Pacientes\PacienteShowController;
+
+use App\Http\Controllers\PacientesAdmin;
 use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\UsersController;
 use App\Livewire\ClinicaShow;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('auth.login');
+    return view('welcome');
 });
 
 Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])->group(function () {
-    Route::get('/dashboard',[DashboardController::class, 'show'])->name('dashboard');;
+    Route::get('/dashboard',[DashboardController::class, 'show'])->name('dashboard');
 });
 Route::group(['middleware' => 'auth:sanctum'], function () {
-    Route::get('/dashboard',[DashboardController::class, 'show'])->name('dashboard');
-
     Route::get('/paciente/{paciente}/etapa/{etapa}/imagenes', [ImagenesController::class, 'verImagenes'])
-    ->middleware('check.role:doctor_admin, doctor, clinica_user')->name('imagenes.ver');
+    ->middleware('role:doctor_admin|doctor|clinica_user|admin')->name('imagenes.ver');
 
     Route::get('/imagenes/{filePath}', [ImagenesController::class, 'mostrarImagen'])
     ->name('imagenes.protegidas')->where('filePath', '.*');
@@ -31,10 +34,18 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/etapa/descargar/{filePath}', [ArchivoController::class, 'archivo'])
     ->name('archivo.descargar')->where('filePath', '.*');
 
+    //Rutas PDF Facturas
+    Route::get('/facturas/{factura}/descargar', [ClinicaShow::class, 'download'])->name('facturas.download');
+    Route::get('/factura/{ruta}', [ClinicaShow::class, 'view'])->name('facturas.view');
+
     // Rutas del administrador
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/clinicas', [DashboardController::class, 'show'])->name('admin.clinica');
         Route::get('/admin/clinica/{id}', [ClinicaController::class, 'index'])->name('admin.clinica.view');
+        Route::get('/admin/pacientes',[PacientesAdmin::class, 'index'])->name('admin.pacientes');
+        Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
+        Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
+        // Route::delete('/factura/{factura}', [ArchivoController::class, 'delete'])->name('eliminar.archivo');
     });
 
     // Rutas del doctor Administrador
@@ -56,9 +67,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     });
 
     Route::middleware(['role:docor|doctor_admin'])->group(function (){
-        Route::get('/facturas/{factura}/descargar', [ClinicaShow::class, 'download'])->name('facturas.download');
-    });
 
+
+        // Route::get('/descargar/{path}', [CarpetasController::class, 'mostrar'])->name('download');
+    });
 
     // Rutas de la clínica
     Route::middleware(['role:clinica'])->group(function () {

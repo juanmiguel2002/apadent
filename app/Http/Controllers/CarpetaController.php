@@ -37,6 +37,7 @@ class CarpetaController extends Controller
     public function show($id)
     {
         $carpeta = Carpeta::findOrFail($id);
+
         return view('admin.carpeta.show', compact('id', 'carpeta'));
     }
 

@@ -58,7 +58,7 @@
                                     <div class="text-sm text-gray-900">{{ $clinica->direccion }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-center font-medium flex">
-                                    <a class="text-azul px-4 py-2 hover:bg-gray-200 rounded cursor-pointer" wire:click="showCreateModal({{ $clinica->id }})">
+                                    <a class="text-azul px-4 py-2 hover:bg-gray-200 rounded cursor-pointer" wire:click="showCreateModal({{ $clinica->id }})" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </td>

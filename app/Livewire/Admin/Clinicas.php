@@ -178,35 +178,5 @@ class Clinicas extends Component
     {
         $this->showModal = false;
     }
-
-    // public function confirmDelete($id)
-    // {
-    //     $clinica = Clinica::with('users', 'pacientes')->find($id);
-
-    //     // Eliminación en cascada de relaciones
-    //     if($clinica->usuarios){
-    //         foreach ($clinica->usuarios as $usuario) {
-    //             $usuario->delete();
-    //         }
-
-    //         foreach ($clinica->pacientes as $paciente) {
-    //             $paciente->delete();
-    //         }
-    //     }
-
-    //     $clinicaName = preg_replace('/\s+/', '_', trim($clinica->name));
-    //     // Eliminar la carpeta de la clínica (asumiendo una estructura de carpetas definida)
-    //     $carpetaClinica = public_path('clinicas/' . $clinicaName);
-    //     if (is_dir($carpetaClinica)) {
-    //         // Utilizar una librería como File para una eliminación recursiva más segura
-    //         File::deleteDirectory($carpetaClinica);
-    //     }
-
-    //     // Eliminar el registro de la clínica
-    //     $clinica->delete();
-
-    //     // Disparar el evento
-    //     $this->dispatch('clinicaEliminada', 'La Clínica '.$clinica->name.' ha sido eliminada exitosamente.');
-    //     $this->resetPage();
-    // }
+    
 }

@@ -97,6 +97,23 @@ class ClinicaShow extends Component
         return abort(403, 'No tienes permiso para ver este archivo.');
     }
 
+    public function view(Factura $factura) {
+        // Verificar si el usuario tiene acceso a la clínica
+        if (Storage::disk('clinicas')->exists($factura->ruta) && Auth::user()) {
+            $ruta = Storage::disk('clinicas')->path($factura->ruta);
+            // Obtener el nombre del archivo sin la extensión
+            $fileName = pathinfo($ruta, PATHINFO_FILENAME) . '.pdf';
+
+            // Crear la respuesta con la cabecera Content-Disposition
+            return response()->file($ruta, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"', // Establecer el nombre en la cabecera
+            ]);
+        }
+
+        // Si el usuario no tiene acceso, devolver una respuesta de error
+        return abort(403, 'No tienes permiso para ver este archivo.');
+    }
     public function close()
     {
         $this->modalOpen = false;

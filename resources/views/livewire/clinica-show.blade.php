@@ -64,10 +64,14 @@
                             <tbody>
                                 @foreach ($facturas as $factura)
                                     <tr>
-                                        <td class="py-2">{{ $factura->name }}</td>
+                                        <td class="py-2">
+                                            <a href="{{ route('facturas.view', ['ruta' => $factura]) }}" target="_black">{{ $factura->name }}</a>
+                                        </td>
                                         <td class="py-2">
                                             <a href="{{ route('facturas.download', $factura) }}" target="_blank" class="text-azul">Descargar</a>
-                                            <a wire:click="delete({{ $factura->id }})" class="text-red-500 cursor-pointer">Eliminar</a>
+                                            {{-- @if (auth()->user()->hasRole('admin'))
+                                                <a href="{{ route('eliminar.archivo', ['factura'=> $factura]) }}" onclick="event.preventDefault(); showConfirmModal({{ route('eliminar.archivo', ['factura'=> $factura]) }})" class="text-red-500 cursor-pointer">Eliminar</a>
+                                            @endif --}}
                                         </td>
                                     </tr>
                                 @endforeach

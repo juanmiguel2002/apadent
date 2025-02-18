@@ -40,9 +40,19 @@
                                 {{ __('Clínicas') }}
                             </x-nav-link>
                         </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link href="{{ route('admin.pacientes') }}" :active="request()->routeIs('admin.pacientes')">
+                                {{ __('Pacientes') }}
+                            </x-nav-link>
+                        </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('users') }}" :active="request()->routeIs('users.*')">
                                 {{ __('Usuarios') }}
+                            </x-nav-link>
+                        </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('admin.archivos') }}" :active="request()->routeIs('admin.archivos')">
+                                {{ __('Archivos') }}
                             </x-nav-link>
                         </div>
                     @endif
@@ -56,7 +66,6 @@
                             @else
                                 {{ abort(403, 'Clinica No asignada') }}
                             @endif
-
                         </div>
                         {{-- <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('doctor-admin.pacientes') }}" :active="request()->routeIs('doctor.pacientes')">
@@ -73,6 +82,11 @@
                                 {{ __('Usuarios') }}
                             </x-nav-link>
                         </div>
+                        {{-- <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            <x-nav-link href="{{ route('archivos') }}" :active="request()->routeIs('archivos')">
+                                {{ __('Archivos') }}
+                            </x-nav-link>
+                        </div> --}}
                     @endif
 
                     @if (Auth::user()->hasRole('doctor'))
@@ -93,7 +107,7 @@
                         </div>
                     @endif
 
-                    @if (Auth::user()->hasRole('clinica_user'))
+                    @if (Auth::user()->hasRole('clinica'))
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('clinica.pacientes') }}" :active="request()->routeIs('clinica.pacientes')">
                                 {{ __('Pacientes') }}

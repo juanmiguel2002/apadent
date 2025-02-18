@@ -51,7 +51,7 @@
                                 <tr>
                                     <td class="content-cell" style="box-sizing: border-box; max-width: 100vw; padding: 32px;">
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
-                                            Hola {{ $paciente->clinicas[0]->name }},
+                                            Hola {{ $clinica->name }},
                                         </p>
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
                                             Te recordamos que el paciente <strong>{{ $paciente->name }}</strong> tiene una revisión programada para la fecha <strong>{{ $etapa->revision }}</strong> de la etapa {{$etapa->name}}.</p>

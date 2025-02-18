@@ -10,12 +10,13 @@ use Illuminate\Support\Facades\Storage;
 
 class ImagenesController extends Controller
 {
-    public function verImagenes($pacienteId, $etapaId)
+    public function verImagenes(Request $request, $pacienteId, $etapaId)
     {
-        $paciente = Paciente::find($pacienteId);
+        $paciente = Paciente::findOrFail($pacienteId);
         $etapa = Etapa::findOrFail($etapaId);
+        $tipo = $request->query('tipo'); // Valor por defecto 'imgetapa'
 
-        return view('pacientes.imagenes', compact('etapa', 'paciente'));
+        return view('pacientes.imagenes', compact('etapa', 'paciente', 'tipo'));
     }
 
     // Método para servir las imágenes de forma protegida

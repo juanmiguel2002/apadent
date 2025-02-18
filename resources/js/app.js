@@ -16,7 +16,8 @@ window.onload = function(){
         });
     });
 
-    Livewire.on('usuarioSaved', message => {
+    // GESTOR DE ARCHIVOS
+    Livewire.on('carpetaCreated', message => {
         Swal.fire({
             title: 'Éxito',
             text: message,
@@ -25,6 +26,17 @@ window.onload = function(){
         });
     });
 
+    Livewire.on('usuarioSaved', message => {
+        Swal.fire({
+            title: 'Éxito',
+            text: message,
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        });
+    });
+    Livewire.on('pathChanged', (currentPath) => {
+        console.log('Current Path:', currentPath);
+    });
     // Livewire.on('confirmDelete', ({ userId }) => {
     //     Swal.fire({
     //         title: '¿Estás seguro?',
@@ -94,11 +106,11 @@ window.onload = function(){
         });
     });
 
-    Livewire.on('PacienteActivo',() => {
+    Livewire.on('PacienteActivo',message => {
         Swal.fire({
             position: 'top-end',
             icon: 'success',
-            title: 'Paciente desactivado',
+            title: message,
             showConfirmButton: false,
             timer: 2500
         });
@@ -109,6 +121,16 @@ window.onload = function(){
             position: 'top-end',
             icon: 'success',
             title: 'Paciente editado con éxito',
+            showConfirmButton: false,
+            timer: 2500
+        });
+    });
+
+    Livewire.on('stripping',() => {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Striping añadido',
             showConfirmButton: false,
             timer: 2500
         });
@@ -133,6 +155,8 @@ window.onload = function(){
             timer: 2500
         });
     });
+
+    
 
     Livewire.on('etapa',() => {
         Swal.fire({

@@ -15,7 +15,7 @@ class NotificacionNuevoPaciente extends Mailable
     public $paciente;
     public $perfilPacienteUrl;
 
-    public function __construct($user, $paciente,$clinica = null, $perfilPacienteUrl = null)
+    public function __construct($user, $paciente, $clinica = null, $perfilPacienteUrl = null)
     {
         $this->nombre = $user->name;
         $this->clinica = $clinica;
@@ -28,7 +28,7 @@ class NotificacionNuevoPaciente extends Mailable
         return $this->markdown('emails.nuevoPaciente')
                     ->with([
                         'nombre' => $this->nombre,
-                        'clinicaName' => $this->clinica->name,
+                        'clinicaName' => $this->clinica,
                         'perfilPacienteUrl' => $this->perfilPacienteUrl,
                         'paciente' => $this->paciente,
                         'fechaRegistro' => now()->format('d/m/Y H:i'),

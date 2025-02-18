@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin\Users;
 
 use App\Models\Clinica;
-use App\Models\ClinicaUser;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -197,7 +196,7 @@ class UserManagement extends Component
             $user->assignRole($this->selectedRole);
             $user->clinicas()->attach($this->selectedClinica ? $this->selectedClinica : $this->clinica_id);
 
-            // $user->sendEmailVerificationNotification();
+            $user->sendEmailVerificationNotification();
             $this->dispatch('userSaved', 'Usuario Añadido');  // Emite un evento para que otros componentes puedan escuchar
 
         }
