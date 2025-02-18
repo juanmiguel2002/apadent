@@ -168,13 +168,13 @@
                                 @role('admin')
                                     <div class="col-span-2 mb-4">
                                         <x-label for="clinica_id" value="Clínica*" class="text-azul text-base"/>
-                                        <select name="clinica_id" wire:model="selectedClinica" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                        <select name="clinica_id" wire:model="clinica_id" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
                                             <option value="">Seleccione una Clínica</option>
                                             @foreach($clinicas as $clinica)
                                                 <option value="{{ $clinica->id }}">{{ $clinica->name }}</option>
                                             @endforeach
                                         </select>
-                                        <x-input-error for="clinica_id" />
+                                        <x-input-error for="selectedClinica" />
                                     </div>
                                 @endrole
                                 <div class="col-span-2 mb-4">
@@ -235,6 +235,7 @@
                                 <div class="col-span-2 mb-3">
                                     <x-label for="imagenes" class="block text-md text-azul capitalize">Fotografías</x-label>
                                     <x-input type="file" wire:model="imagenes" multiple class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                                    <x-input-error for="imagenes.*" />
                                 </div>
 
                                 <div class="col-span-2 mb-4">
@@ -244,8 +245,8 @@
                                 </div>
 
                                 <div class="col-span-2 mb-3">
-                                    <x-label for="rx" class="block text-md text-azul capitalize">Archivos RX</x-label>
-                                    <x-input multiple wire:model="rayos" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                                    <x-label for="rayos" class="block text-md text-azul capitalize">Archivos RX</x-label>
+                                    <x-input type="file" wire:model="rayos" multiple class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                 </div>
 
                                 <div class="col-span-2 mb-4">

@@ -19,7 +19,7 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use App\Models\User;
+use Illuminate\Support\Str;
 
 class Pacientes extends Component
 {
@@ -33,7 +33,7 @@ class Pacientes extends Component
     public $showModal = false;
     public $menuVisible = null;
 
-    public $imagenes = [], $cbct = [], $rayos = [];
+    public $imagenes = [], $cbct = [], $rayos = []; //archivos que del paciente
     public $selectedTratamiento, $status = "Set Up", $activo = false;
 
     public $search = '';
@@ -65,6 +65,8 @@ class Pacientes extends Component
         'observacion' => 'nullable|string|max:255',
         'obser_cbct' => 'nullable|string',
         'selectedTratamiento' => 'required|exists:tratamientos,id',
+        'img_paciente' => 'nullable|image',
+        'rayos.*' => 'nullable|image',
     ];
 
     public function updatingSearch()
@@ -184,6 +186,7 @@ class Pacientes extends Component
                     [
                         'fase_id' => $fase->id,
                         'paciente_id' => $paciente->id,
+                        'trat_id' => $this->selectedTratamiento,
                     ],
                     [
                         'name' => 'Inicio',
@@ -200,7 +203,7 @@ class Pacientes extends Component
             if ($this->img_paciente) {
                 $extension = $this->img_paciente->getClientOriginalExtension();
                 $fileName = 'foto_paciente.' . $extension;
-                $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'clinicas');
+                $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'public');
 
                 $paciente->url_img = $path;
                 $paciente->save();
@@ -208,20 +211,19 @@ class Pacientes extends Component
             // 6. Subir archivos y asociarlos
             $this->updatedArchivos($paciente, $pacienteFolder, $etapa);
 
-            // 7. Enviar email de notificación a la clínica y al admin
-            $clinica = Clinica::find($paciente->clinica_id);
-            $perfilPacienteUrl = route('pacientes-show', $paciente->id);
-            if ($clinica && $clinica->email) {
-                Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente, null, null));
-            }
-            $admin = User::role('admin')->first();
-            Mail::to($admin->email)->send(new NotificacionNuevoPaciente($admin, $paciente, $clinica, $perfilPacienteUrl));
 
             // 7. Disparar evento y resetear formulario
             $this->dispatch('nuevoPaciente');
             $this->resetForm();
             $this->showModal = false;
             $this->resetPage();
+            // 8. Enviar email de notificación a la clínica y al admin
+            $clinica = Clinica::find($paciente->clinica_id);
+            if ($clinica && $clinica->email) {
+                Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente, null, route('pacientes-show', $paciente->id)));
+            }
+
+
         });
     }
 
@@ -230,9 +232,13 @@ class Pacientes extends Component
      */
     public function createPacienteFolders($paciente)
     {
-        $clinica = Auth::user()->clinicas->first();
-        if (!$clinica) {
-            throw new \Exception("No se encontró ninguna clínica asociada al usuario.");
+        if($this->clinica_id){
+            $clinica = Clinica::find($this->clinica_id);
+        }else {
+            $clinica = Clinica::find(Auth::user()->clinicas->first()->id);
+        }
+        if (!$clinica && !$this->clinica_id) {
+            $this->dispatch('error', "No se encontró ninguna clínica asociada.");
         }
 
         // Normalizar nombres
@@ -249,8 +255,8 @@ class Pacientes extends Component
 
         // Guardar estructura en la base de datos
         $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $nombreClinica, 'carpeta_id' => null]);
-        $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id]);
-        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $nombrePaciente, 'carpeta_id' => $carpetaPacientes->id]);
+        $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id, 'clinica_id' => $clinica->id]);
+        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
 
         // Subcarpetas
         $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
@@ -259,7 +265,7 @@ class Pacientes extends Component
             if (!Storage::disk('clinicas')->exists($subFolderPath)) {
                 Storage::disk('clinicas')->makeDirectory($subFolderPath);
             }
-            Carpeta::firstOrCreate(['nombre' => $subFolder, 'carpeta_id' => $carpetaPaciente->id]);
+            Carpeta::firstOrCreate(['nombre' => $subFolder, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
         }
 
         return $pacienteFolder;
@@ -275,6 +281,11 @@ class Pacientes extends Component
                 $query->where('nombre', 'pacientes');
             })->first();
 
+        if (!$carpetaPaciente) {
+            session()->flash('error', 'Carpeta del paciente no encontrada.');
+            return;
+        }
+
         $subCarpetas = [
             'imgEtapa' => $this->imagenes,
             'CBCT' => $this->cbct,
@@ -287,14 +298,34 @@ class Pacientes extends Component
                     ->where('carpeta_id', $carpetaPaciente->id)
                     ->first();
 
+                if (!$carpeta) {
+                    session()->flash('error', "Carpeta {$nombreCarpeta} no encontrada.");
+                    continue;
+                }
+
                 foreach ($archivos as $key => $archivo) {
                     $extension = $archivo->getClientOriginalExtension();
-                    $fileName = "{$nombreCarpeta}_" . ($key + 1) . '.' . $extension;
-                    $path = $archivo->storeAs($pacienteFolder . "/{$nombreCarpeta}", $fileName, 'clinicas');
 
+                    // Asegurar que el nombre de la carpeta sea seguro
+                    $safeFolderName = Str::slug($nombreCarpeta, '_');
+
+                    // Generar el nombre del archivo de manera segura
+                    $fileName = "{$safeFolderName}_" . ($key + 1) . '.' . $extension;
+
+                    // Asegurar que el nombre no tenga caracteres extraños
+                    $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
+
+                    // Extraer el nombre del archivo sin la extensión
+                    $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
+
+                    // Guardar el archivo en la carpeta del paciente
+                    $path = $archivo->storeAs("{$pacienteFolder}/{$safeFolderName}", $fileName, 'clinicas');
+
+                    // Guardar en la base de datos solo el nombre sin extensión
                     Archivo::create([
+                        'name' => $fileNameWithoutExtension,
                         'ruta' => $path,
-                        'tipo' => strtolower($nombreCarpeta),
+                        'tipo' => strtolower($safeFolderName),
                         'extension' => $extension,
                         'etapa_id' => $etapa->id,
                         'carpeta_id' => $carpeta->id,
