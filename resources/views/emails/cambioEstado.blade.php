@@ -58,28 +58,11 @@
                                             Nos ponemos en contacto para informarle que se ha registrado un cambio de estado en el tratamiento del paciente <strong>{{ $paciente->name }} {{ $paciente->apellidos }}</strong>.
                                         </p>
                                         <ul style="color: #4a5568; font-size: 16px; list-style: none; padding: 0;">
-                                            <li><strong>Tratamiento:</strong> {{ $trat->name }}</li>
+                                            <li><strong>Tratamiento:</strong> {{ $trat->name }} - {{$trat->descirption}}}}</li>
                                             <li><strong>Fase:</strong> {{ $etapa->fase->name }}</li>
                                             <li><strong>Etapa:</strong> {{ $etapa->name }}</li>
                                             <li><strong>Nuevo estado:</strong> {{ $estado }}</li>
                                         </ul>
-
-                                        <!-- Botón de acción -->
-                                        {{-- <table class="action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin: 30px auto; text-align: center; width: 100%;">
-                                            <tr>
-                                                <td align="center">
-                                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation">
-                                                        <tr>
-                                                            <td>
-                                                                <a href="{{ env('APP_URL') }}" class="button button-primary" target="_blank" rel="noopener" style="background-color: #2d3748; border-radius: 4px; color: #fff; display: inline-block; font-size: 16px; font-weight: bold; padding: 8px 16px; text-decoration: none;">
-                                                                    Acceso a clientes
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table> --}}
                                         <!-- Fin botón de acción -->
                                     </td>
                                 </tr>
