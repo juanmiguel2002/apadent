@@ -9,14 +9,23 @@
         <!-- Contenedor de los botones -->
         <div class="flex space-x-4">
             <!-- Añadir stripping -->
-            @can('stripping')
-                <button wire:click="stripping" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+            {{-- @can('stripping')
+                <button wire:click="showStripping" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
                     <span>Añadir Stripping</span>
                 </button>
             @endcan
+            @if ($verStripping)
+                <button class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-4.636 0-8.573 3.14-9.805 7.5 1.232 4.36 5.17 7.5 9.805 7.5s8.573-3.14 9.805-7.5c-1.232-4.36-5.17-7.5-9.805-7.5z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"/>
+                    </svg>
+                    <span> Ver Stripping</span>
+                </button>
+            @endif --}}
             <!-- Botón Editar-->
             <button wire:click="edit" class="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -123,7 +132,7 @@
 
                         <!-- Contenedor de Tratamientos y Etapas -->
                         <div class="space-y-8">
-                            @foreach ($tratamientos as $tratamiento)
+                            {{-- @foreach ($tratamientos as $tratamiento)
                                 <div class="grid grid-cols-1 gap-6 items-start border-t pt-4">
                                     <!-- Tratamiento -->
                                     <div class="space-y-2">
@@ -205,9 +214,93 @@
                                         @endforeach
                                     </div>
                                 </div>
+                            @endforeach --}}
+
+                            @foreach ($tratamientos as $tratamiento)
+                                <div class="grid grid-cols-1 gap-6 items-start border-t pt-4">
+                                    <!-- Tratamiento -->
+                                    <div class="space-y-2">
+                                        <div class="text-teal-600 font-semibold text-lg cursor-pointer"
+                                            wire:click='historial({{$paciente->id}}, {{$tratamiento->id}})'>
+                                            {{ $tratamiento->name }} - {{ $tratamiento->descripcion }}
+                                        </div>
+                                        <div class="text-gray-500 text-sm">
+                                            Fecha Inicio: {{ date('d/m/Y', strtotime($tratamiento->created_at)) }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Etapas del tratamiento -->
+                                    <div class="space-y-6 ">
+                                        @if ($tratamiento->etapas->isNotEmpty())
+                                            <h3 class="text-lg font-semibold text-teal-700">Fase 1</h3>
+                                            <ul class="space-y-4 mt-4">
+                                                @foreach ($tratamiento->etapas as $etapa)
+                                                    <li class="p-4 rounded-lg shadow-md border
+                                                        {{ $etapa->status === 'Finalizado' ? 'bg-red-100 border-red-300' :
+                                                            ($etapa->status === 'Pausado' ? 'bg-blue-100 border-blue-300' :
+                                                            ($etapa->status === 'En proceso' ? 'bg-green-100 border-green-300' :
+                                                            ($etapa->status === 'Set Up' ? 'bg-yellow-100 border-yellow-300' : 'bg-gray-100 border-gray-200'))) }}">
+
+                                                        <div class="flex justify-between items-center">
+                                                            <span class="font-semibold text-md">{{ $etapa->name }}</span>
+                                                            @if ($etapa->status === 'Finalizado')
+                                                                <span class="text-sm text-gray-800">
+                                                                    Finalizado el: {{ \Carbon\Carbon::parse($etapa->fecha_fin)->format('d/m/Y') }}
+                                                                </span>
+                                                            @else
+                                                                <span class="text-sm text-gray-600">
+                                                                    Próxima revisión: {{ $etapa->revision ? \Carbon\Carbon::parse($etapa->revision)->format('d/m/Y') : 'No asignada' }}
+                                                                </span>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="mt-2 text-xs text-gray-500">
+                                                            <!-- Estado de la etapa -->
+                                                            <div class="mt-2">
+                                                                <strong>Estado:</strong>
+                                                                <span class="text-sm {{
+                                                                    $etapa->status === 'Finalizado' ? 'text-red-600' :
+                                                                    ($etapa->status === 'Pausado' ? 'text-blue-600' :
+                                                                    ($etapa->status === 'En proceso' ? 'text-green-600' :
+                                                                    ($etapa->status === 'Set Up' ? 'text-yellow-600' : 'text-gray-600'))) }}">
+                                                                    {{ $etapa->status }}
+                                                                </span>
+                                                            </div>
+
+                                                            <!-- Detalles adicionales de la etapa -->
+                                                            @if($etapa->mensajes->count() > 0)
+                                                                <div class="mt-4">
+                                                                    <h4 class="text-sm font-semibold text-gray-700">Mensajes:</h4>
+                                                                    <ul class="space-y-2 mt-2">
+                                                                        @foreach ($etapa->mensajes as $mensaje)
+                                                                            <li class="bg-gray-50 p-3 rounded-md border-l-4 border-teal-500 shadow-sm">
+                                                                                <div class="flex justify-between items-center">
+                                                                                    <span class="text-sm text-gray-800">{{ $mensaje->mensaje }}</span>
+                                                                                    <span class="text-xs text-gray-500">
+                                                                                        {{ \Carbon\Carbon::parse($mensaje->created_at)->format('d/m/Y H:i') }}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div class="text-xs text-gray-600 mt-2">
+                                                                                    <span class="font-semibold">Usuario:</span> {{ $mensaje->user->name }}
+                                                                                </div>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            @else
+                                                                <div class="mt-4 text-sm text-gray-500">No hay mensajes para esta etapa.</div>
+                                                            @endif
+                                                        </div>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <div class="text-gray-500">No hay etapas registradas para este tratamiento.</div>
+                                        @endif
+                                    </div>
+                                </div>
                             @endforeach
                         </div>
-
                     </div>
 
                     <div class="my-3"></div>
@@ -248,27 +341,29 @@
 
     {{-- Añadir Stripping--}}
     @if ($showModal)
-      <x-dialog-modal wire:model="showModal" maxWidth="lg">
-          <x-slot name="title">
-              <div class="flex justify-between items-center">
-                  <h1 class="text-xl font-medium text-gray-800">{{ $uploadType == 'imagenes' ? 'Añadir Imágenes' : 'Añadir Archivos' }}</h1>
-                  <button wire:click="close" class="text-gray-400 hover:text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                  </button>
-              </div>
-          </x-slot>
-          <x-slot name="content">
-              <x-label for="file" class="block text-md text-azul capitalize" value="{{ $uploadType == 'imagenes' ? 'Imágenes' : 'Archivos' }}" />
-              <x-input wire:model="files" multiple required type="file" class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
-              <x-input-error for="files.*" />
-          </x-slot>
-          <x-slot name="footer">
-              <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-              <button type="submit" wire:click="save" class="bg-azul text-white px-4 py-2 rounded">Añadir</button>
-          </x-slot>
-      </x-dialog-modal>
+        <x-dialog-modal wire:model='showModal' maxWidth="lg">
+            <x-slot name="title">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-xl font-medium text-gray-800">Añadir Stripping</h1>
+                    <button wire:click="close" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </x-slot>
+            <x-slot name="content">
+                <form wire:submit.prevent="saveStripping">
+                    <x-label for="stripping" class="block text-md text-azul capitalize" value="Stripping" />
+                    <x-input type="file" wire:model="stripping" multiple class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                    {{-- <x-input-error for="stripping.*" /> --}}
+                </form>
+            </x-slot>
+            <x-slot name="footer">
+                <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
+                <button type="submit" wire:click="saveStripping" class="bg-azul text-white px-4 py-2 rounded">Añadir</button>
+            </x-slot>
+        </x-dialog-modal>
     @endif
 
     {{-- Editar Paciente --}}
