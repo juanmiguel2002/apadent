@@ -9,11 +9,12 @@ class ImagenesEtapa extends Component
 {
     public $archivos, $etapa, $paciente;
 
-    public function mount($etapa, $paciente){
+    public function mount($etapa, $paciente, $tipo){
         $this->etapa = $etapa;
         $this->paciente = $paciente;
         $this->archivos = Archivo::where('etapa_id', $this->etapa->id)
-            ->whereIn('tipo', ['jpg', 'jpeg', 'png'])
+            ->whereIn('extension', ['jpg', 'jpeg', 'png'])
+            ->where('tipo', $tipo)
             ->get();
     }
 
