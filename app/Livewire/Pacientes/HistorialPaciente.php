@@ -13,9 +13,11 @@ use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
 use App\Mail\NotificacionMensaje;
 use App\Mail\NotificacionRevision;
+use App\Models\Carpeta;
 use App\Models\Fase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class HistorialPaciente extends Component
 {
@@ -27,11 +29,9 @@ class HistorialPaciente extends Component
     public $selectedTratamiento, $selectedNewTratamiento, $tratId;
     public $showTratamientoModal = false, $mostrarMenu = [], $modalOpen = false, $documents = false;
     public $etapaId; // para guardar el ID de la etapa correspondiente
-    public $archivo, $img = false, $completado;
+    public $archivo, $img = false;
     public $modalImg, $imagenes = [];
     public $modalArchivo = false, $archivos = [];
-    public $mostrarAcordeon = [];
-    public $fases, $faseId;
 
     public $statuses = [
         'En proceso' => 'bg-green-600',
@@ -44,67 +44,38 @@ class HistorialPaciente extends Component
         'selectedNewTratamiento' => 'required|exists:tratamientos,id',
     ];
 
-    public function mount($paciente, $tratamiento = null, $tratId = null)
+    public function mount($paciente, $tratId = null)
     {
         $this->paciente = $paciente;
         $this->clinica = Clinica::find($this->paciente->clinica_id);
         $this->pacienteId = $this->paciente->id;
 
         $this->tratId = $tratId;// comprobar si existe tratamiento asignado por url
-        $this->tratamiento = $tratamiento;//se pasa el tratamiento seleccionado por url
+        // $this->tratamiento = $tratamiento;//se pasa el tratamiento seleccionado por url
 
         // Cargar las fases del tratamiento seleccionado (si existe un tratamiento)
         if ($this->tratId) {
-            $this->loadFases($this->tratId);
-            $this->loadEtapas($this->fases[0]->id);
+            $this->loadEtapas($this->tratId);
         }else{
-            $this->loadFases($this->tratamientoId);
-        }
-
-        // Inicializa el acordeón basado en el tratamiento pasado por URL
-        foreach ($this->fases as $fase) {
-            $this->mostrarAcordeon[$fase->id] = ($tratId && $fase->id == $this->tratId);
+            $this->loadEtapas($this->tratamientoId);
         }
 
         // Cargar archivos relacionados con las etapas del paciente
         $this->archivo = Archivo::whereHas('etapas', function ($query) {
             $query->where('paciente_id', $this->pacienteId);
-        })->where('tipo', 'zip')->get();
+        })->where('extension', 'zip')->get();
     }
 
-
-    public function loadFases($tratId = null)
-    {
-        // Cargar las fases únicas asociadas al tratamiento
-        $this->fases = Fase::where('trat_id', $tratId ? $tratId : $this->tratamientoId)
-            ->with(['etapas' => function ($query) {
-                $query->where('paciente_id', $this->pacienteId);
-            }])
-            ->distinct()
-            ->get();
-    }
-
-    public function loadEtapas($faseId)
+    public function loadEtapas($tratamientoId)
     {
         // Cargar las etapas específicas para la fase activa
-        $this->etapas = Etapa::with(['fase', 'archivos', 'mensajes.user'])
-            ->where('fase_id', $faseId)
-            ->where('paciente_id', $this->pacienteId)
-            ->get();
+        $this->etapas = Etapa::whereHas('fase', function ($query) use ($tratamientoId) {
+            $query->where('trat_id', $tratamientoId);
+        })
+        ->where('paciente_id', $this->pacienteId)
+        ->with('fase')
+        ->get();
 
-    }
-
-    public function toggleAcordeon($faseId)
-    {
-        // Alternar visibilidad del acordeón para las fases
-        if (isset($this->mostrarAcordeon[$faseId])) {
-            unset($this->mostrarAcordeon[$faseId]);
-        } else {
-            $this->mostrarAcordeon = []; // Cerrar otros menús
-            $this->mostrarAcordeon[$faseId] = true;
-            $this->faseId = $faseId;
-            $this->loadEtapas($faseId);
-        }
     }
 
     public function render()
@@ -113,12 +84,14 @@ class HistorialPaciente extends Component
     }
 
     // COMPRUEBA SI TIENE ARCHIVO UNA ETAPA
-    public function tieneArchivos($etapaId, $archivo = false)
+    public function tieneArchivos($etapaId, $archivo = false,$tipo)
     {
         if($archivo){
-           return Archivo::where('etapa_id', $etapaId)->where('tipo', 'zip')->exists();
+           return Archivo::where('etapa_id', $etapaId)->where('extension', 'zip')->exists();
         }
-        return Archivo::where('etapa_id', $etapaId)->exists();
+        return Archivo::where('etapa_id', $etapaId)
+                      ->where('tipo', $tipo)
+                      ->exists();
     }
 
     // ENVIAR MENSAJE TRATAMIENTO ETAPA PACIENTE
@@ -144,13 +117,13 @@ class HistorialPaciente extends Component
 
         // Limpiar el campo de mensaje
         $this->mensajes[$etapaId] = '';
-        $this->loadFases($this->tratId ? $this->tratId : $this->tratamientoId);
+        $this->loadEtapas($this->tratId ? $this->tratId : $this->tratamientoId);
         $this->dispatch('mensaje');
 
         $etapa = Etapa::find($etapaId);
         $trat = Tratamiento::find($this->tratId ? $this->tratId : $this->tratamientoId);
 
-        // Mail::to($this->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
+        Mail::to($this->clinica->email)->send(new NotificacionMensaje($this->paciente, $etapa, $trat, $mensaje));
 
     }
 
@@ -167,7 +140,7 @@ class HistorialPaciente extends Component
         $etapa->save();
         $this->mostrarMenu = false; // Cerrar el menú
         $this->dispatch('estadoActualizado');
-        $this->loadEtapas($this->faseId);
+        $this->loadEtapas($this->selectedTratamiento);
 
         // Enviar email a la clínica
         $etapa = Etapa::find($etapaId);
@@ -196,25 +169,25 @@ class HistorialPaciente extends Component
 
             $this->dispatch('revision');
             $this->modalOpen = false;
-            $this->loadEtapas($this->faseId);
+            $this->loadEtapas($this->selectedTratamiento);
 
             Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa, $this->clinica));
         }
     }
 
     // Nueva Etapa
-    public function nuevaEtapa($faseId)
+    public function nuevaEtapa($tratamientoId)
     {
-        $fase = Fase::find($faseId);
+        $fase = Fase::where('trat_id', $tratamientoId)->first();
 
-        if (!$fase) {
+        if (!$tratamientoId) {
             session()->flash('error', 'La fase especificada no existe.');
 
             return;
         }
 
         // Obtener el número consecutivo de la nueva etapa
-        $numeroEtapa = Etapa::where('fase_id', $fase->id)->where('paciente_id', $this->pacienteId)->count() + 1;
+        $numeroEtapa = Etapa::where('trat_id', $tratamientoId)->where('paciente_id', $this->pacienteId)->count() + 1;
         $nombreEtapa = "Etapa " . $numeroEtapa;
 
         // Crear una nueva etapa
@@ -222,86 +195,83 @@ class HistorialPaciente extends Component
             'name' => $nombreEtapa, // Nombre consecutivo
             'fecha_ini' => now(),
             'status' => 'Set Up', // Status inicial de la etapa
+            'trat_id' => $tratamientoId,
             'fase_id' => $fase->id, // Relacionar con la fase seleccionada
             'paciente_id' => $this->pacienteId, // Relacionar con el paciente seleccionado
         ]);
 
         $this->dispatch('etapa');
         // Recargar las etapas para reflejar los cambios
-        $this->loadEtapas($fase->tratamiento->id);
+        $this->loadEtapas($tratamientoId);
     }
 
     // GESTIÓN NEW TRATAMIENTO
-    public function showTratamientosModal()
+    public function showTratModal()
     {
         $this->showTratamientoModal = true;
-        $this->reset(['selectedTratamiento']);
+        $this->tratamientos = Tratamiento::all();
     }
 
     public function saveTratamiento()
     {
-        // Validar que se haya seleccionado un tratamiento
+        // Validar que se haya seleccionado un tratamiento válido
         $this->validate([
             'selectedNewTratamiento' => 'required|exists:tratamientos,id',
         ], [
-            'selectedNewTratamiento' => 'Has selecionado un tratamiento que esta asignado ya'
+            'selectedNewTratamiento.required' => 'Debes seleccionar un tratamiento.',
+            'selectedNewTratamiento.exists' => 'El tratamiento seleccionado no es válido.',
         ]);
 
         try {
-            // Verificar si el tratamiento ya está asociado con el paciente
-            $existingTratamiento = PacienteTrat::where('paciente_id', $this->pacienteId)
-                ->where('trat_id', $this->selectedNewTratamiento)
-                ->first();
+            DB::transaction(function () {
+                // Verificar si el tratamiento ya está asociado con el paciente
+                $existe = PacienteTrat::where('paciente_id', $this->pacienteId)
+                    ->where('trat_id', $this->selectedNewTratamiento)
+                    ->exists();
 
-            if ($existingTratamiento) {
-                $this->dispatch('error', 'El tratamiento ya está asociado al paciente.');
-                return;
-            }
+                if ($existe) {
+                    throw new \Exception('El tratamiento ya está asociado al paciente.');
+                }
 
-            // Crear la relación entre el paciente y el tratamiento
-            $pacienteTrat = PacienteTrat::create([
-                'paciente_id' => $this->pacienteId,
-                'trat_id' => $this->selectedNewTratamiento,
-            ]);
-
-            // Obtener las etapas del tratamiento seleccionado
-            $etapas = TratamientoEtapa::where('trat_id', $this->selectedNewTratamiento)->get();
-
-            // Asociar cada etapa con el paciente en `paciente_etapas`
-            foreach ($etapas as $etapa) {
-                PacienteEtapas::create([
+                // Asociar el tratamiento al paciente
+                PacienteTrat::create([
                     'paciente_id' => $this->pacienteId,
-                    'etapa_id' => $etapa->etapa_id,
-                    'status' => 'Set Up', // Estado inicial
-                    'fecha_ini' => now(), // Fecha de inicio actual
+                    'trat_id' => $this->selectedNewTratamiento,
                 ]);
-            }
+
+                // Obtener todas las fases del tratamiento seleccionado
+                $fases = Fase::where('trat_id', $this->selectedNewTratamiento)->get();
+
+                foreach ($fases as $fase) {
+                    // Crear una etapa inicial para cada fase
+                    Etapa::create([
+                        'fase_id' => $fase->id,
+                        'paciente_id' => $this->pacienteId,
+                        'name' => 'Inicio',
+                        'status' => 'Set Up',
+                        'fecha_ini' => now(),
+                    ]);
+                }
+            });
 
             // Resetear el tratamiento seleccionado y cerrar el modal
             $this->reset('selectedNewTratamiento');
             $this->closeModal();
-            $this->loadFases($this->selectedNewTratamiento);
-            // Emitir un evento para actualizar la lista de tratamientos en la vista principal si es necesario
-            $this->dispatch('tratamientoAsignado', 'Tratamiento asignado.');
+            $this->mount($this->paciente, null, $this->selectedNewTratamiento);
+
+            // Emitir un evento para actualizar la lista de tratamientos en la vista
+            $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
         } catch (\Exception $e) {
-            $this->dispatch('error', 'Ocurrió un error al guardar el tratamiento.');
+            return redirect()->back()->with('error', 'Tratamiento ya asignado');
         }
     }
 
     // Nueva Documentación
-    public function showDocumentacionModal(){
-        $this->documents = true;
+    public function abrirModalDocumentacion()
+    {
+        $this->dispatch('abrirModalDocumentacion', $this->paciente->id, $this->tratId ? $this->tratId : null);
     }
-
-    public function saveDocumentacion($tratId, $etapaId){
-
-    }
-
     // GESTIONAR IMÁGENES ETAPA PACIENTE TRATAMIENTO
-    public function verImg($etapaId){
-        return redirect()->route('imagenes.ver', ['paciente' => $this->pacienteId, 'etapa' => $etapaId]);
-    }
-
     public function showModalImg($etapaId){
         $this->etapaId = $etapaId;
         $this->modalImg = true;
@@ -320,60 +290,74 @@ class HistorialPaciente extends Component
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
         $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
 
+        $carpetaPaciente = Carpeta::where('nombre', preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos)))
+        ->whereHas('parent', function ($query) {
+            $query->where('nombre', 'pacientes');
+        })->first();
+
+        $carpeta = Carpeta::where('nombre', 'imgEtapa')
+                    ->where('carpeta_id', $carpetaPaciente->id)
+                    ->first();
+
         // Subir múltiples imágenes del paciente, si existen
         if ($this->imagenes && is_array($this->imagenes)) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = $etapa->name . "_" . $key . '.' . $extension;
                 $path = $imagen->storeAs($pacienteFolder . '/imgEtapa', $fileName, 'clinicas');
-
+                // Extraer el nombre del archivo sin la extensión
+                $Name = pathinfo($fileName, PATHINFO_FILENAME);
                 // Guardar la ruta de la imagen en la tabla de archivos
                 Archivo::create([
+                    'name' => $Name,
                     'ruta' => $path,
-                    'tipo' => $extension,
+                    'tipo' => 'imgetapa',
+                    'extension'=>$extension,
                     'etapa_id' => $this->etapaId,
+                    'carpeta_id' => $carpeta->id,
+
                 ]);
             }
         }
         $this->modalImg = false;
-        $this->loadEtapas($this->faseId);
+        return redirect()->route('imagenes.ver', ['paciente' => $this->pacienteId, 'etapa' => $this->etapaId]);
     }
 
     // GESTIONAR ARCHIVOS ETAPA PACIENTE TRATAMIENTO
-    public function showModalArchivo(){
-        $this->modalArchivo = true;
-    }
+    // public function showModalArchivo(){
+    //     $this->modalArchivo = true;
+    // }
 
-    public function saveArchivos($etapaId){
+    // public function saveArchivos($etapaId){
 
-        $etapa = Etapa::find($etapaId);
-        $clinicaName = preg_replace('/\s+/', '_', trim(Auth::user()->clinicas->first()->name));
-        $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
-        $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
+    //     $etapa = Etapa::find($etapaId);
+    //     $clinicaName = preg_replace('/\s+/', '_', trim(Auth::user()->clinicas->first()->name));
+    //     $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
+    //     $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
 
-        $this->validate([
-            'archivos.*' => 'required|file',
-        ]);
+    //     $this->validate([
+    //         'archivos.*' => 'required|file',
+    //     ]);
 
-        // Subir múltiples imágenes del paciente, si existen
-        if ($this->archivos && is_array($this->archivos)) {
-            foreach ($this->archivos as $key => $archivo) {
-                $extension = $archivo->getClientOriginalExtension();
-                $fileName = $etapa->name."_" . $key . '.' . $extension;
-                $path = $archivo->storeAs($pacienteFolder . '/archivoEtapa', $fileName, 'clinicas');
+    //     // Subir múltiples imágenes del paciente, si existen
+    //     if ($this->archivos && is_array($this->archivos)) {
+    //         foreach ($this->archivos as $key => $archivo) {
+    //             $extension = $archivo->getClientOriginalExtension();
+    //             $fileName = $etapa->name."_" . $key . '.' . $extension;
+    //             $path = $archivo->storeAs($pacienteFolder . '/archivoEtapa', $fileName, 'clinicas');
 
-                // Guardar la ruta de la imagen en la tabla de archivos
-                $archivo = Archivo::create([
-                    'ruta' => $path,
-                    'tipo' => $extension,
-                    'paciente_id' => $this->pacienteId,
-                    'paciente_etapa_id' => $etapaId,
-                ]);
-            }
-            $archivo->save();
-        }
-        $this->modalArchivo = false;
-    }
+    //             // Guardar la ruta de la imagen en la tabla de archivos
+    //             $archivo = Archivo::create([
+    //                 'ruta' => $path,
+    //                 'tipo' => $extension,
+    //                 'paciente_id' => $this->pacienteId,
+    //                 'paciente_etapa_id' => $etapaId,
+    //             ]);
+    //         }
+    //         $archivo->save();
+    //     }
+    //     $this->modalArchivo = false;
+    // }
 
     public function closeModal(){
         if($this->documents) {
@@ -390,7 +374,7 @@ class HistorialPaciente extends Component
             $this->showTratamientoModal = false;
             // $this->reset(['selectedNewTratamiento']);
         }
-        $this->loadFases($this->selectedTratamiento);
+        $this->loadEtapas($this->selectedTratamiento);
     }
 
     public function toggleMenu($etapaId)
