@@ -58,10 +58,11 @@
                                             Nos ponemos en contacto para informarle que se ha registrado un cambio de estado en el tratamiento del paciente <strong>{{ $paciente->name }} {{ $paciente->apellidos }}</strong>.
                                         </p>
                                         <ul style="color: #4a5568; font-size: 16px; list-style: none; padding: 0;">
-                                            <li><strong>Tratamiento:</strong> {{ $trat->name }} - {{$trat->descirption}}}}</li>
+                                            <li><strong>Tratamiento:</strong> {{ $trat->name }} - {{$trat->descripcion}}</li>
                                             <li><strong>Fase:</strong> {{ $etapa->fase->name }}</li>
                                             <li><strong>Etapa:</strong> {{ $etapa->name }}</li>
                                             <li><strong>Nuevo estado:</strong> {{ $estado }}</li>
+                                            <li><strong>Clínica:</strong> {{$clinica->name}}</li>
                                         </ul>
                                         <!-- Fin botón de acción -->
                                     </td>

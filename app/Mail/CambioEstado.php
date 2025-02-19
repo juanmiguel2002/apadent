@@ -14,17 +14,18 @@ class CambioEstado extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $paciente, $estado, $etapa, $trat;
+    public $paciente, $estado, $etapa, $trat, $clinica;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Paciente $paciente, $estado, $etapa, $trat)
+    public function __construct(Paciente $paciente, $estado, $etapa, $trat, $clinica)
     {
         $this->paciente = $paciente;
         $this->estado = $estado;
         $this->etapa = $etapa;
         $this->trat = $trat;
+        $this->clinica = $clinica;
     }
 
     /**
@@ -47,7 +48,8 @@ class CambioEstado extends Mailable
                         'paciente' => $this->paciente,
                         'estado' => $this->estado,
                         'etapa' => $this->etapa,
-                        'trat' => $this->trat
+                        'trat' => $this->trat,
+                        'clinica' => $this->clinica,
                     ]);
     }
 

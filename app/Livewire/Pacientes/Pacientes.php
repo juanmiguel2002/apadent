@@ -365,7 +365,7 @@ class Pacientes extends Component
         // Opcional: Enviar email a la clínica
         $clinica = Clinica::find($paciente->clinica_id);
         if ($clinica && $clinica->email) {
-            Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $this->tratamientos->first()));
+            Mail::to($clinica->email)->send(new CambioEstado($paciente, $newStatus, $etapa, $this->tratamientos->first(),$clinica));
         }
     }
 
