@@ -211,7 +211,6 @@ class Pacientes extends Component
             // 6. Subir archivos y asociarlos
             $this->updatedArchivos($paciente, $pacienteFolder, $etapa);
 
-
             // 7. Disparar evento y resetear formulario
             $this->dispatch('nuevoPaciente');
             $this->resetForm();
@@ -222,8 +221,6 @@ class Pacientes extends Component
             if ($clinica && $clinica->email) {
                 Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente, null, route('pacientes-show', $paciente->id)));
             }
-
-
         });
     }
 

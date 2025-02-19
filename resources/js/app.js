@@ -156,7 +156,7 @@ window.onload = function(){
         });
     });
 
-    
+
 
     Livewire.on('etapa',() => {
         Swal.fire({
@@ -227,5 +227,4 @@ window.onload = function(){
             timer: 2500
         });
     });
-
 }

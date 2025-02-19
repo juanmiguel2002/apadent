@@ -51,7 +51,6 @@
         <table class="min-w-full divide-y table-fixed">
             <thead class="text-white">
                 <tr class="bg-azul">
-                    {{-- <th class="p-3 text-center">ID</th> --}}
                     <th class="p-3 text-center">Cód Paciente</th>
                     <th class="p-3 text-center">Nombre y Apellido</th>
                     @if (auth()->user()->hasRole('admin'))
@@ -68,18 +67,32 @@
                 <tbody class="bg-gray-200 ">
                     @foreach ($pacientes as $paciente)
                         <tr>
-                            {{-- <td class="text-center px-4 py-2">{{ $paciente->id }}</td> --}}
                             <td class="text-center px-4 py-2">{{ $paciente->num_paciente }}</td>
-                            <td class="text-center px-4 py-2 cursor-pointer"><a href="{{ route('pacientes-show', $paciente->id) }}"> {{ $paciente->name . " " . $paciente->apellidos }}</a></td>
+                            <td class="text-center px-4 py-2 cursor-pointer">
+                                <a href="{{ route('pacientes-show', $paciente->id) }}">
+                                    {{ $paciente->name . " " . $paciente->apellidos }}
+                                </a>
+                            </td>
                             @if (auth()->user()->hasRole('admin'))
                                 <td class="text-center px-4 py-2">
                                     {{ $paciente->clinicas->name ?? 'Sin clínica' }}
                                 </td>
                             @endif
                             <td class="text-center px-4 py-2">{{ $paciente->telefono }}</td>
-                            <td class="text-center px-4 py-2">{{ $paciente->tratamientos[0]->name ?? "Sin tratamiento"}} - {{ $paciente->tratamientos[0]->descripcion }}</td>
+
+                            {{-- Tratamiento --}}
+                            @php
+                                $tratamiento = $paciente->tratamientos->first();
+                            @endphp
+
+                            <td class="text-center px-4 py-2">{{ $tratamiento->name ?? "Sin tratamiento"}} - {{ $tratamiento->descripcion }}</td>
+                            {{-- Obtener la última fase y etapa del tratamiento más reciente --}}
+                            @php
+                                $fase = optional($tratamiento)->fases->first();
+                                $etapa = optional($fase)->etapas->first();
+                            @endphp
                             @foreach ($statuses as $status => $color)
-                                @if ($paciente->etapas[0]->status == $status)
+                                @if ($etapa->status == $status)
                                     <td class="p-3 text-center flex justify-center items-center mt-2">
                                         @if (auth()->user()->hasRole('admin') || ($status !== 'Finalizado' && auth()->user()))
                                             {{-- Si es admin o usuario normal (y el estado no es "Finalizado"), puede cambiarlo --}}
@@ -110,7 +123,7 @@
                                     </td>
                                 @endif
                             @endforeach
-                            <td class="text-center px-4 py-2">{{ $paciente->tratamientos[0]->fases[0]->name }} <br> {{ $paciente->etapas[0]->name }}</td>
+                            <td class="text-center px-4 py-2">{{ $fase->name }} <br> {{ $etapa->name }}</td>
                             <td class="text-center border px-4 py-2">
                                 <a href="{{ route('paciente-historial', $paciente->id) }}">
                                     <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
@@ -121,7 +134,7 @@
                 </tbody>
             @else
                 <tr class="text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm">
-                    <td class="font-medium px-6 py-4 mt-4" colspan="7">
+                    <td class="font-medium px-6 py-4 mt-4" colspan="{{auth()->user()->hasRole('admin') ? '8': '7' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
                         </svg>

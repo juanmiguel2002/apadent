@@ -51,7 +51,6 @@ class HistorialPaciente extends Component
         $this->pacienteId = $this->paciente->id;
 
         $this->tratId = $tratId;// comprobar si existe tratamiento asignado por url
-        // $this->tratamiento = $tratamiento;//se pasa el tratamiento seleccionado por url
 
         // Cargar las fases del tratamiento seleccionado (si existe un tratamiento)
         if ($this->tratId) {
@@ -69,13 +68,13 @@ class HistorialPaciente extends Component
     public function loadEtapas($tratamientoId)
     {
         // Cargar las etapas específicas para la fase activa
-        $this->etapas = Etapa::whereHas('fase', function ($query) use ($tratamientoId) {
-            $query->where('trat_id', $tratamientoId);
+        $this->etapas = Etapa::whereHas('tratamiento', function ($query) use ($tratamientoId) {
+            $query->where('id', $tratamientoId);
         })
         ->where('paciente_id', $this->pacienteId)
         ->with('fase')
         ->get();
-
+        // dd($this->etapas);
     }
 
     public function render()
@@ -169,7 +168,7 @@ class HistorialPaciente extends Component
 
             $this->dispatch('revision');
             $this->modalOpen = false;
-            $this->loadEtapas($this->selectedTratamiento);
+            $this->loadEtapas($this->tratId ? $this->tratId : $this->selectedTratamiento);
 
             Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa, $this->clinica));
         }
@@ -202,7 +201,9 @@ class HistorialPaciente extends Component
 
         $this->dispatch('etapa');
         // Recargar las etapas para reflejar los cambios
-        $this->loadEtapas($tratamientoId);
+        $this->mount($this->paciente, $this->tratId ? $this->tratId : null);
+        // Mail clinica
+
     }
 
     // GESTIÓN NEW TRATAMIENTO
@@ -257,7 +258,7 @@ class HistorialPaciente extends Component
             // Resetear el tratamiento seleccionado y cerrar el modal
             $this->reset('selectedNewTratamiento');
             $this->closeModal();
-            $this->mount($this->paciente, null, $this->selectedNewTratamiento);
+            $this->mount($this->paciente, $this->selectedNewTratamiento);
 
             // Emitir un evento para actualizar la lista de tratamientos en la vista
             $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
@@ -271,6 +272,7 @@ class HistorialPaciente extends Component
     {
         $this->dispatch('abrirModalDocumentacion', $this->paciente->id, $this->tratId ? $this->tratId : null);
     }
+
     // GESTIONAR IMÁGENES ETAPA PACIENTE TRATAMIENTO
     public function showModalImg($etapaId){
         $this->etapaId = $etapaId;

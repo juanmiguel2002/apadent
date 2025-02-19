@@ -42,7 +42,7 @@ class PacienteShow extends Component
         $this->etapas = Etapa::whereIn('trat_id', $this->tratamientos->pluck('id'))
                                 ->where('paciente_id', $this->pacienteId)
                                 ->get();
-
+        // dd($this->etapas);
         // $this->etapas = $this->tratamientos->flatMap->etapas->unique('id')->values();
     }
 

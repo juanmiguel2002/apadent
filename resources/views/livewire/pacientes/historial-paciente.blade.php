@@ -201,7 +201,7 @@
                     </table>
                     <div class="px-6 text-red-500 text-lg text-center cursor-pointer flex justify-center items-center w-full">
                         <img src="{{ asset('storage/recursos/icons/etapa.png') }}" alt="etapas" class="w-4 mr-1 pt-3">
-                        <strong wire:click='nuevaEtapa({{$tratId ? $tratamiento->id : $tratamiento[0]->id}})'>Añadir etapa</strong>
+                        <strong wire:click='nuevaEtapa({{$tratamientoId ? $tratamientoId : $tratId}})'>Añadir etapa</strong>
                     </div>
                 </div>
             </div>

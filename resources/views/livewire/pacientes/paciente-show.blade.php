@@ -224,9 +224,9 @@
                                             wire:click='historial({{$paciente->id}}, {{$tratamiento->id}})'>
                                             {{ $tratamiento->name }} - {{ $tratamiento->descripcion }}
                                         </div>
-                                        <div class="text-gray-500 text-sm">
-                                            Fecha Inicio: {{ date('d/m/Y', strtotime($tratamiento->created_at)) }}
-                                        </div>
+                                        {{-- <div class="text-gray-500 text-sm">
+                                            Fecha Inicio: {{ date('d/m/Y', strtotime($tratamiento->pacientes->created_at)) }}
+                                        </div> --}}
                                     </div>
 
                                     <!-- Etapas del tratamiento -->
