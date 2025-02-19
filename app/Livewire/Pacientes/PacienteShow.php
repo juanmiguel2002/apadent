@@ -32,9 +32,7 @@ class PacienteShow extends Component
         ])->findOrFail($this->pacienteId);
 
         $this->clinica = $this->paciente->clinicas->first();
-        // dd($this->clinica);
-        // Obtener todas las fases de los tratamientos del paciente
-        // $this->fases = $this->paciente->tratamientos->flatMap->fases->unique('id')->values();
+
         // Obtener tratamientos del paciente
         $this->tratamientos = $this->paciente->tratamientos;
 
@@ -42,8 +40,6 @@ class PacienteShow extends Component
         $this->etapas = Etapa::whereIn('trat_id', $this->tratamientos->pluck('id'))
                                 ->where('paciente_id', $this->pacienteId)
                                 ->get();
-        // dd($this->etapas);
-        // $this->etapas = $this->tratamientos->flatMap->etapas->unique('id')->values();
     }
 
     public function toggleActivo()
@@ -67,6 +63,18 @@ class PacienteShow extends Component
 
         // Redirigir al dashboard
         return redirect()->route('dashboard');
+    }
+
+    public function fechaEtapa($tratId) {
+        $primeraEtapa = Etapa::whereHas('fase', function ($query) use ($tratId) {
+            $query->where('trat_id', $tratId);
+        })
+        ->orderBy('created_at', 'asc') // Ordenar por fecha de creación ascendente
+        ->first();
+        $fechaPrimeraEtapa = $primeraEtapa ? $primeraEtapa->created_at : null;
+        
+       return $fechaPrimeraEtapa;
+
     }
 
     public function render()

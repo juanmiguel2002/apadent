@@ -132,90 +132,6 @@
 
                         <!-- Contenedor de Tratamientos y Etapas -->
                         <div class="space-y-8">
-                            {{-- @foreach ($tratamientos as $tratamiento)
-                                <div class="grid grid-cols-1 gap-6 items-start border-t pt-4">
-                                    <!-- Tratamiento -->
-                                    <div class="space-y-2">
-                                        <div class="text-teal-600 font-semibold text-lg cursor-pointer" wire:click='historial({{$paciente->id}}, {{$tratamiento->id}})'>
-                                            {{ $tratamiento->name }} - {{ $tratamiento->descripcion }}
-                                        </div>
-                                        <div class="text-gray-500 text-sm">Fecha Inicio: {{ date('d/m/Y', strtotime($tratamiento->created_at)) }}</div>
-                                    </div>
-
-                                    <!-- Fases y Etapas -->
-                                    <div class="space-y-6 ">
-                                        @foreach ($fases as $fase)
-                                            <div class="border-t pt-4">
-                                                <!-- Fase -->
-                                                <div class="flex justify-between items-center">
-                                                    <h3 class="text-lg font-semibold text-teal-700">{{ $fase->name }}</h3>
-                                                    <span class="text-sm text-gray-600">{{ $fase->created_at->format('d/m/Y') }}</span>
-                                                </div>
-
-                                                <!-- Etapas de la fase -->
-                                                <ul class="space-y-4 mt-4">
-                                                    @foreach ($fase->etapas as $etapa)
-                                                    <li class="p-4 rounded-lg shadow-md border
-                                                        {{ $etapa->status === 'Finalizado' ? 'bg-red-100 border-red-300' :
-                                                            ($etapa->status === 'Pausado' ? 'bg-blue-100 border-blue-300' :
-                                                            ($etapa->status === 'En proceso' ? 'bg-green-100 border-green-300' :
-                                                            ($etapa->status === 'Set Up' ? 'bg-yellow-100 border-yellow-300' : 'bg-gray-100 border-gray-200'))) }}">
-                                                        <div class="flex justify-between items-center">
-                                                            <span class="font-semibold text-md">{{ $etapa->name }}</span>
-                                                            @if ($etapa->status === 'Finalizado')
-                                                                <span class="text-sm text-gray-800">
-                                                                    Finalizado el: {{ \Carbon\Carbon::parse($etapa->fecha_fin)->format('d/m/Y') }}
-                                                                </span>
-                                                            @else
-                                                                <span class="text-sm text-gray-600">
-                                                                    Próxima revisión: {{ $etapa->revision ? \Carbon\Carbon::parse($etapa->revision)->format('d/m/Y') : 'No asignada' }}
-                                                                </span>
-                                                            @endif
-                                                        </div>
-                                                        <div class="mt-2 text-xs text-gray-500">
-                                                            <!-- Estado de la etapa -->
-                                                            <div class="mt-2">
-                                                                <strong>Estado:</strong>
-                                                                <span class="text-sm {{
-                                                                    $etapa->status === 'Finalizado' ? 'text-red-600' :
-                                                                    ($etapa->status === 'Pausado' ? 'text-blue-600' :
-                                                                    ($etapa->status === 'En proceso' ? 'text-green-600' :
-                                                                    ($etapa->status === 'Set Up' ? 'text-yellow-600' : 'text-gray-600'))) }}">
-                                                                    {{ $etapa->status }}
-                                                                </span>
-                                                            </div>
-
-                                                            <!-- Detalles adicionales de la etapa -->
-                                                            @if($etapa->mensajes->count() > 0)
-                                                                <div class="mt-4">
-                                                                    <h4 class="text-sm font-semibold text-gray-700">Mensajes:</h4>
-                                                                    <ul class="space-y-2 mt-2">
-                                                                        @foreach ($etapa->mensajes as $mensaje)
-                                                                            <li class="bg-gray-50 p-3 rounded-md border-l-4 border-teal-500 shadow-sm">
-                                                                                <div class="flex justify-between items-center">
-                                                                                    <span class="text-sm text-gray-800">{{ $mensaje->mensaje }}</span>
-                                                                                    <span class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($mensaje->created_at)->format('d/m/Y H:i') }}</span>
-                                                                                </div>
-                                                                                <div class="text-xs text-gray-600 mt-2">
-                                                                                    <span class="font-semibold">Usuario:</span> {{ $mensaje->user->name }}
-                                                                                </div>
-                                                                            </li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                </div>
-                                                            @else
-                                                                <div class="mt-4 text-sm text-gray-500">No hay mensajes para esta etapa.</div>
-                                                            @endif
-                                                        </div>
-                                                    </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach --}}
-
                             @foreach ($tratamientos as $tratamiento)
                                 <div class="grid grid-cols-1 gap-6 items-start border-t pt-4">
                                     <!-- Tratamiento -->
@@ -224,9 +140,9 @@
                                             wire:click='historial({{$paciente->id}}, {{$tratamiento->id}})'>
                                             {{ $tratamiento->name }} - {{ $tratamiento->descripcion }}
                                         </div>
-                                        {{-- <div class="text-gray-500 text-sm">
-                                            Fecha Inicio: {{ date('d/m/Y', strtotime($tratamiento->pacientes->created_at)) }}
-                                        </div> --}}
+                                        <div class="text-gray-500 text-sm">
+                                            Fecha Inicio: {{ date('d/m/Y', strtotime($this->fechaEtapa($tratamiento->id))) }}
+                                        </div>
                                     </div>
 
                                     <!-- Etapas del tratamiento -->
