@@ -62,7 +62,9 @@
                                             <li><strong>Fase:</strong> {{ $etapa->fase->name }}</li>
                                             <li><strong>Etapa:</strong> {{ $etapa->name }}</li>
                                             <li><strong>Nuevo estado:</strong> {{ $estado }}</li>
-                                            <li><strong>Clínica:</strong> {{$clinica->name}}</li>
+                                            @if (auth()->user()->hasRole('admin'))
+                                                <li><strong>Clínica:</strong> {{$clinica->name}}</li>
+                                            @endif
                                         </ul>
                                         <!-- Fin botón de acción -->
                                     </td>
