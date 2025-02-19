@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('pageTitle', 'Radiografías del paciente '. $paciente->name)
+@section('pageTitle', ($tipo == 'rayos' ? 'Radiografías' : "Fotografías"). ' del paciente '. $paciente->name)
 @section('header')
     <div class="w-4/5 flex justify-start items-center">
         <a href="{{ route('paciente-historial', $paciente->id) }}" clas="mr-4">
@@ -7,7 +7,7 @@
             {{-- <p class="text-lg font-semibold text-naranja">Atrás</p> --}}
         </a>
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Radiografías del paciente ')}}
+            {{ ($tipo == 'rayos' ? 'Radiografías' : "Fotografías") . ' del paciente ' }}
             <a href="{{ route('pacientes-show', $paciente->id) }}" class="text-azul hover:underline">
                 {{ $paciente->name }} - {{ $paciente->num_paciente }}
             </a>

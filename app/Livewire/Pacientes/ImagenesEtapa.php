@@ -7,7 +7,7 @@ use Livewire\Component;
 
 class ImagenesEtapa extends Component
 {
-    public $archivos, $etapa, $paciente;
+    public $archivos, $etapa, $paciente, $tratamiento;
 
     public function mount($etapa, $paciente, $tipo){
         $this->etapa = $etapa;
@@ -16,6 +16,8 @@ class ImagenesEtapa extends Component
             ->whereIn('extension', ['jpg', 'jpeg', 'png'])
             ->where('tipo', $tipo)
             ->get();
+        $this->tratamiento = $this->etapa->tratamiento;
+        // $this->tratamiento;
     }
 
     public function render()

@@ -1,6 +1,6 @@
 <div>
-    <h3 class="mt-2 font-semibold text-lg text-gray-800">Tratamiento: {{$paciente->tratamientos[0]->name . ' - '. $paciente->tratamientos[0]->descripcion}}</h3>
-    <p class="mt-2 font-semibold ">{{ $etapa->name }}</p>
+    <h3 class="mt-2 font-semibold text-lg text-gray-800">Tratamiento: {{$tratamiento->name . ' - '. $tratamiento->descripcion}}</h3>
+    <p class="mt-2 font-semibold px-2">{{ $etapa->name }}</p>
 
     @if($archivos->isNotEmpty())
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
