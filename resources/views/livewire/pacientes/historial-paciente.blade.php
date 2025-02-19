@@ -143,7 +143,7 @@
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                 <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="showModalImg({{$etapa->id}})" class="cursor-pointer font-light text-sm">Añadir</span>
+                                                <span wire:click="showModalImg({{$etapa->id}}, 'rayos')" class="cursor-pointer font-light text-sm">Añadir</span>
                                             @endif
                                         </div>
                                     </td>
@@ -191,7 +191,7 @@
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                 <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="showModalImg({{$etapa->id}})" class="cursor-pointer font-light text-sm">Añadir</span>
+                                                <span wire:click="showModalImg({{$etapa->id}}, 'imgetapa')" class="cursor-pointer font-light text-sm">Añadir</span>
                                             @endif
                                         </div>
                                     </td>
@@ -243,7 +243,7 @@
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="button" wire:click="saveTratamiento" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="submit" wire:click="saveTratamiento" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>
@@ -285,7 +285,7 @@
         <x-dialog-modal wire:model="modalImg" >
             <x-slot name="title">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-medium text-gray-900">Añadir Imágenes</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}</h3>
                     <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -296,7 +296,7 @@
 
             <x-slot name="content">
                 <form wire:submit.prevent="saveImg">
-                    <x-label for="imagenes" value="Añadir Imágenes" />
+                    <x-label for="imagenes" value="Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}" />
                     <input type="file" multiple accept="image/*" wire:model="imagenes" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
                     <x-input-error for="imagenes.*" />
                 </form>
@@ -316,7 +316,7 @@
         <x-dialog-modal wire:model="modalArchivo" >
             <x-slot name="title">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-medium text-gray-900">Añadir Archivos (.zip)</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Añadir CBCT (.zip)</h3>
                     <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -326,8 +326,8 @@
             </x-slot>
 
             <x-slot name="content">
-                <form wire:submit.prevent='saveArchivos'>
-                    <x-label for="archivos" value="Añadir Archivos" />
+                <form wire:submit='saveArchivos'>
+                    <x-label for="archivos" value="Añadir CBCT" />
                     <input type="file" multiple wire:model="archivos" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
                     <x-input-error for="archivos.*" />
                 </form>
@@ -335,7 +335,7 @@
 
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                <button type="button" wire:click="saveArchivos({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                <button type="submit" wire:click="saveArchivos({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>
