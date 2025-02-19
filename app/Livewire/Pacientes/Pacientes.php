@@ -134,7 +134,6 @@ class Pacientes extends Component
             }
         } else {
             // Si es un usuario normal (no admin), solo mostrar los pacientes de la clínica asignada a ese usuario
-            // Asumimos que el usuario tiene asociada una clínica y tiene un campo `clinica_id` o similar
             $query->where('pacientes.clinica_id', Auth::user()->clinicas->first()->id);
         }
 
@@ -333,7 +332,7 @@ class Pacientes extends Component
     }
 
     // CAMBIAR ESTADO PACIENTE ETAPA
-    public function estado($pacienteId, $newStatus)
+    public function estado($pacienteId, $tratamientoId,$newStatus)
     {
         // Encuentra al paciente y su etapa actual
         $paciente = Paciente::find($pacienteId);
@@ -343,7 +342,7 @@ class Pacientes extends Component
             return;
         }
 
-        $etapa = Etapa::where('paciente_id', $pacienteId)->first();
+        $etapa = Etapa::where('paciente_id', $pacienteId)->where('trat_id', $tratamientoId)->first();
 
         if (!$etapa) {
             session()->flash('error', 'Etapa no encontrada para el paciente.');
@@ -375,14 +374,6 @@ class Pacientes extends Component
         $this->menuVisible = $this->menuVisible === $pacienteId ? null : $pacienteId;
     }
 
-    public function showPaciente($id_paciente){
-        return redirect()->route('pacientes-show',$id_paciente);
-    }
-    public function showHistorial($id)
-    {
-        return redirect()->route('paciente-historial', ['id' => $id]);
-    }
-
     public function resetForm()
     {
         $this->reset(['name',
@@ -401,9 +392,4 @@ class Pacientes extends Component
     {
         $this->showModal = false;
     }
-
-    // public function toggleMenu($etapaId)
-    // {
-    //     $this->mostrarMenu[$etapaId] = isset($this->mostrarMenu[$etapaId]) ? !$this->mostrarMenu[$etapaId] : true;
-    // }
 }

@@ -108,7 +108,7 @@
                                                 <div class="ml-8 mt-2 space-y-1">
                                                     @foreach ($statuses as $optionStatus => $optionColor)
                                                         <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
-                                                            wire:click="estado({{ $paciente->id }}, '{{ $optionStatus }}')">
+                                                            wire:click="estado({{ $paciente->id }}, {{$tratamiento->id}},'{{ $optionStatus }}')">
                                                             {{ $optionStatus }}
                                                         </div>
                                                     @endforeach
