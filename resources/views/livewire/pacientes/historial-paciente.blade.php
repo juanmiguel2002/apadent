@@ -10,18 +10,18 @@
             </button>
         @endif
 
-        <button wire:click="abrirModalDocumentacion" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
+        <button wire:click="showDocumentacionModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
             <span>Documentación</span>
         </button>
-        @livewire('pacientes.nueva-documentacion', ['tratamiento' => $tratId ? $tratId : null, 'pacienteId' => $pacienteId])
+
     </div>
 
     @if ($tratId)
         <h2 class="px-2 mb-4 font-semibold text-lg text-gray-800">
-            Tratamiento seleccionado: {{ $tratamiento->tratamiento->name }} - {{ $tratamiento->tratamiento->descripcion }}
+            Tratamiento seleccionado: {{ $tratamientoPaciente->tratamiento->name }} - {{ $tratamientoPaciente->tratamiento->descripcion }}
         </h2>
     @else
         <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
@@ -29,7 +29,7 @@
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Tratamientos</h2>
             <select wire:model="tratamientoId" wire:change.defer='loadEtapas($event.target.value)' class="w-full p-3 border rounded-md">
                 <option value="">Seleccione un tratamiento</option>
-                @foreach($tratamiento as $trat)
+                @foreach($tratamientoPaciente as $trat)
                     <option value="{{ $trat->tratamiento->id }}">{{ $trat->tratamiento->name }} - {{ $trat->tratamiento->descripcion }}</option>
                 @endforeach
             </select>
@@ -49,7 +49,7 @@
                                 <th class="px-4 py-2 bg-azul">Mensaje</th>
                                 <th class="px-4 py-2 bg-azul">Estado</th>
                                 <th class="px-4 py-2 bg-azul">Revisión</th>
-                                @if ($documents)
+                                @if ($documentos)
                                     <th class="px-4 py-2 bg-azul">Archivos complementarios</th>
                                 @endif
                                 <th class="px-4 py-2 bg-azul">Rayos</th>
@@ -127,7 +127,7 @@
                                     </td>
 
                                     {{-- Archivos complementarios --}}
-                                    @if ($documents)
+                                    @if ($documentos)
                                         <td>
 
                                         </td>
@@ -336,6 +336,68 @@
             <x-slot name="footer">
                 <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
                 <button type="submit" wire:click="saveArchivos({{$etapa->id}})" class="bg-blue-500 text-white px-4 py-2 rounded">
+                    Guardar
+                </button>
+            </x-slot>
+        </x-dialog-modal>
+    @endif
+
+    @if ($documents)
+        <x-dialog-modal wire:model="documents">
+            <x-slot name="title">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Archivos Complementarios</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </x-slot>
+
+            <x-slot name="content">
+                <div>
+                    <!-- Si se pasó un tratId por URL, mostrarlo directamente -->
+                    @if ($tratId)
+                        <p class="py-2 text-base"><strong>Tratamiento: {{ $tratamientoPaciente->tratamiento->name }} - {{ $tratamientoPaciente->tratamiento->descripcion }}</strong></p>
+                    @elseif ($tratamientoId)
+                        <p class="py-2 text-base"><strong>Tratamiento: {{ $tratamiento->name }} - {{$tratamiento->descripcion}}</strong></p>
+                    @else
+                        <!-- Si no hay tratId, permitir elegir un tratamiento -->
+                        <x-label for="tratamiento" value="Selecciona un tratamiento" />
+                        <select wire:model="selectedtratamientoId" wire:change.defer='loadEtapas($event.target.value)' class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50">
+                            <option value="">Seleccione un tratamiento</option>
+                            @foreach ($tratamientoPaciente as $trat)
+                                <option value="{{ $trat->tratamiento->id }}">{{ $trat->tratamiento->name }} - {{ $trat->tratamiento->descripcion}}</option>
+                            @endforeach
+                        </select>
+                        <br>
+                    @endif
+                    <x-label for="" value="Selecciona una etapa" />
+                    <select wire:model="selectedEtapa" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <option value="">Seleccione una etapa</option>
+                        @foreach ($etapas as $etapa)
+                            <option value="{{ $etapa->id }}">{{ $etapa->name }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error for="selectedEtapa"/>
+
+                    <br>
+
+                    <x-label for="documentacion" value="Nueva Documentación" />
+                    <input type="file" multiple wire:model="documentacion" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                    <x-input-error for="documentacion.*"/>
+
+
+                    <x-label for="mensaje" value="Mensaje o Descripción" />
+                    <textarea wire:model="mensaje" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4" rows="3"></textarea>
+                    <x-input-error for="mensaje.*"/>
+                </div>
+            </x-slot>
+
+            <x-slot name="footer">
+                <button type="button" wire:click="closeModal" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
+                <button type="submit" wire:click="saveDocumentacion" class="bg-blue-500 text-white px-4 py-2 rounded">
                     Guardar
                 </button>
             </x-slot>

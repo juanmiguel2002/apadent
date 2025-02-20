@@ -16,19 +16,19 @@ class PacienteHistorial extends Controller
         // Si se pasa un tratamiento, buscar el tratamiento específico del paciente
         $tratamiento = null;
         if ($tratId) {
-            $tratamiento = PacienteTrat::where('paciente_id', $paciente->id)
+            $tratamientoPaciente = PacienteTrat::where('paciente_id', $paciente->id)
                                     ->where('trat_id', $tratId)
                                     ->with('tratamiento')
                                     ->first();
         }else{
             // Si no se pasa un tratamiento
-            $tratamiento = PacienteTrat::where('paciente_id', $paciente->id)->with('tratamiento')->get();
+            $tratamientoPaciente = PacienteTrat::where('paciente_id', $paciente->id)->with('tratamiento')->get();
         }
 
         // Pasar el paciente y el tratamiento a la vista
         return view('pacientes.paciente-historial', [
             'paciente' => $paciente,
-            'tratamiento' => $tratamiento, // Puede ser null si no se pasa un tratId
+            'tratamientoPaciente' => $tratamientoPaciente, // Puede ser null si no se pasa un tratId
             'tratId' => $tratId, // Este se usará en el componente Livewire
         ]);
     }
