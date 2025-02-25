@@ -15,8 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->unsignedBigInteger('carpeta_id')->nullable();
+            $table->unsignedBigInteger('clinica_id');
             $table->timestamps();
+            
             $table->foreign('carpeta_id')->references('id')->on('carpetas')->onDelete('cascade');
+            $table->foreign('clinica_id')->references('id')->on('clinicas')->onDelete('cascade');
+
         });
     }
 

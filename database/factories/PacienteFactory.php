@@ -25,39 +25,40 @@ class PacienteFactory extends Factory
             'obser_cbct' => $this->faker->text(50),
             'url_img' => null,
             'activo' => 1,
-            'clinica_id' => $this->faker->numberBetween(1, 2),
+            'clinica_id' => $this->faker->numberBetween(1, 27),
+            // Este es un ejemplo, debe ser cambiado según su necesidad.
         ];
     }
 
-    public function configure()
-    {
-        return $this->afterCreating(function (Paciente $paciente) {
-            // Obtener un ID de tratamiento aleatorio (mejor rendimiento que inRandomOrder()->first())
-            $tratamientoId = Tratamiento::query()->pluck('id')->random();
+    // public function configure()
+    // {
+    //     return $this->afterCreating(function (Paciente $paciente) {
+    //         // Obtener un ID de tratamiento aleatorio (mejor rendimiento que inRandomOrder()->first())
+    //         $tratamientoId = Tratamiento::query()->pluck('id')->random();
 
-            // Relacionar paciente con tratamiento
-            $paciente->tratamientos()->attach($tratamientoId);
+    //         // Relacionar paciente con tratamiento
+    //         $paciente->tratamientos()->attach($tratamientoId);
 
-            // Obtener todas las fases asociadas al tratamiento
-            $fases = Fase::where('trat_id', $tratamientoId)->get();
+    //         // Obtener todas las fases asociadas al tratamiento
+    //         $fases = Fase::where('trat_id', $tratamientoId)->get();
 
-            // Insertar múltiples etapas en una sola consulta
-            $etapas = $fases->map(function ($fase) use ($paciente) {
-                return [
-                    'name' => 'Inicio',
-                    'paciente_id' => $paciente->id,
-                    'fase_id' => $fase->id,
-                    'fecha_ini' => now(),
-                    'fecha_fin' => null,
-                    'status' => collect(['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->random(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            })->toArray();
+    //         // Insertar múltiples etapas en una sola consulta
+    //         $etapas = $fases->map(function ($fase) use ($paciente) {
+    //             return [
+    //                 'name' => 'Inicio',
+    //                 'paciente_id' => $paciente->id,
+    //                 'fase_id' => $fase->id,
+    //                 'fecha_ini' => now(),
+    //                 'fecha_fin' => null,
+    //                 'status' => collect(['Set Up', 'En proceso', 'Pausado', 'Finalizado'])->random(),
+    //                 'created_at' => now(),
+    //                 'updated_at' => now(),
+    //             ];
+    //         })->toArray();
 
-            // Inserción masiva para mejor rendimiento
-            Etapa::insert($etapas);
-        });
-    }
+    //         // Inserción masiva para mejor rendimiento
+    //         Etapa::insert($etapas);
+    //     });
+    // }
 
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         //
         Schema::create('fases', function (Blueprint $table) {
-            $table->bigIncrements('id'); // id - bigint(20) UNSIGNED NOT NULL
+            $table->id('id'); // id - bigint(20) UNSIGNED NOT NULL
             $table->string('name'); // name - varchar(255) NOT NULL
             $table->unsignedBigInteger('trat_id'); // trat_id
             $table->timestamps(); // created_at and updated_at

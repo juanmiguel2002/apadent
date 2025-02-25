@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id(); // ID autoincremental
             $table->unsignedBigInteger('user_id'); // Relación con usuarios
             $table->text('mensaje'); // Mensaje del usuario
-            $table->unsignedBigInteger('etapa_id');
+            // $table->unsignedBigInteger('etapa_id');
 
             $table->timestamps(); // Campos de creación y actualización
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); // Relación con usuarios en la tabla users (cascade para eliminar el mensaje si el usuario es eliminado)
-            $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
+            // $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');
+            $table->foreignId('etapa_id')->constrained('etapas')->onDelete('cascade');
+
         });
     }
 

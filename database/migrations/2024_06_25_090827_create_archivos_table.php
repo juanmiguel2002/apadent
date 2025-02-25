@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('tipo', 55);
             $table->string('extension', 255);
             $table->unsignedBigInteger('etapa_id');
-            $table->unsignedBigInteger('carpeta_id')->nullable();
+            $table->unsignedBigInteger('carpeta_id');
             $table->timestamps();
 
             $table->foreign('etapa_id')->references('id')->on('etapas')->onDelete('cascade');

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         //
         Schema::create('etapas', function (Blueprint $table) {
-            $table->bigIncrements('id'); // id - bigint(20) UNSIGNED NOT NULL
+            $table->id(); // id - bigint(20) UNSIGNED NOT NULL
             $table->string('name'); // name - varchar(255) NOT NULL
             $table->date('fecha_ini');
             $table->date('fecha_fin');

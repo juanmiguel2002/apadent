@@ -2,7 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Clinica;
+use App\Models\Etapa;
+use App\Models\Fase;
 use App\Models\Paciente;
+use App\Models\PacienteTrat;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -17,7 +21,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        Paciente::factory()->count(100)->create();
+        // Clinica::factory(5)->create();
+        // Paciente::factory(100)->create();
+        // PacienteTrat::factory(100)->create();
+        // Fase::factory(0)->create(); // Usa tratamientos existentes
+        Etapa::factory(100)->create(); // Usa tratamientos existentes
         // $this->call(TratamientosSeeder::class);
         // $this->call(ClinicasTableSeeder::class);
 
