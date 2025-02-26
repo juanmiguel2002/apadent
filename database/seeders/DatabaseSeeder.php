@@ -22,10 +22,10 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // Clinica::factory(5)->create();
-        // Paciente::factory(100)->create();
+        Paciente::factory(100)->create();
         // PacienteTrat::factory(100)->create();
         // Fase::factory(0)->create(); // Usa tratamientos existentes
-        Etapa::factory(100)->create(); // Usa tratamientos existentes
+        // Etapa::factory(200)->create();// Usa tratamientos existentes
         // $this->call(TratamientosSeeder::class);
         // $this->call(ClinicasTableSeeder::class);
 
