@@ -332,17 +332,16 @@ class Pacientes extends Component
     }
 
     // CAMBIAR ESTADO PACIENTE ETAPA
-    public function estado($pacienteId, $tratamientoId,$newStatus)
+    public function estado($etapaId, $newStatus)
     {
         // Encuentra al paciente y su etapa actual
-        $paciente = Paciente::find($pacienteId);
+        $etapa = Etapa::find($etapaId);
+        $paciente = Paciente::find($etapa->paciente_id);
 
         if (!$paciente) {
             session()->flash('error', 'Paciente no encontrado.');
             return;
         }
-
-        $etapa = Etapa::where('paciente_id', $pacienteId)->where('trat_id', $tratamientoId)->first();
 
         if (!$etapa) {
             session()->flash('error', 'Etapa no encontrada para el paciente.');

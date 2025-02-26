@@ -88,9 +88,10 @@
                             <td class="text-center px-4 py-2">{{ $tratamiento->name ?? "Sin tratamiento"}} - {{ $tratamiento->descripcion }}</td>
                             {{-- Obtener la última fase y etapa del tratamiento más reciente --}}
                             @php
-                                $fase = optional($tratamiento)->fases->first();
-                                $etapa = optional($fase)->etapas->first();
+                                // $fase = optional($tratamiento)->fases->first();
+                                $etapa = $tratamiento->etapas->where('paciente_id', $paciente->id)->last();
                             @endphp
+
                             @foreach ($statuses as $status => $color)
                                 @if ($etapa->status == $status)
                                     <td class="p-3 text-center flex justify-center items-center mt-2">
@@ -108,7 +109,7 @@
                                                 <div class="ml-8 mt-2 space-y-1">
                                                     @foreach ($statuses as $optionStatus => $optionColor)
                                                         <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
-                                                            wire:click="estado({{ $paciente->id }}, {{$tratamiento->id}},'{{ $optionStatus }}')">
+                                                            wire:click="estado({{ $etapa->id }},'{{ $optionStatus }}')">
                                                             {{ $optionStatus }}
                                                         </div>
                                                     @endforeach
@@ -123,7 +124,9 @@
                                     </td>
                                 @endif
                             @endforeach
-                            <td class="text-center px-4 py-2">{{ $fase->name }} <br> {{ $etapa->name }}</td>
+                            {{-- <td class="text-center px-4 py-2">{{ $fase->name }} <br> {{ $etapa->name }}</td> --}}
+                            <td class="text-center px-4 py-2">Fase 1 <br> {{ $etapa->name }}</td>
+
                             <td class="text-center border px-4 py-2">
                                 <a href="{{ route('paciente-historial', $paciente->id) }}">
                                     <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">

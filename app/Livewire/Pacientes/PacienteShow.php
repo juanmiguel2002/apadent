@@ -8,10 +8,11 @@ use App\Models\Etapa;
 use App\Models\Paciente;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class PacienteShow extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $paciente, $tratamientos, $pacienteId;
     public $showModal = false, $showModalPaciente = false;
@@ -27,8 +28,10 @@ class PacienteShow extends Component
         // Cargar paciente con sus clínicas y tratamientos, incluyendo sus etapas con mensajes y archivos
         $this->paciente = Paciente::with([
             'clinicas',
-            'tratamientos.etapas.mensajes.user',
-            'tratamientos.etapas.archivos'
+            'tratamientos.etapas' => function ($query) {
+                $query->where('paciente_id', $this->pacienteId) // Filtrar por paciente
+                    ->with(['mensajes.user', 'archivos']);
+            }
         ])->findOrFail($this->pacienteId);
 
         $this->clinica = $this->paciente->clinicas->first();
@@ -36,11 +39,10 @@ class PacienteShow extends Component
         // Obtener tratamientos del paciente
         $this->tratamientos = $this->paciente->tratamientos;
 
-        // Obtener todas las etapas de los tratamientos del paciente sin duplicados
-        $this->etapas = Etapa::whereIn('trat_id', $this->tratamientos->pluck('id'))
-                                ->where('paciente_id', $this->pacienteId)
-                                ->get();
+        // Obtener etapas directamente de los tratamientos ya cargados (evitando una consulta extra)
+        $this->etapas = $this->tratamientos->flatMap->etapas;
     }
+
 
     public function toggleActivo()
     {
@@ -72,7 +74,7 @@ class PacienteShow extends Component
         ->orderBy('created_at', 'asc') // Ordenar por fecha de creación ascendente
         ->first();
         $fechaPrimeraEtapa = $primeraEtapa ? $primeraEtapa->created_at : null;
-        
+
        return $fechaPrimeraEtapa;
 
     }
