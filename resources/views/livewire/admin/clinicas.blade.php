@@ -39,9 +39,11 @@
                                     <div class="text-sm text-gray-900">{{ $clinica->id }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">
-                                    <div class="text-lg text-gray-900 cursor-pointer" wire:click='showClinica({{$clinica->id}})'>{{ $clinica->name }}</div>
+                                    <div class="text-lg text-gray-900 cursor-pointer" wire:click='showClinica({{ $clinica->id }})'>
+                                        {{ $clinica->name }}
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 text-center border-b">{{$clinica->telefono}}</td>
+                                <td class="px-6 py-4 text-center border-b">{{ $clinica->telefono }}</td>
                                 <td class="px-6 py-4 text-center border-b">
                                     @if($clinica->users->isEmpty())
                                         <p>No hay usuarios asignados a esta clínica.</p>
@@ -52,7 +54,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">
-                                    {{$clinica->pacientes->count()}}
+                                    {{ $clinica->pacientes->count() }}
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">
                                     <div class="text-sm text-gray-900">{{ $clinica->direccion }}</div>

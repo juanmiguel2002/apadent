@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use Livewire\WithPagination;
 use App\Mail\CredencialesClinica;
 use App\Models\Clinica;
 use App\Models\ClinicaUser;
@@ -13,7 +12,6 @@ use Illuminate\Support\Str;
 
 class Clinicas extends Component
 {
-    use WithPagination;
     public $showModal, $editable = false;
     public $clinicas, $clinica_id;
     public $ordenar = '';
@@ -24,16 +22,6 @@ class Clinicas extends Component
         'search' => ['except' => ''],
         'ordenar' => ['except' => ''],
     ];
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingOrdenar()
-    {
-        $this->resetPage();
-    }
 
     protected function rules() {
         return  [
@@ -47,11 +35,11 @@ class Clinicas extends Component
         ];
     }
 
-    public function mount() {
+    public function render()
+    {
         // Definir la columna y dirección de ordenación predeterminadas
         $orderByColumn = 'id';
         $orderByDirection = 'asc';
-
         // Determinar la columna de ordenación basada en la selección del usuario
         switch ($this->ordenar) {
             case 'recientes':
@@ -70,13 +58,10 @@ class Clinicas extends Component
 
         // Realizar la consulta con los filtros y la ordenación seleccionada
         $this->clinicas = Clinica::with('users')
-            ->where('name', 'like', '%' . $this->search . '%') // Filtrado por nombre
-            ->orderBy($orderByColumn, $orderByDirection) // Ordenar por la columna y dirección seleccionadas
+            ->where('name', 'LIKE', "%{$this->search}%")
+            ->orderBy($orderByColumn, $orderByDirection)
             ->get();
-    }
 
-    public function render()
-    {
         return view('livewire.admin.clinicas');
     }
 
@@ -155,7 +140,8 @@ class Clinicas extends Component
             $this->dispatch('clinicaSaved', 'Clinica '. $this->name . ' creada');
         }
         $this->close();
-        $this->mount();
+        $this->dispatch('recargar-pagina');  // Emite un evento para que otros componentes puedan escuchar
+
     }
 
     public function showClinica($clinicaId){
@@ -178,5 +164,5 @@ class Clinicas extends Component
     {
         $this->showModal = false;
     }
-    
+
 }
