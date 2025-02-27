@@ -7,7 +7,7 @@ Se ha registrado un nuevo paciente con la siguiente información:
 - **Diagnóstico:** {{ $paciente->tratamientos[0]->name }}
 - **Registrado:** {{ $fechaRegistro }}
 
-@if($perfilPacienteUrl)
+@if(auth()->user()->hasRole('admin'))
 
     La clínica {{ $clinicaName }} ha asignado un nuevo paciente al laboratorio.
     Haz clic en el botón de abajo para ver su perfil.

@@ -211,10 +211,10 @@ class Pacientes extends Component
             $this->updatedArchivos($paciente, $pacienteFolder, $etapa);
 
             // 7. Disparar evento y resetear formulario
-            $this->dispatch('nuevoPaciente');
-            $this->resetForm();
             $this->showModal = false;
-            $this->resetPage();
+            $this->dispatch('nuevoPaciente');
+            $this->dispatch('recargar-pagina');
+
             // 8. Enviar email de notificación a la clínica y al admin
             $clinica = Clinica::find($paciente->clinica_id);
             if ($clinica && $clinica->email) {
@@ -325,6 +325,7 @@ class Pacientes extends Component
                         'extension' => $extension,
                         'etapa_id' => $etapa->id,
                         'carpeta_id' => $carpeta->id,
+                        'paciente_id' => $paciente->id,
                     ]);
                 }
             }
