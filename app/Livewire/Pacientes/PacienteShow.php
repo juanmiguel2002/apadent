@@ -6,19 +6,21 @@ use App\Models\Archivo;
 use App\Models\Carpeta;
 use App\Models\Etapa;
 use App\Models\Paciente;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\WithPagination;
 
 class PacienteShow extends Component
 {
-    use WithFileUploads, WithPagination;
+    use WithFileUploads;
 
     public $paciente, $tratamientos, $pacienteId;
     public $showModal = false, $showModalPaciente = false;
+
     public $num_paciente, $name, $apellidos, $email, $fecha_nacimiento, $telefono;
     public $observacion, $obser_cbct, $odontograma;
-    public $fases, $etapas, $stripping = [], $verStripping = false;
+
+    public $etapas, $stripping = [], $verStripping = false;
     public $clinica;
 
     public function mount($id)
@@ -41,8 +43,12 @@ class PacienteShow extends Component
 
         // Obtener etapas directamente de los tratamientos ya cargados (evitando una consulta extra)
         $this->etapas = $this->tratamientos->flatMap->etapas;
-    }
 
+        // Verificar si existen archivos de Stripping
+        $this->verStripping = Archivo::where('etapa_id', null) // Filtrar archivos sin etapa
+                                ->where('tipo', 'stripping') // Filtrar archivos con la palabra "Stripping"
+                                ->exists();
+    }
 
     public function toggleActivo()
     {
@@ -84,10 +90,6 @@ class PacienteShow extends Component
         return view('livewire.pacientes.paciente-show');
     }
 
-    public function historial($id, $tratId){
-        return redirect()->route('paciente-historial', ['id' => $id, 'tratId' => $tratId]);
-    }
-
     // Editar Paciente.
     public function edit()
     {
@@ -104,6 +106,10 @@ class PacienteShow extends Component
     }
 
     public function savePaciente() {
+        // Obtener el nombre y apellido del paciente para la nueva carpeta
+        $nuevoNombreCarpeta = $this->name . ' ' . $this->apellidos;
+
+        // Primero, actualizamos los datos del paciente en la base de datos
         $this->paciente->update([
             'name' => $this->name,
             'apellidos' => $this->apellidos,
@@ -114,8 +120,39 @@ class PacienteShow extends Component
             'obser_cbct' => $this->obser_cbct,
             'odontograma_obser' => $this->odontograma,
         ]);
+
+        // Ahora, renombramos la carpeta en el disco 'clinicas' si es necesario
+        // Suponemos que la carpeta actual del paciente está en 'clinicas/{old_name}'
+        $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
+        $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
+        $carpetaAntigua = $clinicaName . '/pacientes/' . $pacienteName;
+        $carpetaNueva = 'clinicas/' . $nuevoNombreCarpeta;
+
+        // Verificar si la carpeta antigua existe y renombrarla
+        if (Storage::exists($carpetaAntigua)) {
+            Storage::move($carpetaAntigua, $carpetaNueva);
+        }
+
+        // Actualizamos la tabla 'carpetas' con el nuevo nombre
+        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
+            ->whereHas('parent', function ($query) {
+                $query->where('nombre', 'pacientes');
+            })->first();
+
+        if ($carpetaPaciente) {
+            $carpetaPaciente->update([
+                'nombre' => $nuevoNombreCarpeta, // Actualizar el campo 'nombre' de la carpeta con el nuevo nombre
+            ]);
+        }
+
+        // Llamar a un evento para indicar que el paciente fue editado
         $this->dispatch('pacienteEdit');
+
+        // Cerrar el modal
         $this->showModalPaciente = false;
+
+        // Recargar la información del paciente (esto probablemente depende de tu implementación)
+        $this->mount($this->pacienteId);
     }
 
     // GESTIÓN DE Stripping
@@ -126,14 +163,6 @@ class PacienteShow extends Component
 
     public function saveStripping()
     {
-
-        // $this->validate([
-        //     'stripping.*' => 'image|mimes:jpeg,png,jpg,gif,svg',
-        // ], [
-        //     'stripping.image' => 'Solo se admiten imágenes',
-        //     'stripping.*.mimes' => 'Formato de imagen válido: jpeg, png, jpg, gif, svg',
-        // ]);
-
         // Generar nombres para las carpetas
         $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
@@ -143,6 +172,8 @@ class PacienteShow extends Component
             ->whereHas('parent', function ($query) {
                 $query->where('nombre', 'pacientes');
             })->first();
+
+        // Verificar si la carpeta de Stripping ya existe
         $carpeta = Carpeta::where('nombre', 'Stripping')
             ->where('carpeta_id', $carpetaPaciente->id)
             ->first();
@@ -157,20 +188,20 @@ class PacienteShow extends Component
                 // Extraer el nombre del archivo sin la extensión
                 $name = pathinfo($fileName, PATHINFO_FILENAME);
 
-                $archivo = Archivo::create([
+                Archivo::create([
                     'name' => $name,
                     'ruta' => $path,
                     'tipo' => 'stripping',
                     'extension' => $extension,
                     'carpeta_id' => $carpeta->id,
                 ]);
-                $this->verStripping = $archivo->where('tipo','stripping')->exist();
             }
-
+            $this->verStripping = true;
         }
 
         $this->dispatch('stripping');
         $this->showModal = false;
+        $this->mount($this->pacienteId);
     }
 
     public function close()
@@ -180,5 +211,6 @@ class PacienteShow extends Component
         }else{
             $this->showModal = false;
         }
+        $this->mount($this->pacienteId);
     }
 }

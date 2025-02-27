@@ -19,6 +19,14 @@ class ImagenesController extends Controller
         return view('pacientes.imagenes', compact('etapa', 'paciente', 'tipo'));
     }
 
+    public function verStripping(Request $request, $pacienteId)
+    {
+        $paciente = Paciente::findOrFail($pacienteId);
+        $tipo = $request->query('tipo');
+
+        return view('pacientes.stripping', compact('paciente', 'tipo'));
+    }
+
     // Método para servir las imágenes de forma protegida
     public function mostrarImagen($filePath)
     {

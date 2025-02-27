@@ -8,5 +8,5 @@
 @endsection
 
 @section('content')
-    <livewire:pacientes.paciente-show :id="$id" />
+    @livewire('pacientes.paciente-show', ['id' => $id])
 @endsection

@@ -1,9 +1,11 @@
 <div>
-    <h3 class="mt-2 font-semibold text-lg text-gray-800">Tratamiento: {{$tratamiento->name . ' - '. $tratamiento->descripcion}}</h3>
-    <p class="mt-2 font-semibold px-2">{{ $etapa->name }}</p>
+    @isset($etapa)
+        <h3 class="mt-2 font-semibold text-lg text-gray-800">Tratamiento: {{$tratamiento->name . ' - '. $tratamiento->descripcion}}</h3>
+        <p class="mt-2 font-semibold px-2">{{ $etapa->name }}</p>
+    @endisset
 
     @if($archivos->isNotEmpty())
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
             @foreach ($archivos as $archivo)
                 <div class="relative group">
                     <!-- Enlace para Lightbox -->
