@@ -1,7 +1,9 @@
 <div>
     <div class="px-2 py-4 flex justify-between items-center">
         <div class="flex">
-            {{-- <strong>Tratamientos asignados a la clínica {{$clinica[0]->name}}</strong> --}}
+            @if (!auth()->user()->hasRole('admin'))
+                <strong>Tratamientos asignados a la clínica {{$clinica[0]->name}}</strong>
+            @endif
         </div>
         <div class="flex">
             <button wire:click="showCreateModal" class="bg-azul text-white px-3 py-2 rounded">
@@ -27,7 +29,7 @@
                             <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->id }}</td>
                             <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->name }}</td>
                             <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->descripcion }}</td>
-                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->pacientes->count() }}</td>
+                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $this->pacientesTrat($tratamiento->id) }}</td>
 
                             <td class="px-6 py-4 text-sm text-center whitespace-nowrap">
                                 <div class="flex justify-center space-x-2">

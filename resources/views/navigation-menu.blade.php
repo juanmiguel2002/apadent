@@ -45,6 +45,11 @@
                                 {{ __('Pacientes') }}
                             </x-nav-link>
                         </div>
+                        <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                            <x-nav-link href="{{ route('admin.tratamientos') }}" :active="request()->routeIs('admin.tratamientos')">
+                                {{ __('Tratamientos') }}
+                            </x-nav-link>
+                        </div>
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                             <x-nav-link href="{{ route('users') }}" :active="request()->routeIs('users.*')">
                                 {{ __('Usuarios') }}

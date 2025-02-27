@@ -5,7 +5,9 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Tratamiento;
 use App\Mail\NewTratamiento;
+use App\Models\Clinica;
 use App\Models\Fase;
+use App\Models\Paciente;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
@@ -13,7 +15,9 @@ use Illuminate\Support\Facades\Mail;
 class Tratamientos extends Component
 {
     public $tratamientos, $trat_id;
-    public $clinica;
+    public $clinica, $clinicas;
+
+    public $clinicaSelected;
     public $showModal = false, $isEditing = false;
     public $name, $descripcion;
 
@@ -30,7 +34,29 @@ class Tratamientos extends Component
 
         //sacar el nombre de la clinica
         $this->clinica = $user->clinicas;
+        $this->clinicas = Clinica::all();
         // dd($this->tratamientos);
+
+    }
+
+    public function pacientesTrat($trat) {
+
+        if(auth()->user()->hasRole('admin')){
+            return Paciente::whereHas('tratamientos', function($query) use ($trat) {
+                $query->where('trat_id', $trat);
+            })->count();
+        }else {
+            return Paciente::whereHas('clinicas', function($query) {
+                $query->where('id', $this->clinica[0]->id);
+            })
+            ->whereHas('tratamientos', function($query) use ($trat) {
+                $query->where('trat_id', $trat);
+            })
+            ->count();
+        }
+
+        // Obtener el número de pacientes que están en la clinica seleccionada y tienen el tratamiento seleccionado
+
     }
 
     public function render()

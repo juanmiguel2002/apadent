@@ -7,8 +7,8 @@ use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DashboardController;
 
 use App\Http\Controllers\Pacientes\ImagenesController;
-use App\Http\Controllers\Pacientes\PacienteHistorial;
 use App\Http\Controllers\Pacientes\Pacientes;
+use App\Http\Controllers\Pacientes\PacienteHistorial;
 use App\Http\Controllers\Pacientes\PacienteShowController;
 
 use App\Http\Controllers\PacientesAdmin;
@@ -28,6 +28,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/paciente/{paciente}/etapa/{etapa}/imagenes', [ImagenesController::class, 'verImagenes'])
     ->middleware('role:doctor_admin|doctor|clinica_user|admin')->name('imagenes.ver');
 
+    Route::get('/paciente/{paciente}/stripping/', [ImagenesController::class, 'verStripping'])
+    ->middleware('role:doctor_admin|doctor|clinica_user|admin')->name('stripping');
+
     Route::get('/imagenes/{filePath}', [ImagenesController::class, 'mostrarImagen'])
     ->name('imagenes.protegidas')->where('filePath', '.*');
 
@@ -43,6 +46,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/admin/clinicas', [DashboardController::class, 'show'])->name('admin.clinica');
         Route::get('/admin/clinica/{id}', [ClinicaController::class, 'index'])->name('admin.clinica.view');
         Route::get('/admin/pacientes',[PacientesAdmin::class, 'index'])->name('admin.pacientes');
+        Route::get('/admin/tratamientos', [TratamientoController::class, 'index'])->name('admin.tratamientos');
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
         // Route::delete('/factura/{factura}', [ArchivoController::class, 'delete'])->name('eliminar.archivo');
@@ -54,7 +58,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     });
 
     Route::middleware(['role:doctor_admin'])->group(function () {
-        Route::get('/doctor/clinica', [DashboardController::class, 'show'])->name('dashboard');
+        // Route::get('/doctor/clinica', [DashboardController::class, 'show'])->name('dashboard');
         Route::get('/pacientes', [DashboardController::class, 'show'])->name('doctor-admin.pacientes');
         Route::get('/tratamientos', [TratamientoController::class, 'index'])->name('doctor-admin.tratamientos');
     });
