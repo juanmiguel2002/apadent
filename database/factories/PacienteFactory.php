@@ -25,7 +25,7 @@ class PacienteFactory extends Factory
             'obser_cbct' => $this->faker->text(50),
             'url_img' => null,
             'activo' => 1,
-            'clinica_id' => $this->faker->numberBetween(1, 27),
+            'clinica_id' => $this->faker->numberBetween(1, 8),
         ];
     }
 
