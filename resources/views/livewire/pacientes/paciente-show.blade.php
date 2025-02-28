@@ -1,7 +1,19 @@
 <div>
     <div class="flex items-center justify-between">
         <!-- Contenedor del título -->
-        <a href="javascript: history.go(-1)" class="flex items-center mr-4">
+        @php
+            $ruta = '';
+            if (Auth::user()->hasRole('admin')) {
+                $ruta = route('admin.pacientes');
+            }elseif (Auth::user()->hasRole('clinica')) {
+                $ruta = route('clinica.pacientes');
+            }elseif (Auth::user()->hasRole('doctor_admin')) {
+                $ruta = route('doctor-admin.pacientes');
+            }else {
+                $ruta = route('doctor.pacientes');
+            }
+        @endphp
+        <a href="{{ $ruta }}" class="flex items-center mr-4">
             <img class="w-6 mr-2" src="{{ asset('storage/recursos/icons/volver_naranja.png') }}" alt="Volver">
             <p class="text-lg font-semibold text-naranja">Pacientes</p>
         </a>

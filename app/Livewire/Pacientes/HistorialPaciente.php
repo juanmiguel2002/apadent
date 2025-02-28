@@ -283,7 +283,7 @@ class HistorialPaciente extends Component
             $this->closeModal();
             // Emitir un evento para actualizar la lista de tratamientos en la vista
             $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
-            return redirect()->to(url()->current());
+            return redirect()->route('pacientes.historial', $this->pacienteId);
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Tratamiento ya asignado');

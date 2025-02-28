@@ -36,7 +36,8 @@ class PacienteShow extends Component
             }
         ])->findOrFail($this->pacienteId);
 
-        $this->clinica = $this->paciente->clinicas->first();
+        // $this->clinica = $this->paciente->clinicas->first();
+        $this->clinica = $this->paciente->clinicas;
 
         // Obtener tratamientos del paciente
         $this->tratamientos = $this->paciente->tratamientos;
@@ -44,10 +45,9 @@ class PacienteShow extends Component
         // Obtener etapas directamente de los tratamientos ya cargados (evitando una consulta extra)
         $this->etapas = $this->tratamientos->flatMap->etapas;
 
-        // Verificar si existen archivos de Stripping
-        $this->verStripping = Archivo::where('etapa_id', null) // Filtrar archivos sin etapa
-                                ->where('tipo', 'stripping') // Filtrar archivos con la palabra "Stripping"
-                                ->exists();
+        $this->verStripping = Archivo::where('paciente_id', $this->pacienteId)
+            ->where('tipo', 'stripping')
+            ->exists();
     }
 
     public function toggleActivo()
@@ -168,7 +168,7 @@ class PacienteShow extends Component
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
         $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
 
-        $carpetaPaciente = Carpeta::where('nombre', preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos)))
+        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
             ->whereHas('parent', function ($query) {
                 $query->where('nombre', 'pacientes');
             })->first();
@@ -194,6 +194,7 @@ class PacienteShow extends Component
                     'tipo' => 'stripping',
                     'extension' => $extension,
                     'carpeta_id' => $carpeta->id,
+                    'paciente_id' => $this->paciente->id,
                 ]);
             }
             $this->verStripping = true;

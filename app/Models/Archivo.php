@@ -17,7 +17,8 @@ class Archivo extends Model
         'tipo',
         'extension',
         'etapa_id',
-        'carpeta_id'
+        'carpeta_id',
+        'paciente_id'
     ];
 
     // Relación muchos a uno con pacienteEtapas
@@ -28,6 +29,11 @@ class Archivo extends Model
 
     public function carpeta(){
         return $this->belongsTo(Carpeta::class);
+    }
+    
+    public function paciente()
+    {
+        return $this->belongsTo(Paciente::class);
     }
 
     protected $casts = [
