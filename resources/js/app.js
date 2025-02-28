@@ -37,28 +37,6 @@ window.onload = function(){
     Livewire.on('pathChanged', (currentPath) => {
         console.log('Current Path:', currentPath);
     });
-    // Livewire.on('confirmDelete', ({ userId }) => {
-    //     Swal.fire({
-    //         title: '¿Estás seguro?',
-    //         text: "¡No podrás revertir esto!",
-    //         icon: 'warning',
-    //         showCancelButton: true,
-    //         confirmButtonColor: '#3085d6',
-    //         cancelButtonColor: '#d33',
-    //         confirmButtonText: 'Sí, eliminar',
-    //         cancelButtonText: 'Cancelar'
-    //     }).then((result) => {
-    //         if (result.isConfirmed) {
-    //             Livewire.dispatch('deleteUserConfirmed', userId);
-    //         } else {
-    //             Swal.fire(
-    //                 'Cancelado',
-    //                 'El usuario no fue eliminado.',
-    //                 'info'
-    //             );
-    //         }
-    //     });
-    // });
 
     Livewire.on('cli_edit',() => {
         Swal.fire({
@@ -156,8 +134,6 @@ window.onload = function(){
         });
     });
 
-
-
     Livewire.on('etapa',() => {
         Swal.fire({
             position: 'top-end',
@@ -183,6 +159,16 @@ window.onload = function(){
             position: 'top-end',
             icon: 'success',
             title: 'Archivo(s) añadido(s) con éxito',
+            showConfirmButton: false,
+            timer: 2500
+        });
+    });
+
+    Livewire.on('archivoComple', message => {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: message,
             showConfirmButton: false,
             timer: 2500
         });
@@ -228,3 +214,6 @@ window.onload = function(){
         });
     });
 }
+window.addEventListener('recargar-pagina', event => {
+    window.location.reload(); // Recargar la página completa
+});
