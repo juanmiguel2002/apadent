@@ -25,9 +25,6 @@ class Tratamientos extends Component
 
         // Filtrar los tratamientos por la clinica del usuario logueado (solo salen los que los usuarios de la clinica estan asignados)
         $user = Auth::user();
-        // $this->tratamientos = Tratamiento::whereHas('pacientes.paciente.clinicas', function ($query) use ($user) {
-        //     $query->whereIn('id', $user->clinicas->pluck('id'));
-        // })->get();
 
         // saca todos los tratamientos
         $this->tratamientos = Tratamiento::all();
@@ -54,9 +51,6 @@ class Tratamientos extends Component
             })
             ->count();
         }
-
-        // Obtener el número de pacientes que están en la clinica seleccionada y tienen el tratamiento seleccionado
-
     }
 
     public function render()
@@ -108,7 +102,7 @@ class Tratamientos extends Component
 
         $this->dispatch('tratamiento', $this->trat_id ? 'Tratamiento Actualizado.' : 'Tratamiento Creado');
 
-        // Mail::to($clinica->email)->send(new NewTratamiento($tratamiento, $this->trat_id ? 'Tratamiento actualizado.' : 'Tratamiento Creado',$this->trat_id ? true : false));
+        Mail::to($clinica->email)->send(new NewTratamiento($tratamiento, $this->trat_id ? 'Tratamiento actualizado.' : 'Tratamiento Creado',$this->trat_id ? true : false));
 
         $this->close();
         $this->mount();
