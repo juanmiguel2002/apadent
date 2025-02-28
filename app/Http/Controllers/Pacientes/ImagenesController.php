@@ -36,6 +36,8 @@ class ImagenesController extends Controller
         }
 
         // Retorna la imagen desde el almacenamiento privado
-        return response()->file(storage_path('app/clinicas/' . $filePath));
+        return response()->file(storage_path('app/clinicas/' . $filePath), [
+            ''
+        ]);
     }
 }
