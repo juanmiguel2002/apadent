@@ -49,7 +49,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/admin/tratamientos', [TratamientoController::class, 'index'])->name('admin.tratamientos');
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
-        // Route::delete('/factura/{factura}', [ArchivoController::class, 'delete'])->name('eliminar.archivo');
     });
 
     // Rutas del doctor Administrador
@@ -58,22 +57,14 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     });
 
     Route::middleware(['role:doctor_admin'])->group(function () {
-        // Route::get('/doctor/clinica', [DashboardController::class, 'show'])->name('dashboard');
         Route::get('/pacientes', [DashboardController::class, 'show'])->name('doctor-admin.pacientes');
         Route::get('/tratamientos', [TratamientoController::class, 'index'])->name('doctor-admin.tratamientos');
     });
 
     // Rutas del doctor
     Route::middleware(['role:doctor'])->group(function () {
-        // Route::get('/doctor/clinica', [DashboardController::class, 'show'])->name('doctor.clinica');
         Route::get('/doctor/pacientes', [Pacientes::class, 'index'])->name('doctor.pacientes');
         Route::get('/doctor/tratamientos', [TratamientoController::class, 'index'])->name('doctor.tratamientos');
-    });
-
-    Route::middleware(['role:docor|doctor_admin'])->group(function (){
-
-
-        // Route::get('/descargar/{path}', [CarpetasController::class, 'mostrar'])->name('download');
     });
 
     // Rutas de la clínica
@@ -84,9 +75,5 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/paciente/{id}/perfil/', [PacienteShowController::class, 'show'])->name('pacientes-show');
     Route::get('/paciente/{id}/historial/{tratId?}', [PacienteHistorial::class, 'index'])->name('paciente-historial');
     Route::get('/clinica/{id}/', [ClinicaController::class, 'index'])->name('clinica');
+
 });
-// Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-
-
-// });
-
