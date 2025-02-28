@@ -5,13 +5,13 @@ namespace App\Livewire\Pacientes;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Mail\CambioEstado;
+use App\Mail\NotificacionMensaje;
 use App\Models\Clinica;
 use App\Models\Etapa;
 use App\Models\Mensaje;
 use App\Models\Archivo;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use App\Mail\NotificacionMensaje;
 use App\Mail\NotificacionRevision;
 use App\Models\Carpeta;
 use App\Models\Fase;
@@ -64,6 +64,11 @@ class HistorialPaciente extends Component
         }else{
             $this->loadEtapas($this->tratamientoId);
         }
+        // $this->documentos = Archivo::where('paciente_id', $this->pacienteId)
+        //     ->where('tipo', 'archivoscomplementarios') // Asegurar que la comparación es insensible a mayúsculas
+        //     ->get();
+        $this->documentos = $this->tieneDocumentos();
+        // dd($this->documentos);
 
         // Cargar archivos relacionados con las etapas del paciente
         $this->archivo = Archivo::whereHas('etapas', function ($query) {
@@ -93,9 +98,31 @@ class HistorialPaciente extends Component
         if($archivo){
            return Archivo::where('etapa_id', $etapaId)->where('extension', 'zip')->exists();
         }
+
         return Archivo::where('etapa_id', $etapaId)
                       ->where('tipo', $tipo)
                       ->exists();
+    }
+
+    public function tieneDocumentos()
+    {
+        // Verificar si hay un tratamiento válido
+        $tratamientoId = $this->tratamientoId ?: $this->tratId;
+
+        // Obtener los IDs de las etapas del tratamiento para este paciente
+        $etapas = Etapa::where('trat_id', $tratamientoId)
+                    ->where('paciente_id', $this->pacienteId)
+                    ->pluck('id');
+
+        // Si no hay etapas, no hay documentos
+        if ($etapas->isEmpty()) {
+            return false;
+        }
+
+        // Comprobar si existen archivos en alguna de esas etapas
+        return Archivo::whereIn('etapa_id', $etapas)
+            ->whereRaw('LOWER(tipo) = ?', ['archivoscomplementarios']) // Asegurar que la comparación es insensible a mayúsculas
+            ->exists();
     }
 
     // ENVIAR MENSAJE TRATAMIENTO ETAPA PACIENTE
@@ -144,7 +171,7 @@ class HistorialPaciente extends Component
         $etapa->save();
         $this->mostrarMenu = false; // Cerrar el menú
         $this->dispatch('estadoActualizado');
-        $this->loadEtapas($this->selectedTratamiento);
+        $this->loadEtapas($this->selectedTratamiento ?: $this->tratId);
 
         // Enviar email a la clínica
         $etapa = Etapa::find($etapaId);
@@ -279,21 +306,13 @@ class HistorialPaciente extends Component
         $this->loadEtapas($this->tratamientoId);
     }
 
-    public function saveDocumentacion(){
-
-        $this->validate([
-            'selectedEtapa' => 'required|exists:etapas,id',
-            'documentacion' => 'nullable|file',
-            'mensaje' => 'nullable|string|max:500',
-        ],[
-            'documentacion.*' => 'Solo se admiten imágenes válidas',
-            'mensaje.min' => 'El mensaje debe tener al menos 3 caracteres.',
-            'mensaje.max' => 'El mensaje no puede tener más de 255 caracteres.',
-        ]);
+    public function saveDocumentacion() {
 
         $etapa = Etapa::findOrFail($this->selectedEtapa);
-        $clinicaName = Str::slug(Auth::user()->clinicas->first()->name, '_');
-        $pacienteName = Str::slug($this->paciente->name . ' ' . $this->paciente->apellidos, '_');
+        $clinica = Clinica::find($this->paciente->clinica_id);
+
+        $clinicaName = Str::slug($clinica->name, '_' );
+        $pacienteName = preg_replace('/\s+/', '_',$this->paciente->name . ' ' . $this->paciente->apellidos);
         $pacienteFolder = "{$clinicaName}/pacientes/{$pacienteName}";
 
         // Buscar la carpeta del paciente dentro de la clínica
@@ -313,24 +332,47 @@ class HistorialPaciente extends Component
 
         // Subir imágenes y guardarlas en la base de datos
         if ($this->documentacion && is_array($this->documentacion)) {
-            foreach ($this->documentacion as $key => $imagen) {
+            // Obtener el número más alto de clave (key) en la BD para esta etapa
+            $maxKey = Archivo::where('etapa_id', $etapa->id)
+                ->where('tipo', 'archivocomplementarios')
+                ->where('ruta', 'LIKE', "{$pacienteFolder}/archivoComplementarios/%")
+                ->get()
+                ->map(function ($archivo) {
+                    preg_match('/_archivoComplementarios_(\d+)\./', $archivo->ruta, $matches);
+                    return isset($matches[1]) ? (int) $matches[1] : 0;
+                })
+                ->max();
+
+            foreach ($this->documentacion as $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
-                $fileName = Str::slug($etapa->name) . "_archivoComplementarios{$key}.{$extension}";
+                $maxKey++; // Aumentamos el índice para evitar duplicados
+                $fileName = Str::slug($etapa->name) . "_archivoComplementarios_{$maxKey}.{$extension}";
                 $filePath = "{$pacienteFolder}/archivoComplementarios/{$fileName}";
 
-                Storage::disk('clinicas')->put("{$pacienteFolder}/archivoComplementarios/{$fileName}", file_get_contents($imagen->getRealPath()));
+                // Comprobar si el archivo ya existe
+                $archivoExistente = Archivo::where('ruta', $filePath)
+                    ->where('etapa_id', $etapa->id)
+                    ->exists();
 
-                Archivo::create([
-                    'name'       => pathinfo($fileName, PATHINFO_FILENAME),
-                    'ruta'       => $filePath,
-                    'tipo'       => 'archivoComplementarios',
-                    'extension'  => $extension,
-                    'etapa_id'   => $etapa->id,
-                    'carpeta_id' => $carpeta->id,
-                ]);
+                if (!$archivoExistente) {
+                    // Guardar archivo en almacenamiento
+                    Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/archivoComplementarios", $imagen, $fileName);
+
+                    // Crear registro en la base de datos
+                    Archivo::create([
+                        'name'       => pathinfo($fileName, PATHINFO_FILENAME),
+                        'ruta'       => $filePath,
+                        'tipo'       => 'archivocomplementarios',
+                        'extension'  => $extension,
+                        'etapa_id'   => $etapa->id,
+                        'carpeta_id' => $carpeta->id,
+                        'paciente_id' => $this->paciente->id,
+                    ]);
+                }
             }
 
-            if($this->mensaje) {
+            // Crear mensaje solo si hay contenido
+            if ($this->mensaje) {
                 Mensaje::create([
                     'user_id' => auth()->id(),
                     'mensaje' => $this->mensaje,
@@ -338,9 +380,10 @@ class HistorialPaciente extends Component
                 ]);
             }
         }
-        $this->documents = false;
-        $this->dispatch('archivoComple', 'Archivos complementarios añadidos');
 
+        $this->documents = false;
+        $this->documentos = true;
+        $this->dispatch('archivoComple', 'Archivos complementarios añadidos');
     }
 
     // GESTIONAR IMÁGENES ETAPA PACIENTE TRATAMIENTO
@@ -377,7 +420,7 @@ class HistorialPaciente extends Component
         $tipoCarpeta = $this->tipo === 'rayos' ? 'rayos' : 'imgEtapa';
 
         $carpeta = Carpeta::where('nombre', $tipoCarpeta)
-            ->where('carpeta_id', $carpetaPaciente->id)            ->first();
+            ->where('carpeta_id', $carpetaPaciente->id)->first();
 
         if (!$carpeta) {
             return session()->flash('error', 'Carpeta de almacenamiento no encontrada.');
@@ -399,12 +442,14 @@ class HistorialPaciente extends Component
                     'extension'  => $extension,
                     'etapa_id'   => $this->etapaId,
                     'carpeta_id' => $carpeta->id,
+                    'paciente_id' => $this->paciente->id,
                 ]);
             }
         }
 
         $this->modalImg = false;
         $this->dispatch('imagen');
+
         return redirect()->route('imagenes.ver', [
             'paciente' => $this->pacienteId,
             'etapa' => $this->etapaId,
@@ -419,9 +464,9 @@ class HistorialPaciente extends Component
 
     public function saveArchivos($etapaId){
         $this->validate([
-            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'archivos.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
         ], [
-            'imagenes.*' => 'Solo se admiten imágenes válidas'
+            'archivos.*' => 'Solo se admiten imágenes válidas'
         ]);
 
         $etapa = Etapa::findOrFail($etapaId);
@@ -460,6 +505,7 @@ class HistorialPaciente extends Component
                     'extension'  => $extension,
                     'etapa_id'   => $etapaId,
                     'carpeta_id' => $carpetaCBCT->id,
+                    'paciente_id' => $this->paciente->id,
                 ]);
             }
         }

@@ -16,7 +16,6 @@
             </svg>
             <span>Documentación</span>
         </button>
-
     </div>
 
     @if ($tratId)
@@ -25,7 +24,6 @@
         </h2>
     @else
         <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
-
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Tratamientos</h2>
             <select wire:model="tratamientoId" wire:change.defer='loadEtapas($event.target.value)' class="w-full p-3 border rounded-md">
                 <option value="">Seleccione un tratamiento</option>
@@ -40,28 +38,24 @@
         <div class="space-y-4">
             <div class="bg-white shadow-md rounded-md space-y-4">
                 <span class="w-full flex justify-between items-center px-4 py-3 bg-azul text-white font-semibold rounded-t-md focus:outline-none">Fase 1</span>
-                <div class="px-3 py-2">
-                    <table class="min-w-full bg-gray-50 rounded-t-md">
+                <div class="px-2 py-2">
+                    <table class="table-fixed min-w-full bg-gray-50">
                         <thead>
                             <tr>
-                                {{-- <th class="px-4 py-2 bg-azul">ID</th> --}}
-                                <th class="px-4 py-2 bg-azul">Etapa</th>
-                                <th class="px-4 py-2 bg-azul">Mensaje</th>
-                                <th class="px-4 py-2 bg-azul">Estado</th>
-                                <th class="px-4 py-2 bg-azul">Revisión</th>
-                                @if ($documentos)
-                                    <th class="px-4 py-2 bg-azul">Archivos complementarios</th>
-                                @endif
-                                <th class="px-4 py-2 bg-azul">Rayos</th>
-                                <th class="px-4 py-2 bg-azul">CBCT</th>
-                                <th class="px-4 py-2 bg-azul">Fotografíes</th>
+                                <th class="px-2 py-2 bg-azul" style="width: 10%">Etapa</th>
+                                <th class="w-1/2 px-4 py-2 bg-azul">Mensaje</th>
+                                <th class="w-1/6 px-4 py-2 bg-azul">Estado</th>
+                                <th class="w-1/5 px-3 py-2 bg-azul">Revisión</th>
+                                <th class="w-1-5 px-4 py-2 bg-azul">Archivos</th>
+                                <th class="px-2 py-2 bg-azul">Rayos</th>
+                                <th class="px-2 py-2 bg-azul">CBCT</th>
+                                <th class="px-2 py-2 bg-azul">Fotografíes</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($etapas as $etapa)
                                 <tr class="hover:bg-gray-200 transition duration-300">
-                                    {{-- <td class="px-4 text-center">{{$key}}</td> --}}
-                                    <td class="px-4 py-2 text-center">{{ $etapa->name }}</td>
+                                    <td class="px-2 py-2 text-center">{{ $etapa->name }}</td>
                                     <td class="px-4 py-2">
                                         @foreach ($etapa->mensajes as $mensaje)
                                             <div class="text-left mb-2">
@@ -85,24 +79,19 @@
                                             <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                                         @enderror
                                     </td>
-                                    <td class="p-3 text-center flex justify-center items-center h-full mt-4">
-                                        @foreach (['En proceso' => 'bg-green-600', 'Pausado' => 'bg-blue-600', 'Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $status => $color)
+                                    <td class="relative px-4 py-2 text-center">
+                                        @foreach ($statuses as $status => $color)
                                             @if ($etapa->status == $status)
-                                                <div class="p-3 text-center flex justify-center items-center">
-                                                    @if ($status === 'Finalizado')
-                                                        <span class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl">
-                                                            <span>{{ $status }}</span>
-                                                        </span>
-                                                    @else
+                                                <div class="relative min-h-[35px] flex items-center justify-center">
+                                                    @if (auth()->user()->hasRole('admin') || ($status !== 'Finalizado' && auth()->user()))
                                                         <button wire:click="toggleMenu({{ $etapa->id }})"
-                                                            class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-xl {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                            @if ($etapa->status == 'Finalizado') disabled @endif>
+                                                            class="flex items-center justify-center px-6 text-white {{ $color }} font-medium rounded-lg">
                                                             <span>{{ $status }}</span>
                                                         </button>
                                                         <img class="ml-2 w-3" src="{{ asset('storage/recursos/icons/flecha_abajo.png') }}" alt="flecha_abajo">
 
-                                                        @if ($etapa->status != 'Finalizado' && !empty($mostrarMenu[$etapa->id]))
-                                                            <div class="ml-8 mt-2 space-y-1">
+                                                        @if (!empty($mostrarMenu[$etapa->id]))
+                                                            <div class="ml-4 mt-2 space-y-1">
                                                                 @foreach ($statuses as $optionStatus => $optionColor)
                                                                     <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
                                                                         wire:click="estado({{ $etapa->id }}, '{{ $optionStatus }}')">
@@ -111,12 +100,17 @@
                                                                 @endforeach
                                                             </div>
                                                         @endif
+                                                    @else
+                                                        <span class="absolute inset-0 flex items-center justify-center px-4 text-white {{ $color }} font-normal rounded-lg">
+                                                            {{ $status }}
+                                                        </span>
                                                     @endif
                                                 </div>
                                             @endif
                                         @endforeach
                                     </td>
-                                    <td class="px-4 py-2 text-center">
+
+                                    <td class="px-2 py-2 text-center">
                                         @if($etapa->revision)
                                             <span class="text-sm font-semibold">{{ \Carbon\Carbon::parse($etapa->revision)->format('d-m-Y') }}</span>
                                         @else
@@ -127,13 +121,25 @@
                                     </td>
 
                                     {{-- Archivos complementarios --}}
-                                    @if ($documentos)
-                                        <td>
-
+                                    @if ($this->tieneArchivos($etapa->id, false, 'archivocomplementarios') == true)
+                                        <td class="px-2 py-2">
+                                            <div class="flex justify-center items-center">
+                                                <!-- Mostrar botón 'Ver' si tiene archivos -->
+                                                <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
+                                                <a href="{{ route('imagenes.ver', ['paciente' => $paciente->id, 'etapa' => $etapa->id, 'tipo' => 'archivocomplementarios']) }}"
+                                                    class="cursor-pointer font-light text-sm">Ver</a>
+                                            </div>
+                                        </td>
+                                    @else
+                                        <td class="px-2 py-2">
+                                            <div class="flex justify-center items-center">
+                                                <p class="text-base">No tiene ningún archivo</p>
+                                            </div>
                                         </td>
                                     @endif
+
                                     {{-- Rayos --}}
-                                    <td class="px-4 py-2">
+                                    <td class="px-2 py-2">
                                         <div class="flex justify-center items-center">
                                             @if ($this->tieneArchivos($etapa->id, false, 'rayos') == true)
                                                 <!-- Mostrar botón 'Ver' si tiene archivos -->
@@ -149,7 +155,7 @@
                                     </td>
 
                                     {{-- CBCT --}}
-                                    <td class="px-4 py-2">
+                                    <td class="px-2 py-2">
                                         <div class="flex justify-center items-center">
                                             @if ($this->tieneArchivos($etapa->id, true, 'cbct') == true)
                                                 <!-- Opción para descargar archivo -->
@@ -180,14 +186,13 @@
                                     </td>
 
                                     {{-- Imágenes --}}
-                                    <td class="px-3 py-2">
+                                    <td class="px-2 py-2">
                                         <div class="flex justify-center items-center">
                                             @if ($this->tieneArchivos($etapa->id, false, 'imgetapa') == true)
                                                 <!-- Mostrar botón 'Ver' si tiene archivos -->
                                                 <img class="w-4 ml-4 mr-2" src="{{ asset('storage/recursos/icons/ojo_azul.png') }}">
                                                 <a href="{{ route('imagenes.ver', ['paciente' => $paciente->id, 'etapa' => $etapa->id, 'tipo' => 'imgetapa']) }}"
                                                     class="cursor-pointer font-light text-sm">Ver</a>
-                                                {{-- <span wire:click="verImg({{ $etapa->id }},'imgetapa')" class="cursor-pointer font-light text-sm">Ver</span> --}}
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                 <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
@@ -344,6 +349,11 @@
 
     @if ($documents)
         <x-dialog-modal wire:model="documents">
+            @if (session()->has('error'))
+                <div class="alert alert-error">
+                    {{ session('error') }}
+                </div>
+            @endif
             <x-slot name="title">
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-medium text-gray-900">Archivos Complementarios</h3>
@@ -356,43 +366,44 @@
             </x-slot>
 
             <x-slot name="content">
-                <div>
-                    <!-- Si se pasó un tratId por URL, mostrarlo directamente -->
-                    @if ($tratId)
-                        <p class="py-2 text-base"><strong>Tratamiento: {{ $tratamientoPaciente->tratamiento->name }} - {{ $tratamientoPaciente->tratamiento->descripcion }}</strong></p>
-                    @elseif ($tratamientoId)
-                        <p class="py-2 text-base"><strong>Tratamiento: {{ $tratamiento->name }} - {{$tratamiento->descripcion}}</strong></p>
-                    @else
-                        <!-- Si no hay tratId, permitir elegir un tratamiento -->
-                        <x-label for="tratamiento" value="Selecciona un tratamiento" />
-                        <select wire:model="selectedtratamientoId" wire:change.defer='loadEtapas($event.target.value)' class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50">
-                            <option value="">Seleccione un tratamiento</option>
-                            @foreach ($tratamientoPaciente as $trat)
-                                <option value="{{ $trat->tratamiento->id }}">{{ $trat->tratamiento->name }} - {{ $trat->tratamiento->descripcion}}</option>
+                <form wire:submit.prevent='saveDocumentacion'>
+                    <div>
+                        <!-- Si se pasó un tratId por URL, mostrarlo directamente -->
+                        @if ($tratId)
+                            <p class="py-2 text-base"><strong>Tratamiento: {{ $tratamientoPaciente->tratamiento->name }} - {{ $tratamientoPaciente->tratamiento->descripcion }}</strong></p>
+                        @elseif ($tratamientoId)
+                            <p class="py-2 text-base"><strong>Tratamiento: {{ $tratamiento->name }} - {{$tratamiento->descripcion}}</strong></p>
+                        @else
+                            <!-- Si no hay tratId, permitir elegir un tratamiento -->
+                            <x-label for="tratamiento" value="Selecciona un tratamiento" />
+                            <select wire:model="selectedtratamientoId" wire:change.defer='loadEtapas($event.target.value)' class="block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50">
+                                <option value="">Seleccione un tratamiento</option>
+                                @foreach ($tratamientoPaciente as $trat)
+                                    <option value="{{ $trat->tratamiento->id }}">{{ $trat->tratamiento->name }} - {{ $trat->tratamiento->descripcion}}</option>
+                                @endforeach
+                            </select>
+                            <br>
+                        @endif
+                        <x-label for="" value="Selecciona una etapa" />
+                        <select wire:model="selectedEtapa" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                            <option value="">Seleccione una etapa</option>
+                            @foreach ($etapas as $etapa)
+                                <option value="{{ $etapa->id }}">{{ $etapa->name }}</option>
                             @endforeach
                         </select>
+                        <x-input-error for="selectedEtapa"/>
+
                         <br>
-                    @endif
-                    <x-label for="" value="Selecciona una etapa" />
-                    <select wire:model="selectedEtapa" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <option value="">Seleccione una etapa</option>
-                        @foreach ($etapas as $etapa)
-                            <option value="{{ $etapa->id }}">{{ $etapa->name }}</option>
-                        @endforeach
-                    </select>
-                    <x-input-error for="selectedEtapa"/>
 
-                    <br>
+                        <x-label for="documentacion" value="Nueva documentación" />
+                        <input type="file" multiple wire:model="documentacion" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                        <x-input-error for="documentacion.*"/>
 
-                    <x-label for="documentacion" value="Nueva Documentación" />
-                    <input type="file" multiple wire:model="documentacion" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
-                    <x-input-error for="documentacion.*"/>
-
-
-                    <x-label for="mensaje" value="Mensaje o Descripción" />
-                    <textarea wire:model="mensaje" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4" rows="3"></textarea>
-                    <x-input-error for="mensaje.*"/>
-                </div>
+                        <x-label for="mensaje" value="Mensaje o Descripción" />
+                        <textarea wire:model="mensaje" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4" rows="3"></textarea>
+                        <x-input-error for="mensaje.*"/>
+                    </div>
+                </form>
             </x-slot>
 
             <x-slot name="footer">
