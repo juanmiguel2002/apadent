@@ -2,7 +2,7 @@
     <div class="px-2 py-4 flex justify-between items-center">
         <div class="flex">
             @if (!auth()->user()->hasRole('admin'))
-                <strong>Tratamientos asignados a la clínica {{$clinica[0]->name}}</strong>
+                <h3>Tratamientos asignados a la clínica <strong>{{ $clinica[0]->name }}</strong></h3>
             @endif
         </div>
         <div class="flex">
