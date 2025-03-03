@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Programar el comando para que se ejecute diariamente a la medianoche
-        $schedule->job(new SendReminderEmailToClinic())->daily();
+        // $schedule->job(new SendReminderEmailToClinic($pacienteId))->daily('08:00');
     }
 
     /**

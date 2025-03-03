@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pacientes;
 
+use App\Jobs\EnviarRecordatorioRevision;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Mail\CambioEstado;
@@ -203,6 +204,7 @@ class HistorialPaciente extends Component
             $this->loadEtapas($this->tratId ? $this->tratId : $this->selectedTratamiento);
 
             Mail::to($this->clinica->email)->send(new NotificacionRevision($this->paciente, $etapa, $this->clinica));
+            EnviarRecordatorioRevision::dispatch($this->paciente->id);
         }
     }
 
