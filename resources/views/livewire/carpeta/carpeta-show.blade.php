@@ -1,12 +1,18 @@
 <div>
     <div class="mb-6 mt-4">
-        <div class="flex justify-end mt-2 gap-4">
+        {{-- {{var_dump($paciente)}} --}}
+        <div class="flex justify-start mt-2 gap-4">
             <a href="{{ route('admin.archivos') }}" class="bg-azul text-white px-4 py-2 rounded hover:bg-blue-600">
-                Atrás
+                Inicio
             </a>
-            <button wire:click="showCreateModal" class="bg-azul text-white px-4 py-2 rounded hover:bg-blue-700">
+            {{-- <button wire:click="showCreateModal" class="bg-azul text-white px-4 py-2 rounded hover:bg-blue-700">
                 Nueva subcarpeta
             </button>
+            @if ($archivos->isNotEmpty() || $facturas->isNotEmpty())
+                <button wire:click="showCreateArchivos" class="bg-azul text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Nuevo archivo
+                </button>
+            @endif --}}
         </div>
     </div>
     <hr>
@@ -34,7 +40,7 @@
                 </div>
 
                 <!-- Botones de Acción -->
-                <div class="flex justify-between w-full">
+                {{-- <div class="flex justify-between w-full">
                     <button wire:click="showEditModal('{{ $subcarpeta->id }}')"
                         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +58,7 @@
                         </svg>
                         Eliminar
                     </button>
-                </div>
+                </div> --}}
             </div>
         @endforeach
     </div>
@@ -65,25 +71,33 @@
                         <tr class="bg-azul">
                             <th class="p-3 text-center uppercase">ID</th>
                             <th class="p-3 text-center uppercase">Nombre</th>
+                            <th class="p-3 text-center uppercase">Tratamiento</th>
                             <th class="p-3 text-center uppercase">Fecha</th>
-                            <th class="p-3 text-center uppercase">Tipo</th>
                             <th class="p-3 text-center uppercase">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach ($archivos as $archivo)
-                            <tr class="bg-gray-100 hover:bg-gray-200 transition">
-                                <td class="px-2 py-4 text-center border-b">{{ $archivo->id }}</td>
-                                <td class="px-6 py-4 text-center border-b">
-                                    {!! \App\Helpers\FileHelper::getFileIcon($archivo->extension) !!}
-                                    <span>{{ $archivo->name }}</span>
-                                </td>
-                                <td class="px-6 py-4 text-center border-b">{{ $archivo->created_at }}</td>
-                                <td class="px-6 py-4 text-center border-b">{{ $archivo['extension'] }}</td>
-                                <td class="px-6 py-4 text-center border-b">
-                                    <a href="{{ $archivo['url'] }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
-                                </td>
-                            </tr>
+                            @foreach ($tratamientos as $tratamiento)
+                                <tr class="bg-gray-100 hover:bg-gray-200 transition">
+                                    <td class="px-2 py-4 text-center border-b">{{ $archivo->id }}</td>
+                                    <td class="px-6 py-4 text-center border-b">
+                                        <a href="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}">
+                                        {!! \App\Helpers\FileHelper::getFileIcon($archivo->extension) !!}
+                                        <span>{{ $archivo->name }}</span></a>
+                                    </td>
+                                    {{-- <td class="px-6 py-4 text-center border-b">{{ $archivo['tipo'] }}</td>
+                                    --}}
+                                    <td class="px-6 py-4 text-center border-b">
+                                        {{$tratamiento->name}} {{ $tratamiento->descripcion }}
+                                        <small>{{$archivo->etapas->name}}</small>
+                                    </td>
+                                    <td class="px-6 py-4 text-center border-b">{{ $archivo->created_at }}</td>
+                                    <td class="px-6 py-4 text-center border-b">
+                                        <a href="{{ route('archivo.descargar', ['filePath'=> $archivo->ruta]) }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
+                                    </td>
+                                </tr>
+                            @endforeach
                         @endforeach
                     </tbody>
                 </table>
@@ -125,7 +139,7 @@
 
 
     @if ($showModal)
-        <x-dialog-modal maxWidth="lg">
+        <x-dialog-modal maxWidth="lg" wire:model="showModal">
             <div class="relative">
                 <x-slot name="title">
                     <div class="flex justify-between items-center">
@@ -161,4 +175,62 @@
             </div>
         </x-dialog-modal>
     @endif
+
+    @if ($showArchivos)
+        <x-dialog-modal maxWidth="lg" wire:model="showArchivos">
+            <div class="relative">
+                <x-slot name="title">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold">Subir nuevo archivo</h2>
+                        <button wire:click="close" class="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </x-slot>
+
+                <x-slot name="content">
+                    <form wire:submit.prevent="saveArchivos">
+                        <div class="grid grid-cols-1 gap-4">
+
+                            {{-- Selección del tipo de archivo --}}
+                            <div>
+                                <x-label for="tipo" value="Tipo de archivo" class="text-gray-700 font-semibold" />
+                                <select wire:model="tipo" id="tipo" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring focus:ring-indigo-500">
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="documento">Documento</option>
+                                    <option value="imagen">Imagen</option>
+                                    <option value="pdf">PDF</option>
+                                </select>
+                                <x-input-error for="tipo" />
+                            </div>
+
+                            {{-- Input para archivos --}}
+                            <div>
+                                <x-label for="files" value="Seleccionar archivo(s)" class="text-gray-700 font-semibold" />
+                                <x-input type="file" wire:model="files" multiple class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring focus:ring-indigo-500" />
+                                <x-input-error for="files" />
+                            </div>
+
+                            {{-- Barra de progreso (muestra el estado de carga) --}}
+                            <div wire:loading wire:target="files" class="text-blue-600 text-sm">
+                                Subiendo archivo(s)...
+                            </div>
+                        </div>
+                    </form>
+                </x-slot>
+
+                <x-slot name="footer">
+                    <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Cancelar</button>
+                    <button type="submit" wire:click="saveArchivos"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+                        @if(!$files) disabled @endif>
+                        Subir
+                    </button>
+                </x-slot>
+            </div>
+        </x-dialog-modal>
+    @endif
+
 </div>
