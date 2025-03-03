@@ -24,11 +24,6 @@ class ClinicaShow extends Component
     public $factura;
     public $carpeta;
 
-    protected $rules = [
-        'name' => 'required|string|max:50',
-        'factura' => 'required|file|mimes:pdf', // Cambia los tipos mime según necesites
-    ];
-
     public function mount($clinica, $users){
         $this->clinica = $clinica;
         $this->users = $users;
@@ -49,7 +44,17 @@ class ClinicaShow extends Component
 
     public function save()
     {
-        $this->validate();
+        $this->validate([
+            'name' => 'required|string|max:50',
+            'factura' => 'required|file|mimes:pdf', // Cambia los tipos mime según necesites
+        ],[
+            'name.required' => 'El campo nombre es obligatorio.',
+            'name.string' => 'El campo nombre debe ser una cadena de texto.',
+            'name.max' => 'El campo nombre no debe exceder los 50 caracteres.',
+            'factura.required' => 'El campo factura es obligatorio.',
+            'factura.file' => 'El campo factura debe ser un archivo.',
+            'factura.mimes' => 'El archivo debe ser un PDF.',
+        ]);
 
         // Obtener la extensión original del archivo
         $extension = $this->factura->getClientOriginalExtension();

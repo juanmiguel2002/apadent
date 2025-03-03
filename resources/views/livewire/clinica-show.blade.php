@@ -100,11 +100,21 @@
                 </div>
             </x-slot>
             <x-slot name="content">
-                <x-label for="file" class="block text-md text-azul capitalize" value="nombre" />
-                <x-input wire:model="name" placeholder="factura-11-02-2000" type="text" class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40"/>
+                <form wire:submit.prevent='save'>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="col-span-2 mb-2 sm:col-span-1">
+                            <x-label for="file" class="block text-md text-azul capitalize" value="nombre" />
+                            <x-input wire:model="name" placeholder="factura-11-02-2000" type="text" class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40"/>
+                            <x-input-error for="name"/>
+                        </div>
 
-                <x-label for="file" class="block text-md text-azul capitalize" value="Factura" />
-                <x-input wire:model="factura" required type="file" class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                        <div class="col-span-2 mb-2 sm:col-span-1">
+                            <x-label for="file" class="block text-md text-azul capitalize" value="Factura" />
+                            <x-input wire:model="factura" required type="file" class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
+                            <x-input-error for="factura"/>
+                        </div>
+                    </div>
+                </form>
             </x-slot>
             <x-slot name="footer">
                 <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
