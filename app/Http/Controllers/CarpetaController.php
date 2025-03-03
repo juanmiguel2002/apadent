@@ -3,9 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Carpeta;
-use App\Models\Clinica;
-use App\Models\Paciente;
-use Illuminate\Http\Request;
 
 class CarpetaController extends Controller
 {
