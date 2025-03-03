@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\CarpetaController;
-use App\Http\Controllers\CarpetasController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DashboardController;
 

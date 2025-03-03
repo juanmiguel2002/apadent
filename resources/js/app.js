@@ -217,3 +217,4 @@ window.onload = function(){
 window.addEventListener('recargar-pagina', event => {
     window.location.reload(); // Recargar la página completa
 });
+
