@@ -100,7 +100,6 @@ class Clinicas extends Component
 
             $clinica->save();
             $this->dispatch('clinicaSaved', 'Clínica Actualizada');  // Emite un evento para que otros componentes puedan escuchar
-            $this->resetPage();
         }else{
             $clinica = Clinica::create([
                 'name' => $this->name,
@@ -133,7 +132,6 @@ class Clinicas extends Component
                 'clinica_id' => $clinica->id,
                 'user_id' => $user->id
             ]);
-
             // Enviar los datos de acceso al correo del usuario
             Mail::to($this->email)->send(new CredencialesClinica($this->name, $this->email, $password));
 
