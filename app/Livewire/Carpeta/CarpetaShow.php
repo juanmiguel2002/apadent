@@ -5,6 +5,8 @@ namespace App\Livewire\Carpeta;
 use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\Factura;
+use App\Models\Paciente;
+use App\Models\Tratamiento;
 use Livewire\Component;
 
 class CarpetaShow extends Component
@@ -15,6 +17,8 @@ class CarpetaShow extends Component
     public $subcarpetas;
     public $archivos;
     public $facturas;
+    public $tratamientos;
+    public $paciente;
 
     public function mount($id)
     {
@@ -30,17 +34,22 @@ class CarpetaShow extends Component
         $this->subcarpetas = $this->carpeta->carpetasHija;
         $this->archivos = $this->carpeta->archivos ?? collect();
 
+
         // Obtener facturas dentro de la carpeta "facturas" de la clínica
         $this->facturas = Factura::where('clinica_id', $clinica->id)
                                 ->where('carpeta_id', $this->carpeta->id)
                                 ->get();
+        // Obtener tratamientos a partir de las etapas de los archivos
+        $this->tratamientos = Tratamiento::whereHas('etapas', function ($query) {
+            $query->whereIn('id', $this->archivos->pluck('etapa_id')->filter());
+        })->get();
     }
 
 
     public function render()
     {
         return view('livewire.carpeta.carpeta-show');
-    }
+ }
 
     public function showCreateModal() {
         $this->showModal = true;
