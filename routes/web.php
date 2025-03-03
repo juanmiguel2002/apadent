@@ -75,5 +75,4 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/paciente/{id}/perfil/', [PacienteShowController::class, 'show'])->name('pacientes-show');
     Route::get('/paciente/{id}/historial/{tratId?}', [PacienteHistorial::class, 'index'])->name('paciente-historial');
     Route::get('/clinica/{id}/', [ClinicaController::class, 'index'])->name('clinica');
-
 });
