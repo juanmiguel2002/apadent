@@ -59,42 +59,6 @@
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
                                             Este es el mensaje: <strong>{{ $mensaje }}</strong>
                                         </p>
-
-                                        <table class="action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                                            style="box-sizing: border-box; margin: 30px auto; padding: 0; text-align: center; width: 100%;">
-                                            <tr>
-                                                <td align="center">
-                                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
-                                                        <tr>
-                                                            <td align="center">
-                                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation">
-                                                                    <tr>
-                                                                        <td>
-                                                                            <a href="{{ env('APP_URL')}}" class="button button-primary" target="_blank" rel="noopener"
-                                                                                style="box-sizing: border-box; border-radius: 4px; color: #fff; display: inline-block; text-decoration: none; background-color: #2d3748; border: 8px solid #2d3748; font-size: 16px; font-weight: bold;">
-                                                                                Acceso a clientes
-                                                                            </a>
-                                                                        </td>
-                                                                    </tr>
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-
-                                        <table class="subcopy" width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                                            style="box-sizing: border-box; border-top: 1px solid #e8e5ef; margin-top: 25px; padding-top: 25px;">
-                                            <tr>
-                                                <td>
-                                                    <p style="box-sizing: border-box; font-size: 14px; line-height: 1.5em; margin-top: 0;">
-                                                        Si no puedes hacer clic en el botón "Acceso a clientes", copia y pega este enlace en tu navegador:
-                                                        <a href="{{ env('APP_URL')}}" style="color: #3869d4;">{{ env('APP_URL')}}</a>
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
                                     </td>
                                 </tr>
                             </table>
