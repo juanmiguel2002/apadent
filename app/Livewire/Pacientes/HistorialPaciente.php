@@ -47,10 +47,6 @@ class HistorialPaciente extends Component
         'Set Up' => 'bg-yellow-600'
     ];
 
-    protected $rules = [
-        'selectedNewTratamiento' => 'required|exists:tratamientos,id',
-    ];
-
     public function mount($paciente, $tratId = null)
     {
         $this->paciente = $paciente;
@@ -256,6 +252,15 @@ class HistorialPaciente extends Component
             'selectedNewTratamiento.exists' => 'El tratamiento seleccionado no es válido.',
         ]);
 
+        // Verificar si el paciente ya tiene asignado este tratamiento
+        $existe = PacienteTrat::where('paciente_id', $this->pacienteId)
+            ->where('trat_id', $this->selectedNewTratamiento)
+            ->exists();
+
+        if ($existe) {
+            return redirect()->back()->with('error', 'Este tratamiento ya está asignado a este paciente.');
+        }
+
         try {
             DB::transaction(function () {
                 // Asociar el tratamiento al paciente
@@ -283,14 +288,17 @@ class HistorialPaciente extends Component
             // Resetear el tratamiento seleccionado y cerrar el modal
             $this->reset('selectedNewTratamiento');
             $this->closeModal();
+
             // Emitir un evento para actualizar la lista de tratamientos en la vista
             $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
+
             return redirect()->route('pacientes.historial', $this->pacienteId);
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Tratamiento ya asignado');
+            return redirect()->back()->with('error', 'Ocurrió un error al asignar el tratamiento.');
         }
     }
+
 
     // Nueva Documentación
     public function showDocumentacionModal()

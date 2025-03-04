@@ -45,8 +45,8 @@
                                 <th class="px-2 py-2 bg-azul" style="width: 10%">Etapa</th>
                                 <th class="w-1/2 px-4 py-2 bg-azul">Mensaje</th>
                                 <th class="w-1/6 px-4 py-2 bg-azul">Estado</th>
-                                <th class="w-1/5 px-3 py-2 bg-azul">Revisión</th>
-                                <th class="w-1-5 px-4 py-2 bg-azul">Archivos</th>
+                                <th class="w-1/6 px-3 py-2 bg-azul">Revisión</th>
+                                <th class="w-1/5 px-4 py-2 bg-azul">Archivos</th>
                                 <th class="px-2 py-2 bg-azul">Rayos</th>
                                 <th class="px-2 py-2 bg-azul">CBCT</th>
                                 <th class="px-2 py-2 bg-azul">Fotografíes</th>
@@ -133,7 +133,7 @@
                                     @else
                                         <td class="px-2 py-2">
                                             <div class="flex justify-center items-center">
-                                                <p class="text-base">No tiene ningún archivo</p>
+                                                <p class="text-base text-center">Sin archivos</p>
                                             </div>
                                         </td>
                                     @endif
@@ -229,7 +229,7 @@
 
             <x-slot name="content">
                 <!-- Selección de tratamiento existente -->
-                <div>
+                <form wire:submit.prevent="saveTratamiento">
                     <x-label for="selectedTratamiento" value="Seleccionar Tratamiento" />
                     <select wire:model="selectedNewTratamiento" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                         <option value="">Seleccione un tratamiento</option>
@@ -243,7 +243,7 @@
                             {{ session('error') }}
                         </div>
                     @endif
-                </div>
+                </form>
             </x-slot>
 
             <x-slot name="footer">
