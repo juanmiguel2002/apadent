@@ -107,7 +107,7 @@
                                             {{-- Menú desplegable con opciones de cambio de estado --}}
                                             @if ($menuVisible === $paciente->id)
                                                 <div class="ml-4 mt-2 space-y-1">
-                                                    @foreach (['En proceso' => 'bg-green-600','Pausado' => 'bg-blue-600','Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-500'] as $optionStatus => $optionColor)
+                                                    @foreach (['En proceso' => 'bg-green-600','Pausado' => 'bg-blue-600','Finalizado' => 'bg-red-600', 'Set Up' => 'bg-yellow-600'] as $optionStatus => $optionColor)
                                                         <div class="cursor-pointer text-white {{ $optionColor }} py-1 px-2 rounded-lg hover:bg-opacity-75"
                                                             wire:click="estado({{ $etapa->id }},'{{ $optionStatus }}')">
                                                             {{ $optionStatus }}
