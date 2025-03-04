@@ -65,7 +65,7 @@
                                 @foreach ($facturas as $factura)
                                     <tr>
                                         <td class="py-2">
-                                            <a href="{{ route('facturas.view', ['ruta' => $factura]) }}" target="_black">{{ $factura->name }}</a>
+                                            <a href="{{ route('ver.pdf', ['ruta' => $factura->ruta]) }}" target="_black">{{ $factura->name }}</a>
                                         </td>
                                         <td class="py-2">
                                             <a href="{{ route('facturas.download', $factura) }}" target="_blank" class="text-azul">Descargar</a>

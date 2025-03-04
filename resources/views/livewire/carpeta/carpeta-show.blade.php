@@ -1,6 +1,5 @@
 <div>
     <div class="mb-6 mt-4">
-        {{-- {{var_dump($paciente)}} --}}
         <div class="flex justify-start mt-2 gap-4">
             <a href="{{ route('admin.archivos') }}" class="bg-azul text-white px-4 py-2 rounded hover:bg-blue-600">
                 Inicio
@@ -122,12 +121,14 @@
                             <tr class="bg-gray-100 hover:bg-gray-200 transition">
                                 <td class="px-2 py-4 text-center border-b">{{ $factura->id }}</td>
                                 <td class="px-6 py-4 text-center border-b">
-                                    {!! \App\Helpers\FileHelper::getFileIcon($factura->extension) !!}
-                                    <span>{{ $factura->name }}</span>
+                                    <a href="{{ route('ver.pdf', ['ruta' => $factura->ruta]) }}" target="_blank">
+                                        {!! \App\Helpers\FileHelper::getFileIcon($factura->extension) !!}
+                                        <span>{{ $factura->name }}</span>
+                                    </a>
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">{{ $factura->created_at }}</td>
                                 <td class="px-6 py-4 text-center border-b">
-                                    <a href="{{ $factura['url'] }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
+                                    <a href="{{ route('facturas.download', $factura->ruta) }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
                                 </td>
                             </tr>
                         @endforeach

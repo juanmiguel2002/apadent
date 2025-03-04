@@ -38,7 +38,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     //Rutas PDF Facturas
     Route::get('/facturas/{factura}/descargar', [ClinicaShow::class, 'download'])->name('facturas.download');
-    Route::get('/factura/{ruta}', [ClinicaShow::class, 'view'])->name('facturas.view');
+    Route::get('/ver-pdf/{ruta}', [ClinicaController::class, 'mostrarVistaPdf'])
+    ->where('ruta', '.*') // Permite rutas con subcarpetas
+    ->name('ver.pdf');
+    Route::get('/ver-pdf/{ruta}', [ClinicaController::class, 'verPdfPrivado'])
+    ->where('ruta', '.*') // Permite rutas con subcarpetas
+    ->name('ver.pdf');
 
     // Rutas del administrador
     Route::middleware(['role:admin'])->group(function () {
