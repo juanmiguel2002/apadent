@@ -46,7 +46,7 @@ class NuevaFactura extends Mailable
                 'name' => $this->clinica->name,
                 'nameFactura' => $this->factura->name,
                 'fecha' => $this->factura->created_at->format('d/m/Y'),
-                // 'usuario' => $this->factura->user(),
+                'factura' => $this->factura,
             ]);
     }
 

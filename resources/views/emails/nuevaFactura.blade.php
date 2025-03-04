@@ -70,7 +70,7 @@
                                         </p> --}}
 
                                         <p style="box-sizing: border-box; font-size: 16px; line-height: 1.5em; margin-top: 0;">
-                                            <strong>Registrado por:</strong> {{$fecha}}
+                                            <strong>Registrado el:</strong> {{$fecha}}
                                         </p>
 
                                         <table class="action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation"
@@ -83,7 +83,7 @@
                                                                 <table border="0" cellpadding="0" cellspacing="0" role="presentation">
                                                                     <tr>
                                                                         <td>
-                                                                            <a href="{{ asset($factura->ruta)}}" class="button button-primary" target="_blank" rel="noopener"
+                                                                            <a href="{{ route('archivo.descargar', ['filePath'=> $factura->ruta]) }}" class="button button-primary" target="_blank" rel="noopener"
                                                                                 style="box-sizing: border-box; border-radius: 4px; color: #fff; display: inline-block; text-decoration: none; background-color: #2d3748; border: 8px solid #2d3748; font-size: 16px; font-weight: bold;">
                                                                                 Descargar Factura
                                                                             </a>
@@ -103,7 +103,7 @@
                                                 <td>
                                                     <p style="box-sizing: border-box; font-size: 14px; line-height: 1.5em; margin-top: 0;">
                                                         Si no puedes hacer clic en el botón "Descargar factura", copia y pega este enlace en tu navegador:
-                                                        <a href="{{ asset($factura->ruta) }}" target="_blank">{{asset($factura->ruta)}}</a>
+                                                        <a href="{{ asset($factura->ruta) }}" target="_blank">{{asset($factura->ruta)}}</>
                                                     </p>
                                                 </td>
                                             </tr>
