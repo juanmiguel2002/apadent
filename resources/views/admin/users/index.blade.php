@@ -6,5 +6,5 @@
     </h2>
 @endsection
 @section('content')
-    @livewire('admin.users.users-management')
+    @livewire('Admin.Users.Users-management')
 @endsection

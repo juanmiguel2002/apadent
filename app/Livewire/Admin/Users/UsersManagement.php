@@ -132,7 +132,7 @@ class UsersManagement extends Component
         // Paginación
         $users = $usersQuery->paginate($this->perPage);
         // Devolvemos la vista con los usuarios filtrados
-        return view('livewire.admin.users.user-management', [
+        return view('livewire.admin.users.users-management', [
                     'users' => $users,
                     'roles' => $this->roles,
                     'clinicas' => $this->clinicas]);

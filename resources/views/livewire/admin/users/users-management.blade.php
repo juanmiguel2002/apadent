@@ -21,7 +21,7 @@
                     </div>
 
                     <div class="relative flex-1">
-                        <x-admin.users.component-input-select placeholder="Seleccione" :options="$roles" name="user_role" label="" />
+                        <x-users.component-input-select placeholder="Seleccione" :options="$roles" name="user_role" label="" />
                     </div>
 
                     @can('usuario_create')
