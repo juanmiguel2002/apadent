@@ -10,7 +10,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 
-class UserManagement extends Component
+class UsersManagement extends Component
 {
     use WithPagination;
 
