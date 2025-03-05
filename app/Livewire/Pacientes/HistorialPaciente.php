@@ -299,7 +299,6 @@ class HistorialPaciente extends Component
         }
     }
 
-
     // Nueva Documentación
     public function showDocumentacionModal()
     {
@@ -413,7 +412,7 @@ class HistorialPaciente extends Component
 
         $etapa = Etapa::findOrFail($this->etapaId);
 
-        $clinicaName = preg_replace('/\s+/', '_', trim(Auth::user()->clinicas->first()->name));
+        $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
         $pacienteFolder = "{$clinicaName}/pacientes/{$pacienteName}";
 
@@ -474,9 +473,9 @@ class HistorialPaciente extends Component
 
     public function saveArchivos($etapaId){
         $this->validate([
-            'archivos.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'archivos.*' => 'required|file|mimes:zip',
         ], [
-            'archivos.*' => 'Solo se admiten imágenes válidas'
+            'archivos.*' => 'Solo se admiten Archivos .zip'
         ]);
 
         $etapa = Etapa::findOrFail($etapaId);
