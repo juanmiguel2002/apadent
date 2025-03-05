@@ -8,7 +8,7 @@
 <body>
     <h1>Recordatorio de Revisión</h1>
     <p>Estimado equipo de la clínica,</p>
-    <p>Este es un recordatorio de que el paciente <strong>{{ $paciente->nombre }}</strong> tiene una próxima revisión programada en <strong>{{ $diasRestantes }} días</strong>.</p>
+    <p>Este es un recordatorio de que el paciente <strong>{{ $paciente->name }}</strong> tiene una próxima revisión programada en <strong>{{ $diasRestantes }} días</strong>.</p>
     <p>Por favor, recuerden gestionar la revisión de acuerdo a la programación.</p>
     <p>Saludos cordiales,</p>
     <p>El equipo de gestión de pacientes.</p>
