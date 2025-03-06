@@ -114,7 +114,7 @@
                                         @if($etapa->revision)
                                             <span class="text-sm font-semibold">{{ \Carbon\Carbon::parse($etapa->revision)->format('d-m-Y') }}</span>
                                         @else
-                                            <button wire:click="{{ $etapa->status == 'Finalizado' ? '' : abrirModalRevision( $etapa->id )}}" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
+                                            <button wire:click="{{ $etapa->status == 'Finalizado' ? '' : "abrirModalRevision($etapa->id)"}}" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
                                                 Asignar Fecha
                                             </button>
                                         @endif
@@ -149,7 +149,7 @@
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                 <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : showModalImg($etapa->id, 'rayos')}}" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
+                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : "showModalImg($etapa->id, 'rayos')"}}" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
                                             @endif
                                         </div>
                                     </td>
@@ -196,7 +196,10 @@
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                 <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : showModalImg($etapa->id, 'imgetapa')}}" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
+                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : "showModalImg($etapa->id, 'imgetapa')" }}" 
+                                                    class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">
+                                                    Añadir
+                                                </span>
                                             @endif
                                         </div>
                                     </td>
