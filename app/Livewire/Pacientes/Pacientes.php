@@ -201,7 +201,7 @@ class Pacientes extends Component
             // 5. Subir la foto del paciente (si existe)
             if ($this->img_paciente) {
                 $extension = $this->img_paciente->getClientOriginalExtension();
-                $fileName = 'foto_'.$this->paciente->name.'.' . $extension;
+                $fileName = 'foto_'.$paciente->name.'.' . $extension;
                 $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'public');
 
                 $paciente->url_img = $path;
