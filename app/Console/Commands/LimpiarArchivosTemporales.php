@@ -20,12 +20,11 @@ class LimpiarArchivosTemporales extends Command
      */
     public function handle()
     {
-        $directorio = 'storage/livewire-tmp/';
+        $directorio = 'livewire-tmp/';
         $archivos = Storage::files($directorio);
 
         foreach ($archivos as $archivo) {
-            // Verificar si el archivo tiene más de 1 día
-            if (now()->diffInDays(Storage::lastModified($archivo)) > 1) {
+            if (Storage::exists($archivo)) {
                 Storage::delete($archivo);
             }
         }
