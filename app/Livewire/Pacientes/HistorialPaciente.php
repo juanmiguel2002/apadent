@@ -366,7 +366,6 @@ class HistorialPaciente extends Component
                 if (!$archivoExistente) {
                     // Guardar archivo en almacenamiento
                     Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/archivoComplementarios", $imagen, $fileName);
-
                     // Crear registro en la base de datos
                     Archivo::create([
                         'name'       => pathinfo($fileName, PATHINFO_FILENAME),
@@ -377,6 +376,7 @@ class HistorialPaciente extends Component
                         'carpeta_id' => $carpeta->id,
                         'paciente_id' => $this->paciente->id,
                     ]);
+                    unlink($imagen->getPathname());
                 }
             }
 
@@ -426,7 +426,7 @@ class HistorialPaciente extends Component
         }
 
         // Determinar la carpeta de destino según el tipo de imagen
-        $tipoCarpeta = $this->tipo === 'rayos' ? 'rayos' : 'imgEtapa';
+        $tipoCarpeta = $this->tipo === 'rayos' ? 'Rayos' : 'imgEtapa';
 
         $carpeta = Carpeta::where('nombre', $tipoCarpeta)
             ->where('carpeta_id', $carpetaPaciente->id)->first();
@@ -440,19 +440,21 @@ class HistorialPaciente extends Component
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_{$key}.{$extension}";
-                $filePath = "{$pacienteFolder}/{$tipoCarpeta}/{$fileName}";
 
-                Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/{$tipoCarpeta}", $imagen, $fileName);
+                $path = $imagen->storeAs("{$pacienteFolder}/{$tipoCarpeta}", $fileName, 'clinicas');
 
                 Archivo::create([
                     'name'       => pathinfo($fileName, PATHINFO_FILENAME),
-                    'ruta'       => $filePath,
+                    'ruta'       => $path,
                     'tipo'       => $tipoCarpeta,
                     'extension'  => $extension,
                     'etapa_id'   => $this->etapaId,
                     'carpeta_id' => $carpeta->id,
                     'paciente_id' => $this->paciente->id,
                 ]);
+                
+                unlink($imagen->getPathname());
+
             }
         }
 
@@ -506,6 +508,7 @@ class HistorialPaciente extends Component
                 $filePath = "{$pacienteFolder}/CBCT/{$fileName}";
 
                 Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/CBCT", $imagen, $fileName);
+                Storage::delete($imagen->getRealPath());
 
                 Archivo::create([
                     'name'       => pathinfo($fileName, PATHINFO_FILENAME),

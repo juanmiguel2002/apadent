@@ -184,7 +184,7 @@ class PacienteShow extends Component
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = "Stripping_" . $key . '.' . $extension; //nombre del archivo
                 $path = $imagen->storeAs($pacienteFolder . '/Stripping', $fileName, 'clinicas');
-
+                Storage::delete($imagen->getRealPath());
                 // Extraer el nombre del archivo sin la extensión
                 $name = pathinfo($fileName, PATHINFO_FILENAME);
 

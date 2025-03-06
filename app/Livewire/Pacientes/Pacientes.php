@@ -201,12 +201,14 @@ class Pacientes extends Component
             // 5. Subir la foto del paciente (si existe)
             if ($this->img_paciente) {
                 $extension = $this->img_paciente->getClientOriginalExtension();
-                $fileName = 'foto_paciente.' . $extension;
+                $fileName = 'foto_'.$this->paciente->name.'.' . $extension;
                 $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'public');
 
                 $paciente->url_img = $path;
                 $paciente->save();
+                unlink($this->img_paciente->getPathname());
             }
+
             // 6. Subir archivos y asociarlos
             $this->updatedArchivos($paciente, $pacienteFolder, $etapa);
 
@@ -306,20 +308,16 @@ class Pacientes extends Component
                     $safeFolderName = Str::slug($nombreCarpeta, '_');
 
                     // Generar el nombre del archivo de manera segura
-                    $fileName = "{$safeFolderName}_" . ($key + 1) . '.' . $extension;
+                    $fileName = "{$etapa->name}_" . ($key + 1) . '.' . $extension;
 
                     // Asegurar que el nombre no tenga caracteres extraños
                     $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
 
-                    // Extraer el nombre del archivo sin la extensión
-                    $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
-
                     // Guardar el archivo en la carpeta del paciente
                     $path = $archivo->storeAs("{$pacienteFolder}/{$safeFolderName}", $fileName, 'clinicas');
-
                     // Guardar en la base de datos solo el nombre sin extensión
                     Archivo::create([
-                        'name' => $fileNameWithoutExtension,
+                        'name' => pathinfo($fileName, PATHINFO_FILENAME),
                         'ruta' => $path,
                         'tipo' => strtolower($safeFolderName),
                         'extension' => $extension,
@@ -327,6 +325,7 @@ class Pacientes extends Component
                         'carpeta_id' => $carpeta->id,
                         'paciente_id' => $paciente->id,
                     ]);
+                    unlink($archivo->getPathname());
                 }
             }
         }
