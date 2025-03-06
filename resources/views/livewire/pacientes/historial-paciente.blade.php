@@ -41,15 +41,15 @@
                 <div class="px-2 py-2">
                     <table class="table-fixed min-w-full bg-gray-50">
                         <thead>
-                            <tr>
-                                <th class="px-2 py-2 bg-azul" style="width: 10%">Etapa</th>
-                                <th class="w-1/2 px-4 py-2 bg-azul">Mensaje</th>
-                                <th class="w-1/6 px-4 py-2 bg-azul">Estado</th>
-                                <th class="w-1/6 px-3 py-2 bg-azul">Revisión</th>
-                                <th class="w-1/5 px-4 py-2 bg-azul">Archivos</th>
-                                <th class="px-2 py-2 bg-azul">Rayos</th>
-                                <th class="px-2 py-2 bg-azul">CBCT</th>
-                                <th class="px-2 py-2 bg-azul">Fotografíes</th>
+                            <tr class='bg-azul'>
+                                <th class="px-2 py-2" style="width: 10%">Etapa</th>
+                                <th class="w-1/2 px-4 py-2">Mensaje</th>
+                                <th class="w-1/6 px-4 py-2">Estado</th>
+                                <th class="w-1/6 px-3 py-2">Revisión</th>
+                                <th class="w-1/5 px-4 py-2">Archivos</th>
+                                <th class="px-2 py-2">Rayos</th>
+                                <th class="px-2 py-2">CBCT</th>
+                                <th class="px-2 py-2">Fotografíes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -114,7 +114,7 @@
                                         @if($etapa->revision)
                                             <span class="text-sm font-semibold">{{ \Carbon\Carbon::parse($etapa->revision)->format('d-m-Y') }}</span>
                                         @else
-                                            <button wire:click="abrirModalRevision({{ $etapa->id }})" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
+                                            <button wire:click="{{ $etapa->status == 'Finalizado' ? '' : abrirModalRevision( $etapa->id )}}" class="{{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }} mt-2 px-4 py-1 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-opacity-50 transition duration-200">
                                                 Asignar Fecha
                                             </button>
                                         @endif
@@ -148,8 +148,8 @@
                                                     class="cursor-pointer font-light text-sm">Ver</a>
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
-                                                <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="showModalImg({{$etapa->id}}, 'rayos')" class="cursor-pointer font-light text-sm">Añadir</span>
+                                                <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
+                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : showModalImg($etapa->id, 'rayos')}}" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
                                             @endif
                                         </div>
                                     </td>
@@ -195,8 +195,8 @@
                                                     class="cursor-pointer font-light text-sm">Ver</a>
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
-                                                <img class="w-4 mr-2 mt-2" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="showModalImg({{$etapa->id}}, 'imgetapa')" class="cursor-pointer font-light text-sm">Añadir</span>
+                                                <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
+                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : showModalImg($etapa->id, 'imgetapa')}}" class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">Añadir</span>
                                             @endif
                                         </div>
                                     </td>
