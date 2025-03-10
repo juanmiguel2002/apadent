@@ -305,7 +305,7 @@ class Pacientes extends Component
                     $extension = $archivo->getClientOriginalExtension();
 
                     // Asegurar que el nombre de la carpeta sea seguro
-                    $safeFolderName = Str::slug($nombreCarpeta, '_');
+                    // $safeFolderName = Str::slug($nombreCarpeta, '_');
 
                     // Generar el nombre del archivo de manera segura
                     $fileName = "{$etapa->name}_" . ($key + 1) . '.' . $extension;
@@ -314,12 +314,12 @@ class Pacientes extends Component
                     $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
 
                     // Guardar el archivo en la carpeta del paciente
-                    $path = $archivo->storeAs("{$pacienteFolder}/{$safeFolderName}", $fileName, 'clinicas');
+                    $path = $archivo->storeAs("{$pacienteFolder}/{$nombreCarpeta}", $fileName, 'clinicas');
                     // Guardar en la base de datos solo el nombre sin extensión
                     Archivo::create([
                         'name' => pathinfo($fileName, PATHINFO_FILENAME),
                         'ruta' => $path,
-                        'tipo' => strtolower($safeFolderName),
+                        'tipo' => strtolower($nombreCarpeta),
                         'extension' => $extension,
                         'etapa_id' => $etapa->id,
                         'carpeta_id' => $carpeta->id,
