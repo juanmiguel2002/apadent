@@ -1,10 +1,10 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
-import Alpine from 'alpinejs';
+// import Alpine from 'alpinejs';
 
-window.Alpine = Alpine;
+// window.Alpine = Alpine;
 
-Alpine.start();
+// Alpine.start();
 
 window.onload = function(){
     Livewire.on('clinicaSaved', message => {
