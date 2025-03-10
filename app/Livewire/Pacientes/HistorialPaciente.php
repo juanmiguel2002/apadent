@@ -46,12 +46,12 @@ class HistorialPaciente extends Component
         'Finalizado' => 'bg-red-600',
         'Set Up' => 'bg-yellow-600'
     ];
-
     public function mount($paciente, $tratId = null)
     {
         $this->paciente = $paciente;
         $this->clinica = Clinica::find($this->paciente->clinica_id);
         $this->pacienteId = $this->paciente->id;
+        $this->tratamientoId = session('tratamientoId', ''); // se recupera si existe, si no se carga en vacio
 
         $this->tratId = $tratId;// comprobar si existe tratamiento asignado por url
 
@@ -73,6 +73,12 @@ class HistorialPaciente extends Component
         })->where('extension', 'zip')->get();
     }
 
+    public function updatedTratamientoId($value)
+    {
+        // Guardar en sesión cada vez que se actualiza
+        session(['tratamientoId' => $value]);
+    }
+
     public function loadEtapas($tratamientoId)
     {
         // Cargar las etapas específicas para la fase activa
@@ -82,6 +88,7 @@ class HistorialPaciente extends Component
         ->where('paciente_id', $this->pacienteId)
         ->with('fase')
         ->get();
+        session(['tratamientoId' => $tratamientoId]);
     }
 
     public function render()
@@ -164,11 +171,12 @@ class HistorialPaciente extends Component
             $etapa->update(['status' => $newStatus, 'fecha_fin' => now()]);
         }else{
             $etapa->status = $newStatus;
+            $etapa->save();
         }
-        $etapa->save();
+
         $this->mostrarMenu = false; // Cerrar el menú
+        $this->loadEtapas($this->tratId ? $this->tratId : $this->tratamientoId);
         $this->dispatch('estadoActualizado');
-        $this->loadEtapas($this->selectedTratamiento ?: $this->tratId);
 
         // Enviar email a la clínica
         $etapa = Etapa::find($etapaId);
