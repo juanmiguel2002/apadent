@@ -1,6 +1,7 @@
 <div>
     <!-- botón Tratamiento y Documentación-->
     <div class="flex items-center justify-end mb-6 md:space-x-3">
+
         @if (!$tratId)
             <button  wire:click="showTratModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -196,7 +197,7 @@
                                             @else
                                                 <!-- Mostrar botón 'Añadir' si no tiene archivos -->
                                                 <img class="w-4 mr-2 mt-2 {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}" src="{{ asset('storage/recursos/icons/suma_azul.png') }}">
-                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : "showModalImg($etapa->id, 'imgetapa')" }}" 
+                                                <span wire:click="{{ $etapa->status == 'Finalizado' ? '' : "showModalImg($etapa->id, 'imgetapa')" }}"
                                                     class="cursor-pointer font-light text-sm {{ $etapa->status == 'Finalizado' ? 'opacity-50 cursor-not-allowed' : '' }}">
                                                     Añadir
                                                 </span>
@@ -292,6 +293,7 @@
     @if ($modalImg)
         <x-dialog-modal wire:model="modalImg" >
             <x-slot name="title">
+
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-medium text-gray-900">Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}</h3>
                     <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
@@ -303,10 +305,18 @@
             </x-slot>
 
             <x-slot name="content">
+                @if (session()->has('error'))
+                    <div class="bg-red-500 text-white p-3 rounded-md mb-4">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 <form wire:submit.prevent="saveImg">
                     <x-label for="imagenes" value="Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}" />
-                    <input type="file" multiple accept="image/*" wire:model="imagenes" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
-                    <x-input-error for="imagenes" />
+                    <input type="file" multiple wire:model="imagenes" required class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                    {{-- <x-input-error for="imagenes" /> --}}
+                    @error('imagenes')
+                        <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                    @enderror
                 </form>
             </x-slot>
 

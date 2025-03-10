@@ -292,7 +292,7 @@ class HistorialPaciente extends Component
             // Emitir un evento para actualizar la lista de tratamientos en la vista
             $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
 
-            return redirect()->route('pacientes.historial', $this->pacienteId);
+            $this->dispatch('recargar-pagina');
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Ocurrió un error al asignar el tratamiento.');
@@ -436,26 +436,29 @@ class HistorialPaciente extends Component
         }
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->imagenes && is_array($this->imagenes)) {
+        if ($this->imagenes != null) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_{$key}.{$extension}";
+                $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
 
                 $path = $imagen->storeAs("{$pacienteFolder}/{$tipoCarpeta}", $fileName, 'clinicas');
 
                 Archivo::create([
                     'name'       => pathinfo($fileName, PATHINFO_FILENAME),
                     'ruta'       => $path,
-                    'tipo'       => $tipoCarpeta,
+                    'tipo'       => strtolower($tipoCarpeta),
                     'extension'  => $extension,
                     'etapa_id'   => $this->etapaId,
                     'carpeta_id' => $carpeta->id,
                     'paciente_id' => $this->paciente->id,
                 ]);
-                
+
                 unlink($imagen->getPathname());
 
             }
+        }else{
+            return session()->flash('error', 'No se han seleccionado imágenes.');
         }
 
         $this->modalImg = false;
