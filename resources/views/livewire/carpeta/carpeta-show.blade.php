@@ -68,41 +68,54 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="text-white">
                         <tr class="bg-azul">
-                            <th class="p-3 text-center uppercase">ID</th>
                             <th class="p-3 text-center uppercase">Nombre</th>
                             <th class="p-3 text-center uppercase">Tratamiento</th>
+                            <th class="p-3 text-center uppercase">Etapa</th>
                             <th class="p-3 text-center uppercase">Fecha</th>
                             <th class="p-3 text-center uppercase">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($archivos as $archivo)
-                            @foreach ($tratamientos as $tratamiento)
-                                <tr class="bg-gray-100 hover:bg-gray-200 transition">
-                                    <td class="px-2 py-4 text-center border-b">{{ $archivo->id }}</td>
-                                    <td class="px-6 py-4 text-center border-b">
-                                        <a href="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}">
+                        @foreach ($archivos as $key => $archivo)
+                            <tr class="bg-gray-100 hover:bg-gray-200 transition">
+                                {{-- <td class="px-2 py-4 text-center border-b">{{ $key+1 }}</td> --}}
+                                <td class="px-6 py-4 text-center border-b">
+                                    <a href="{{ route('imagenes.protegidas', ['filePath' => $archivo->ruta]) }}" target="_blank">
                                         {!! \App\Helpers\FileHelper::getFileIcon($archivo->extension) !!}
-                                        <span>{{ $archivo->name }}</span></a>
-                                    </td>
-                                    {{-- <td class="px-6 py-4 text-center border-b">{{ $archivo['tipo'] }}</td>
-                                    --}}
-                                    <td class="px-6 py-4 text-center border-b">
-                                        {{$tratamiento->name}} {{ $tratamiento->descripcion }}
-                                        <small>{{$archivo->etapas->name}}</small>
-                                    </td>
-                                    <td class="px-6 py-4 text-center border-b">{{ $archivo->created_at }}</td>
-                                    <td class="px-6 py-4 text-center border-b">
-                                        <a href="{{ route('archivo.descargar', ['filePath'=> $archivo->ruta]) }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
-                                    </td>
-                                </tr>
-                            @endforeach
+                                        <span>{{ $archivo->name }}</span>
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 text-center border-b">
+                                    @if ($archivo->etapa_id !== null)
+                                        {{-- Accedemos al tratamiento a través de la etapa --}}
+                                        {{ $archivo->etapas->tratamiento->name ?? 'Sin tratamiento' }}
+                                        {{ $archivo->etapas->tratamiento->descripcion ?? '' }}
+                                    @else
+                                        <span class="text-gray-500">Stripping</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center border-b">
+                                    @if ($archivo->etapa_id !== null)
+                                        {{ $archivo->etapas->name ?? 'Sin etapa' }}
+                                    @else
+                                        <span class="text-gray-500">Stripping</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center border-b">{{ $archivo->created_at }}</td>
+                                <td class="px-6 py-4 text-center border-b">
+                                    <a href="{{ route('archivo.descargar', ['filePath'=> $archivo->ruta]) }}" target="_blank" class="text-blue-600 hover:underline">Descargar</a>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
             </x-tabla>
+            <div class="mt-4">
+                {{ $archivos->links('vendor.pagination.paginacion') }}
+            </div>
         </div>
     @endif
+
 
     @if ($facturas->isNotEmpty())
         <div class="max-w-7xl mx-auto x-4s m:px-6 lg:px-8 mt-6">

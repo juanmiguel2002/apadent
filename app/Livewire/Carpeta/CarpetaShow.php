@@ -5,13 +5,13 @@ namespace App\Livewire\Carpeta;
 use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\Factura;
-use App\Models\Tratamiento;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class CarpetaShow extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $files = [];
     public $tipo;
@@ -21,7 +21,7 @@ class CarpetaShow extends Component
     public $showArchivos = false;
 
     public $subcarpetas;
-    public $archivos;
+    // public $archivos;
     public $facturas;
     public $tratamientos;
     public $paciente;
@@ -36,25 +36,27 @@ class CarpetaShow extends Component
             $query->where('id', $id);
         })->firstOrFail();
 
-        // Cargar subcarpetas y archivos de la carpeta actual
+        // Cargar subcarpetas de la carpeta actual
         $this->subcarpetas = $this->carpeta->carpetasHija;
-        $this->archivos = $this->carpeta->archivos ?? collect();
 
         // Obtener facturas dentro de la carpeta "facturas" de la clínica
         $this->facturas = Factura::where('clinica_id', $clinica->id)
                                 ->where('carpeta_id', $this->carpeta->id)
                                 ->get();
-        // Obtener tratamientos a partir de las etapas de los archivos
-        $this->tratamientos = Tratamiento::whereHas('etapas', function ($query) {
-            $query->whereIn('id', $this->archivos->pluck('etapa_id')->filter());
-        })->get();
     }
 
+    // Método computado que devuelve los archivos paginados
+    public function getArchivosProperty()
+    {
+        return $this->carpeta->archivos()->paginate(10); // 10 archivos por página
+    }
 
     public function render()
     {
-        return view('livewire.carpeta.carpeta-show');
- }
+        return view('livewire.carpeta.carpeta-show',[
+            'archivos' => $this->archivos // Livewire lo detecta automáticamente
+        ]);
+    }
 
     public function showCreateModal() {
         $this->showModal = true;
