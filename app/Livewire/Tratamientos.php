@@ -10,30 +10,27 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-
+use Livewire\WithPagination;
 
 class Tratamientos extends Component
 {
-    public $tratamientos, $trat_id;
+    use WithPagination;
+
+    public $trat_id;
     public $clinica, $clinicas;
 
     public $clinicaSelected;
     public $showModal = false, $isEditing = false;
     public $name, $descripcion;
 
-    public function mount(){
+    public function mount() {
 
         // Filtrar los tratamientos por la clinica del usuario logueado (solo salen los que los usuarios de la clinica estan asignados)
         $user = Auth::user();
 
-        // saca todos los tratamientos
-        $this->tratamientos = Tratamiento::all();
-
         //sacar el nombre de la clinica
         $this->clinica = $user->clinicas;
         $this->clinicas = Clinica::all();
-        // dd($this->tratamientos);
-
     }
 
     public function pacientesTrat($trat) {
@@ -53,9 +50,17 @@ class Tratamientos extends Component
         }
     }
 
+    // Método computado para obtener tratamientos paginados
+    public function getTratamientosProperty()
+    {
+        return Tratamiento::paginate(10); // Paginar 10 tratamientos por página
+    }
+
     public function render()
     {
-        return view('livewire.tratamientos');
+        return view('livewire.tratamientos', [
+            'tratamientos' => $this->tratamientos,
+        ]);
     }
 
     public function showCreateModal($tratamientoId = null)

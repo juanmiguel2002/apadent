@@ -12,43 +12,40 @@
         </div>
     </div>
     <x-tabla>
-        @if ($tratamientos->count())
-            <table class="min-w-full divide-y table-fixed">
-                <thead class="text-white">
-                    <tr class="bg-azul">
-                        <th class="p-3 text-center">ID</th>
-                        <th class="p-3 text-center">Nombre</th>
-                        <th class="p-3 text-center">Descripción</th>
-                        <th class="p-3 text-center">Pacientes</th>
-                        <th class="p-3 text-center">Acción</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-gray-100 divide-y divide-gray-300">
-                    @foreach($tratamientos as $tratamiento)
-                        <tr class="hover:bg-gray-200 transition duration-200">
-                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->id }}</td>
-                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->name }}</td>
-                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->descripcion }}</td>
-                            <td class="text-center px-4 py-3 whitespace-nowrap">{{ $this->pacientesTrat($tratamiento->id) }}</td>
+        <table class="min-w-full divide-y table-fixed">
+            <thead class="text-white">
+                <tr class="bg-azul">
+                    <th class="p-3 text-center">ID</th>
+                    <th class="p-3 text-center">Nombre</th>
+                    <th class="p-3 text-center">Descripción</th>
+                    <th class="p-3 text-center">Pacientes</th>
+                    <th class="p-3 text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody class="bg-gray-100 divide-y divide-gray-300">
+                @foreach($tratamientos as $tratamiento)
+                    <tr class="hover:bg-gray-200 transition duration-200">
+                        <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->id }}</td>
+                        <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->name }}</td>
+                        <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->descripcion }}</td>
+                        <td class="text-center px-4 py-3 whitespace-nowrap">{{ $this->pacientesTrat($tratamiento->id) }}</td>
 
-                            <td class="px-6 py-4 text-sm text-center whitespace-nowrap">
-                                <div class="flex justify-center space-x-2">
-                                    <a wire:click="showCreateModal({{ $tratamiento->id }})"
-                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
-                                        <i class="fas fa-edit mr-2"></i> Editar
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <div class="px-6 py-4">
-                No existe ningún registro coincidente
-            </div>
-        @endif
+                        <td class="px-6 py-4 text-sm text-center whitespace-nowrap">
+                            <div class="flex justify-center space-x-2">
+                                <a wire:click="showCreateModal({{ $tratamiento->id }})"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                                    <i class="fas fa-edit mr-2"></i> Editar
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     </x-tabla>
+    <div class="mt-4">
+        {{ $tratamientos->links('vendor.pagination.paginacion') }}
+    </div>
 
     @if ($showModal)
         <x-dialog-modal maxWidth="lg">
