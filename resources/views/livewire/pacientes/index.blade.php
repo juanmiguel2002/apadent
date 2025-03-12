@@ -162,7 +162,7 @@
     {{-- Añadir paciente --}}
     @can('paciente_create')
         @if($showModal)
-            <x-dialog-modal maxWidth="xl">
+            <x-dialog-modal maxWidth="xl" wire:model="showModal">
                 <div class="relative">
                     <x-slot name="title">
                         <div class="flex justify-between items-center">

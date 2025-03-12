@@ -873,7 +873,7 @@
             <!-- Pie de página -->
             <div class="flex justify-center mt-16">
                 <div class="text-center text-sm text-gray-500">
-                    <i class="fas fa-copyright"></i> Copyright 2024
+                    &copy; Copyright {{date('Y')}}
                 </div>
             </div>
         </div>

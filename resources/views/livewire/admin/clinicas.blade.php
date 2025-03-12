@@ -80,7 +80,7 @@
     </div>
 
     @if($showModal)
-        <x-dialog-modal maxWidth="xl" x-data="{ showModal: @entangle('showModal') }">
+        <x-dialog-modal maxWidth="xl" wire:model="showModal">
             <div class="relative">
                 <x-slot name="title">
                     <div class="flex justify-between clinicas-center">

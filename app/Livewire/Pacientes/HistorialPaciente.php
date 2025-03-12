@@ -46,6 +46,7 @@ class HistorialPaciente extends Component
         'Finalizado' => 'bg-red-600',
         'Set Up' => 'bg-yellow-600'
     ];
+
     public function mount($paciente, $tratId = null)
     {
         $this->paciente = $paciente;
@@ -65,7 +66,6 @@ class HistorialPaciente extends Component
         //     ->where('tipo', 'archivoscomplementarios') // Asegurar que la comparación es insensible a mayúsculas
         //     ->get();
         $this->documentos = $this->tieneDocumentos();
-        // dd($this->documentos);
 
         // Cargar archivos relacionados con las etapas del paciente
         $this->archivo = Archivo::whereHas('etapas', function ($query) {
@@ -526,7 +526,7 @@ class HistorialPaciente extends Component
             }
         }
 
-        $this->modalImg = false;
+        $this->modalArchivo = false;
         $this->dispatch('archivo');
     }
 

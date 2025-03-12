@@ -25,7 +25,7 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])
 });
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/paciente/{paciente}/etapa/{etapa}/imagenes', [ImagenesController::class, 'verImagenes'])
-    ->middleware('role:doctor_admin|doctor|clinica_user|admin')->name('imagenes.ver');
+    ->middleware('role:doctor_admin|doctor|clinica|admin')->name('imagenes.ver');
 
     Route::get('/paciente/{paciente}/stripping/', [ImagenesController::class, 'verStripping'])
     ->middleware('role:doctor_admin|doctor|clinica_user|admin')->name('stripping');

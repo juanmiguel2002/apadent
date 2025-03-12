@@ -5,16 +5,17 @@
             <img class="w-6 mr-2" src="{{ asset('storage/recursos/icons/volver_naranja.png') }}" alt="Volver">
             <p class="text-lg font-semibold text-naranja">Atrás</p>
         </a>
-
-        <div class="flex space-x-4">
-            <!-- botón factura-->
-            <button wire:click="openModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                </svg>
-                <span>Añadir Factura</span>
-            </button>
-        </div>
+        {{-- @can('factura_view') --}}
+            <div class="flex space-x-4">
+                <!-- botón factura-->
+                <button wire:click="openModal" class="flex items-center px-4 py-2 bg-azul text-white rounded-lg shadow-md hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-green-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Añadir Factura</span>
+                </button>
+            </div>
+        {{-- @endcan --}}
     </div>
     <div class="my-3"></div>
 
@@ -49,7 +50,7 @@
                 <p class="text-lg font-semibold text-gray-800">Dirección: <span class="text-azul">{{ $clinica->direccion_fac }}</span></p>
                 <p class="text-lg font-semibold text-gray-800">Nº Cuenta: <span class="text-azul">{{ $clinica->cuenta }}</span></p>
             </div>
-            @can('factura_view')
+            {{-- @can('factura_view') --}}
                 <div class="w-2/4 space-y-4 text-center">
                     <!-- Tabla facturas -->
                     <div class="mt-8">
@@ -82,7 +83,7 @@
                         </div>
                     </div>
                 </div>
-            @endcan
+            {{-- @endcan --}}
         </div>
     </div>
     <div class="my-4"></div>

@@ -48,7 +48,7 @@
     </div>
 
     @if ($showModal)
-        <x-dialog-modal maxWidth="lg">
+        <x-dialog-modal maxWidth="lg" wire:model="showModal">
             <div class="relative">
                 <x-slot name="title">
                     <div class="flex justify-between items-center">
