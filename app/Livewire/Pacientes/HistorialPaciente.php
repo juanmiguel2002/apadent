@@ -17,7 +17,6 @@ use App\Mail\NotificacionRevision;
 use App\Models\Carpeta;
 use App\Models\Fase;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -39,6 +38,7 @@ class HistorialPaciente extends Component
     // nueva documentación
     public $documents = false, $documentos = false;
     public $documentacion = [], $selectedEtapa, $mensaje;
+    public $pacienteFolder, $pacienteName, $clinicaName;
 
     public $statuses = [
         'En proceso' => 'bg-green-600',
@@ -71,6 +71,11 @@ class HistorialPaciente extends Component
         $this->archivo = Archivo::whereHas('etapas', function ($query) {
             $query->where('paciente_id', $this->pacienteId);
         })->where('extension', 'zip')->get();
+
+        // Archivos
+        $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
+        $this->pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
+        $this->pacienteFolder = "{$clinicaName}/pacientes/{$this->pacienteName}";
     }
 
     public function updatedTratamientoId($value)
@@ -326,14 +331,9 @@ class HistorialPaciente extends Component
     public function saveDocumentacion() {
 
         $etapa = Etapa::findOrFail($this->selectedEtapa);
-        $clinica = Clinica::find($this->paciente->clinica_id);
-
-        $clinicaName = Str::slug($clinica->name, '_' );
-        $pacienteName = preg_replace('/\s+/', '_',$this->paciente->name . ' ' . $this->paciente->apellidos);
-        $pacienteFolder = "{$clinicaName}/pacientes/{$pacienteName}";
 
         // Buscar la carpeta del paciente dentro de la clínica
-        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
+        $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
             ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
             ->first();
 
@@ -352,7 +352,7 @@ class HistorialPaciente extends Component
             // Obtener el número más alto de clave (key) en la BD para esta etapa
             $maxKey = Archivo::where('etapa_id', $etapa->id)
                 ->where('tipo', 'archivocomplementarios')
-                ->where('ruta', 'LIKE', "{$pacienteFolder}/archivoComplementarios/%")
+                ->where('ruta', 'LIKE', "{$this->pacienteFolder}/archivoComplementarios/%")
                 ->get()
                 ->map(function ($archivo) {
                     preg_match('/_archivoComplementarios_(\d+)\./', $archivo->ruta, $matches);
@@ -364,7 +364,7 @@ class HistorialPaciente extends Component
                 $extension = $imagen->getClientOriginalExtension();
                 $maxKey++; // Aumentamos el índice para evitar duplicados
                 $fileName = Str::slug($etapa->name) . "_archivoComplementarios_{$maxKey}.{$extension}";
-                $filePath = "{$pacienteFolder}/archivoComplementarios/{$fileName}";
+                $filePath = "{$this->pacienteFolder}/archivoComplementarios/{$fileName}";
 
                 // Comprobar si el archivo ya existe
                 $archivoExistente = Archivo::where('ruta', $filePath)
@@ -373,7 +373,7 @@ class HistorialPaciente extends Component
 
                 if (!$archivoExistente) {
                     // Guardar archivo en almacenamiento
-                    Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/archivoComplementarios", $imagen, $fileName);
+                    Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/archivoComplementarios", $imagen, $fileName);
                     // Crear registro en la base de datos
                     Archivo::create([
                         'name'       => pathinfo($fileName, PATHINFO_FILENAME),
@@ -420,12 +420,8 @@ class HistorialPaciente extends Component
 
         $etapa = Etapa::findOrFail($this->etapaId);
 
-        $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
-        $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
-        $pacienteFolder = "{$clinicaName}/pacientes/{$pacienteName}";
-
         // Buscar la carpeta del paciente dentro de la clínica
-        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
+        $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
             ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
             ->first();
 
@@ -447,10 +443,10 @@ class HistorialPaciente extends Component
         if ($this->imagenes != null) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
-                $fileName = Str::slug($etapa->name) . "_{$key}.{$extension}";
+                $fileName = Str::slug($etapa->name) . "_{$key}_{$tipoCarpeta}.{$extension}";
                 $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
 
-                $path = $imagen->storeAs("{$pacienteFolder}/{$tipoCarpeta}", $fileName, 'clinicas');
+                $path = $imagen->storeAs("{$this->pacienteFolder}/{$tipoCarpeta}", $fileName, 'clinicas');
 
                 Archivo::create([
                     'name'       => pathinfo($fileName, PATHINFO_FILENAME),
@@ -492,12 +488,9 @@ class HistorialPaciente extends Component
         ]);
 
         $etapa = Etapa::findOrFail($etapaId);
-        $clinicaName = Str::slug(Auth::user()->clinicas->first()->name, '_');
-        $pacienteName = Str::slug($this->paciente->name . ' ' . $this->paciente->apellidos, '_');
-        $pacienteFolder = "{$clinicaName}/pacientes/{$pacienteName}";
 
         // Buscar la carpeta del paciente dentro de la clínica
-        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
+        $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
             ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
             ->first();
 
@@ -516,9 +509,9 @@ class HistorialPaciente extends Component
             foreach ($this->archivos as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
-                $filePath = "{$pacienteFolder}/CBCT/{$fileName}";
+                $filePath = "{$this->pacienteFolder}/CBCT/{$fileName}";
 
-                Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/CBCT", $imagen, $fileName);
+                Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/CBCT", $imagen, $fileName);
                 Storage::delete($imagen->getRealPath());
 
                 Archivo::create([
@@ -535,7 +528,6 @@ class HistorialPaciente extends Component
 
         $this->modalImg = false;
         $this->dispatch('archivo');
-        // return redirect()->to(url()->current());
     }
 
     public function closeModal(){

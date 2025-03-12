@@ -19,7 +19,6 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use Illuminate\Support\Str;
 
 class Pacientes extends Component
 {
@@ -304,11 +303,8 @@ class Pacientes extends Component
                 foreach ($archivos as $key => $archivo) {
                     $extension = $archivo->getClientOriginalExtension();
 
-                    // Asegurar que el nombre de la carpeta sea seguro
-                    // $safeFolderName = Str::slug($nombreCarpeta, '_');
-
                     // Generar el nombre del archivo de manera segura
-                    $fileName = "{$etapa->name}_" . ($key + 1) . '.' . $extension;
+                    $fileName = "{$etapa->name}_" . ($key + 1) ."_{$nombreCarpeta}". '.' . $extension;
 
                     // Asegurar que el nombre no tenga caracteres extraños
                     $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
