@@ -448,7 +448,7 @@ class HistorialPaciente extends Component
         }
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->imagenes != null || $this->maxFileSize <= 15) {
+        if ($this->imagenes != null && $this->maxFileSize <= 15) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_{$key}_{$tipoCarpeta}.{$extension}";
@@ -511,7 +511,7 @@ class HistorialPaciente extends Component
         ]);
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->archivos != null || $this->maxFile <= 4) {
+        if ($this->archivos != null && $this->maxFile <= 4) {
             foreach ($this->archivos as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
