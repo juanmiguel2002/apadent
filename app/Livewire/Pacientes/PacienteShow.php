@@ -163,6 +163,12 @@ class PacienteShow extends Component
 
     public function saveStripping()
     {
+        $this->validate([
+            'stripping.*' => 'required|image',
+        ],[
+            'stripping.*.required' => 'Debe seleccionar al menos un archivo para subir.',
+            'stripping.*.image' => 'El archivo debe ser una imagen.',
+        ]);
         // Generar nombres para las carpetas
         $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
         $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
@@ -179,17 +185,14 @@ class PacienteShow extends Component
             ->first();
 
         // Subir múltiples imágenes del paciente, si existen
-        if ($this->stripping && is_array($this->stripping)) {
+        if ($this->stripping != null) {
             foreach ($this->stripping as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
-                $fileName = "Stripping_" . $key . '.' . $extension; //nombre del archivo
+                $fileName = "Stripping_". $this->paciente->name."_" . $key . '.' . $extension; //nombre del archivo
                 $path = $imagen->storeAs($pacienteFolder . '/Stripping', $fileName, 'clinicas');
-                Storage::delete($imagen->getRealPath());
-                // Extraer el nombre del archivo sin la extensión
-                $name = pathinfo($fileName, PATHINFO_FILENAME);
 
                 Archivo::create([
-                    'name' => $name,
+                    'name' => pathinfo($fileName, PATHINFO_FILENAME),
                     'ruta' => $path,
                     'tipo' => 'stripping',
                     'extension' => $extension,
@@ -198,6 +201,8 @@ class PacienteShow extends Component
                 ]);
             }
             $this->verStripping = true;
+        }else{
+            return session()->flash('error', 'No se han seleccionado imágenes.');
         }
 
         $this->dispatch('stripping');

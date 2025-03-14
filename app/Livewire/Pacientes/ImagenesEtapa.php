@@ -16,6 +16,7 @@ class ImagenesEtapa extends Component
             $this->archivos = Archivo::where('etapa_id', null)
             ->whereIn('extension', ['jpg', 'jpeg', 'png'])
             ->where('tipo', $tipo)
+            ->where('paciente_id', $this->paciente->id)
             ->get();
         }else {
             $this->archivos = Archivo::where('etapa_id', $this->etapa->id)

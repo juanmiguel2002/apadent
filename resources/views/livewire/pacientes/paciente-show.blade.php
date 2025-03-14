@@ -32,7 +32,7 @@
 
             @if ($verStripping)
                 <button class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5c-4.636 0-8.573 3.14-9.805 7.5 1.232 4.36 5.17 7.5 9.805 7.5s8.573-3.14 9.805-7.5c-1.232-4.36-5.17-7.5-9.805-7.5z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"/>
                     </svg>
@@ -282,10 +282,15 @@
                 </div>
             </x-slot>
             <x-slot name="content">
+                @if (session()->has('error'))
+                    <div class="bg-red-500 text-white p-3 rounded-md mb-4">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 <form wire:submit.prevent="saveStripping">
                     <x-label class="block text-md text-azul capitalize" value="Stripping" />
                     <x-input type="file" wire:model="stripping" multiple class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
-                    {{-- <x-input-error for="stripping.*" /> --}}
+                    <x-input-error for="stripping" />
                 </form>
             </x-slot>
             <x-slot name="footer">
