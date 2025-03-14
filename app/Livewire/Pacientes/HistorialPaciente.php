@@ -448,7 +448,7 @@ class HistorialPaciente extends Component
         }
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->imagenes != null) {
+        if ($this->imagenes != null || $this->maxFileSize <= 15) {
             foreach ($this->imagenes as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_{$key}_{$tipoCarpeta}.{$extension}";
@@ -467,7 +467,7 @@ class HistorialPaciente extends Component
                 ]);
             }
         }else {
-            return session()->flash('error', 'No se han seleccionado imágenes.');
+            return session()->flash('error', 'No se ha seleccionado nada o se a superado el máximo permitido.');
         }
 
         $this->modalImg = false;
@@ -511,7 +511,7 @@ class HistorialPaciente extends Component
         ]);
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->archivos != null) {
+        if ($this->archivos != null || $this->maxFile <= 4) {
             foreach ($this->archivos as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
@@ -531,7 +531,7 @@ class HistorialPaciente extends Component
                 ]);
             }
         }else {
-            return session()->flash('error', 'No se han seleccionado archivos.');
+            return session()->flash('error', 'No se han seleccionado archivos o supera lo esperado.');
         }
 
         $this->modalArchivo = false;
