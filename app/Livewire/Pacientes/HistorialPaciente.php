@@ -40,6 +40,9 @@ class HistorialPaciente extends Component
     public $documentacion = [], $selectedEtapa, $mensaje;
     public $pacienteFolder, $pacienteName, $clinicaName;
 
+    public $maxFileSize = 15; // Tamaño máximo de imágenes en MB
+    public $maxFile = 4; // Tamaño máximo de archivo en GB
+
     public $statuses = [
         'En proceso' => 'bg-green-600',
         'Pausado' => 'bg-blue-600',
@@ -384,7 +387,9 @@ class HistorialPaciente extends Component
                         'carpeta_id' => $carpeta->id,
                         'paciente_id' => $this->paciente->id,
                     ]);
-                    unlink($imagen->getPathname());
+                    if (file_exists($imagen->getPathname())) {
+                        unlink($imagen->getPathname());
+                    }
                 }
             }
 
@@ -413,9 +418,12 @@ class HistorialPaciente extends Component
     public function saveImg()
     {
         $this->validate([
-            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:15360', //15MB
         ], [
-            'imagenes.*' => 'Solo se admiten imágenes válidas'
+            'imagenes.*' => 'Solo se admiten imágenes válidas',
+            'imagenes.*.image' => 'El archivo debe ser una imagen',
+            'imagenes.*.mimes' => 'El archivo debe tener un formato válido (jpeg, png, jpg, gif, svg)',
+            'imagenes.*.max' => 'El archivo debe pesar menos de 15MB'
         ]);
 
         $etapa = Etapa::findOrFail($this->etapaId);
@@ -457,11 +465,8 @@ class HistorialPaciente extends Component
                     'carpeta_id' => $carpeta->id,
                     'paciente_id' => $this->paciente->id,
                 ]);
-
-                unlink($imagen->getPathname());
-
             }
-        }else{
+        }else {
             return session()->flash('error', 'No se han seleccionado imágenes.');
         }
 
@@ -482,9 +487,10 @@ class HistorialPaciente extends Component
 
     public function saveArchivos($etapaId){
         $this->validate([
-            'archivos.*' => 'required|file|mimes:zip',
+            'archivos.*' => 'required|file|mimes:zip|max:4194304',//4GB
         ], [
-            'archivos.*' => 'Solo se admiten Archivos .zip'
+            'archivos.*' => 'Solo se admiten Archivos .zip',
+            'archivos.*.max' => 'El archivo debe pesar menos de 4GB'
         ]);
 
         $etapa = Etapa::findOrFail($etapaId);
@@ -505,7 +511,7 @@ class HistorialPaciente extends Component
         ]);
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->archivos && is_array($this->archivos)) {
+        if ($this->archivos != null) {
             foreach ($this->archivos as $key => $imagen) {
                 $extension = $imagen->getClientOriginalExtension();
                 $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
@@ -524,6 +530,8 @@ class HistorialPaciente extends Component
                     'paciente_id' => $this->paciente->id,
                 ]);
             }
+        }else {
+            return session()->flash('error', 'No se han seleccionado archivos.');
         }
 
         $this->modalArchivo = false;

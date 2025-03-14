@@ -293,7 +293,6 @@
     @if ($modalImg)
         <x-dialog-modal wire:model="modalImg" >
             <x-slot name="title">
-
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-medium text-gray-900">Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}</h3>
                     <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
@@ -313,7 +312,7 @@
                 <form wire:submit.prevent="saveImg">
                     <x-label for="imagenes" value="Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}" />
                     <input type="file" multiple wire:model="imagenes" required class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
-                    {{-- <x-input-error for="imagenes" /> --}}
+                    <p class="text-sm text-gray-500 mt-1">Tamaño máximo permitido: {{ $maxFileSize }} MB</p>
                     @error('imagenes')
                         <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                     @enderror
@@ -344,9 +343,10 @@
             </x-slot>
 
             <x-slot name="content">
-                <form wire:submit='saveArchivos'>
+                <form wire:submit.prevent='saveArchivos'>
                     <x-label for="archivos" value="Añadir CBCT" />
                     <input type="file" multiple wire:model="archivos" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                    <p class="text-sm text-gray-500 mt-1">Tamaño máximo permitido: {{ $maxFile }} GB</p>
                     <x-input-error for="archivos.*" />
                 </form>
             </x-slot>
@@ -409,10 +409,11 @@
                         <br>
 
                         <x-label for="documentacion" value="Nueva documentación" />
-                        <input type="file" multiple wire:model="documentacion" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
+                        <input type="file" multiple wire:model="documentacion" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 mb-4">
+                        <p class="text-sm text-gray-500">Tamaño máximo permitido: {{ $maxFileSize }} MB</p>
                         <x-input-error for="documentacion.*"/>
 
-                        <x-label for="mensaje" value="Mensaje o Descripción" />
+                        <x-label for="mensaje" value="Mensaje o Descripción" class="mt-1" />
                         <textarea wire:model="mensaje" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4" rows="3"></textarea>
                         <x-input-error for="mensaje.*"/>
                     </div>

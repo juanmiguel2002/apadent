@@ -23,6 +23,8 @@ class PacienteShow extends Component
     public $etapas, $stripping = [], $verStripping = false;
     public $clinica;
 
+    public $maxFileSize = 15; // Tamaño máximo en MB
+
     public function mount($id)
     {
         $this->pacienteId = $id;
@@ -164,7 +166,7 @@ class PacienteShow extends Component
     public function saveStripping()
     {
         $this->validate([
-            'stripping.*' => 'required|image',
+            'stripping.*' => 'required|image|max:15360',
         ],[
             'stripping.*.required' => 'Debe seleccionar al menos un archivo para subir.',
             'stripping.*.image' => 'El archivo debe ser una imagen.',
