@@ -287,7 +287,7 @@
                         {{ session('error') }}
                     </div>
                 @endif
-                <form wire:submit.prevent="saveStripping">
+                <form wire:submit.prevent="saveStripping" enctype="multipart/form-data">
                     <x-label class="block text-md text-azul capitalize" value="Stripping" />
                     <x-input type="file" wire:model="stripping" multiple class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                     <p class="text-sm text-gray-500 mt-1">Tamaño máximo permitido: {{ $maxFileSize }} MB</p>

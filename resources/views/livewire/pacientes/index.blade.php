@@ -178,7 +178,7 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        <form wire:submit.prevent="save">
+                        <form wire:submit.prevent="save" enctype="multipart/form-data">
                             @csrf
                             <div class="grid grid-cols-2 gap-4">
                                 @role('admin')

@@ -309,7 +309,7 @@
                         {{ session('error') }}
                     </div>
                 @endif
-                <form wire:submit.prevent="saveImg">
+                <form wire:submit.prevent="saveImg" enctype="multipart/form-data">
                     <x-label for="imagenes" value="Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}" />
                     <input type="file" multiple wire:model="imagenes" required class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
                     <p class="text-sm text-gray-500 mt-1">Tamaño máximo permitido: {{ $maxFileSize }} MB</p>
@@ -343,7 +343,7 @@
             </x-slot>
 
             <x-slot name="content">
-                <form wire:submit.prevent='saveArchivos'>
+                <form wire:submit.prevent='saveArchivos' enctype="multipart/form-data">
                     <x-label for="archivos" value="Añadir CBCT" />
                     <input type="file" multiple wire:model="archivos" class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
                     <p class="text-sm text-gray-500 mt-1">Tamaño máximo permitido: {{ $maxFile }} GB</p>
@@ -379,7 +379,7 @@
             </x-slot>
 
             <x-slot name="content">
-                <form wire:submit.prevent='saveDocumentacion'>
+                <form wire:submit.prevent='saveDocumentacion' enctype="multipart/form-data">
                     <div>
                         <!-- Si se pasó un tratId por URL, mostrarlo directamente -->
                         @if ($tratId)
