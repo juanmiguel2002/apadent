@@ -323,12 +323,12 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 sm:col-span-1 mb-4">
                                 <x-label for="name" value="Nombre*" class="text-azul text-base"/>
-                                <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" />
+                                <x-input type="text" id="name" class="w-full rounded-md" disabled wire:model.defer="name"  />
                                 <x-input-error for="name" />
                             </div>
                             <div class="col-span-2 sm:col-span-1 mb-4">
-                                <x-label for="apellidos" value="Apellidos*" class="text-azul text-base"/>
-                                <x-input type="text" id="apellidos" class="w-full rounded-md" wire:model.defer="apellidos" />
+                                <x-label for="apellidos" value="Apellidos*" class="text-azul text-base" />
+                                <x-input type="text" id="apellidos" class="w-full rounded-md disabled:" disabled wire:model.defer="apellidos"/>
                                 <x-input-error for="apellidos" />
                             </div>
 
@@ -348,22 +348,6 @@
                                 <x-input type="text" id="telefono" class="w-full rounded-md" wire:model.defer="telefono"/>
                                 <x-input-error for="telefono" />
                             </div>
-                            {{-- <div class="col-span-2 mb-4">
-                                <x-label for="img_paciente" class="block text-md text-azul capitalize">Foto paciente</x-label>
-
-                                @if($url_img)
-                                    <!-- Mostrar imagen si ya existe -->
-                                    <div class="mb-4">
-                                        <img src="{{ asset('storage/' . $url_img) }}" alt="Foto de Paciente" class="w-32 h-32 object-cover rounded-md">
-                                    </div>
-                                    <button type="button" wire:click="$set('url_img', null)" class="text-sm text-red-600">Cambiar imagen</button>
-                                @else
-                                    <!-- Input para subir nueva imagen si no existe o si se decidió cambiar -->
-                                    <x-input wire:model="img_paciente" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
-                                    <x-input-error for="img_paciente" />
-                                @endif
-                            </div> --}}
-
                             <div class="col-span-2 mb-4">
                                 <x-label for="observacion" value="Observaciones" class="text-azul text-md"/>
                                 <textarea wire:model.defer="observacion" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" ></textarea>
