@@ -1,4 +1,5 @@
 <div>
+    @include('components.alert-message')
     @role('admin')
         <x-input-select-clinicas  :options="$clinicas" label="Selecciona una clínica" name="clinicaSelected"/>
     @endrole
@@ -46,7 +47,6 @@
             @endcan
         </div>
     </div>
-
     <x-tabla>
         <table class="min-w-full divide-y table-fixed">
             <thead class="text-white">
@@ -124,13 +124,22 @@
                                     </td>
                                 @endif
                             @endforeach
-                            {{-- <td class="text-center px-4 py-2">{{ $fase->name }} <br> {{ $etapa->name }}</td> --}}
                             <td class="text-center px-4 py-2">Fase 1 <br> {{ $etapa->name }}</td>
 
                             <td class="text-center border px-4 py-2">
-                                <a href="{{ route('paciente-historial', $paciente->id) }}">
-                                    <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
-                                </a>
+                                <div class="flex justify-center space-x-2">
+                                    <a href="{{ route('paciente-historial', $paciente->id) }}">
+                                        <img src="{{ asset('storage/recursos/icons/ojo_azul.png') }}" class="w-5 cursor-pointer">
+                                    </a>
+                                    @role('admin')
+                                        <form action="{{ route('admin.pacientes.delete', $paciente->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este paciente?')">
+                                            @csrf
+                                            <button type="submit">
+                                                <img src="{{ asset('storage/recursos/icons/papelera.png') }}" class="w-5 cursor-pointer">
+                                            </button>
+                                        </form>
+                                    @endrole
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -254,11 +263,21 @@
                                     <x-input-error for="imagenes.*" />
                                 </div>
 
-                                <div class="col-span-2 mb-4">
+                                {{-- <div class="col-span-2 mb-4">
                                     <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT <i>(comprimidos .zip)</i></x-label>
                                     <x-input multiple wire:model="cbct" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
-                                    {{-- <x-input-error for="cbcts.*" /> --}}
-                                </div>
+                                    <x-input-error for="cbcts.*" />
+                                </div> --}}
+                                {{-- <div> --}}
+                                    <div class="col-span-2 mb-4">
+                                        <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT (ZIP)</x-label>
+                                        <div id="dropZone" class="border-2 border-dashed p-6 text-center cursor-pointer">
+                                            Arrastra o selecciona un archivo ZIP
+                                        </div>
+                                        <progress id="uploadProgress" value="0" max="100" class="w-full mt-2 hidden"></progress>
+                                        <p id="uploadStatus" class="text-gray-500 mt-2"></p>
+                                    </div>
+                                {{-- </div> --}}
 
                                 <div class="col-span-2 mb-3">
                                     <x-label for="rayos" class="block text-md text-azul capitalize">Archivos RX</x-label>
@@ -285,4 +304,45 @@
             </x-dialog-modal>
         @endif
     @endcan
+    {{-- <script type="text/javascript">
+        // document.addEventListener("DOMContentLoaded", function () {
+            let dropZone = document.getElementById("dropZone");
+            let progressBar = document.getElementById("uploadProgress");
+            let statusText = document.getElementById("uploadStatus");
+
+            let resumable = new Resumable({
+                target: "/upload-cbct",
+                query: { _token: "{{ csrf_token() }}" },
+                fileType: ["zip"],
+                chunkSize: 2 * 1024 * 1024, // 2MB por chunk
+                simultaneousUploads: 1,
+                testChunks: true,
+                throttleProgressCallbacks: 1
+            });
+
+            // resumable.assignBrowse(dropZone[0]);
+            resumable.assignDrop(dropZone);
+
+            resumable.on("fileAdded", function (file) {
+                progressBar.classList.remove("hidden");
+                resumable.upload();
+            });
+
+            resumable.on("fileProgress", function (file) {
+                let progress = Math.floor(file.progress() * 100);
+                progressBar.value = progress;
+                statusText.textContent = `Subiendo... ${progress}%`;
+            });
+
+            resumable.on("fileSuccess", function (file, message) {
+                statusText.textContent = "Subida completada.";
+                progressBar.classList.add("hidden");
+            });
+
+            resumable.on("fileError", function (file, message) {
+                statusText.textContent = "Error en la subida.";
+                progressBar.classList.add("hidden");
+            });
+        // });
+    </script> --}}
 </div>
