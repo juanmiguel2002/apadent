@@ -40,7 +40,7 @@ class Pacientes extends Component
     public $perPage = 25; //Para filtrar cuando se ve
     public $clinicas, $clinicaSelected;
 
-    public $pacienteFolder;
+    public $pacienteFolder, $nombrePaciente;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -240,10 +240,12 @@ class Pacientes extends Component
 
         // Normalizar nombres
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
-        $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $paciente->apellidos));
+        $primerApellido = strtok($paciente->apellidos, " ");
+
+        $this->nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
 
         // Ruta de la carpeta del paciente
-        $pacienteFolder = "{$nombreClinica}/pacientes/{$nombrePaciente}";
+        $pacienteFolder = "{$nombreClinica}/pacientes/{$this->nombrePaciente}";
 
         // Crear carpeta en sistema de archivos si no existe
         if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
@@ -253,7 +255,7 @@ class Pacientes extends Component
         // Guardar estructura en la base de datos
         $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $nombreClinica, 'carpeta_id' => null]);
         $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id, 'clinica_id' => $clinica->id]);
-        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
+        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $this->nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
 
         // Subcarpetas
         $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
@@ -273,7 +275,7 @@ class Pacientes extends Component
      */
     public function updatedArchivos($paciente, $pacienteFolder, $etapa)
     {
-        $carpetaPaciente = Carpeta::where('nombre', preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $paciente->apellidos)))
+        $carpetaPaciente = Carpeta::where('nombre', $this->nombrePaciente)
             ->whereHas('parent', function ($query) {
                 $query->where('nombre', 'pacientes');
             })->first();

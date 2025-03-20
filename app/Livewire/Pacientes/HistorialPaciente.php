@@ -33,7 +33,7 @@ class HistorialPaciente extends Component
     public $etapaId; // para guardar el ID de la etapa correspondiente
     public $archivo, $img = false, $tipo;
     public $modalImg, $imagenes = [];
-    public $modalArchivo = false, $archivos = [];
+    // public $modalArchivo = false, $archivos = [];
 
     // nueva documentación
     public $documents = false, $documentos = false;
@@ -481,62 +481,58 @@ class HistorialPaciente extends Component
     }
 
     // GESTIONAR ARCHIVOS ETAPA PACIENTE TRATAMIENTO
-    public function showModalArchivo(){
-        $this->modalArchivo = true;
-    }
+    // public function saveArchivos($etapaId){
+    //     $this->validate([
+    //         'archivos.*' => 'required|file|mimes:zip|max:4194304',//4GB
+    //     ], [
+    //         'archivos.*' => 'Solo se admiten Archivos .zip',
+    //         'archivos.*.max' => 'El archivo debe pesar menos de 4GB'
+    //     ]);
 
-    public function saveArchivos($etapaId){
-        $this->validate([
-            'archivos.*' => 'required|file|mimes:zip|max:4194304',//4GB
-        ], [
-            'archivos.*' => 'Solo se admiten Archivos .zip',
-            'archivos.*.max' => 'El archivo debe pesar menos de 4GB'
-        ]);
+    //     $etapa = Etapa::findOrFail($etapaId);
 
-        $etapa = Etapa::findOrFail($etapaId);
+    //     // Buscar la carpeta del paciente dentro de la clínica
+    //     $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
+    //         ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
+    //         ->first();
 
-        // Buscar la carpeta del paciente dentro de la clínica
-        $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
-            ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
-            ->first();
+    //     if (!$carpetaPaciente) {
+    //         return session()->flash('error', 'Carpeta del paciente no encontrada.');
+    //     }
 
-        if (!$carpetaPaciente) {
-            return session()->flash('error', 'Carpeta del paciente no encontrada.');
-        }
+    //     // Buscar o crear la carpeta CBCT dentro del paciente
+    //     $carpetaCBCT = Carpeta::firstOrCreate([
+    //         'nombre'      => 'CBCT',
+    //         'carpeta_id'  => $carpetaPaciente->id
+    //     ]);
 
-        // Buscar o crear la carpeta CBCT dentro del paciente
-        $carpetaCBCT = Carpeta::firstOrCreate([
-            'nombre'      => 'CBCT',
-            'carpeta_id'  => $carpetaPaciente->id
-        ]);
+    //     // Subir imágenes y guardarlas en la base de datos
+    //     if ($this->archivos != null) {
+    //         foreach ($this->archivos as $key => $imagen) {
+    //             $extension = $imagen->getClientOriginalExtension();
+    //             $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
+    //             $filePath = "{$this->pacienteFolder}/CBCT/{$fileName}";
 
-        // Subir imágenes y guardarlas en la base de datos
-        if ($this->archivos != null) {
-            foreach ($this->archivos as $key => $imagen) {
-                $extension = $imagen->getClientOriginalExtension();
-                $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
-                $filePath = "{$this->pacienteFolder}/CBCT/{$fileName}";
+    //             Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/CBCT", $imagen, $fileName);
+    //             Storage::delete($imagen->getRealPath());
 
-                Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/CBCT", $imagen, $fileName);
-                Storage::delete($imagen->getRealPath());
+    //             Archivo::create([
+    //                 'name'       => pathinfo($fileName, PATHINFO_FILENAME),
+    //                 'ruta'       => $filePath,
+    //                 'tipo'       => 'cbct',
+    //                 'extension'  => $extension,
+    //                 'etapa_id'   => $etapaId,
+    //                 'carpeta_id' => $carpetaCBCT->id,
+    //                 'paciente_id' => $this->paciente->id,
+    //             ]);
+    //         }
+    //     }else {
+    //         return session()->flash('error', 'No se han seleccionado archivos.');
+    //     }
 
-                Archivo::create([
-                    'name'       => pathinfo($fileName, PATHINFO_FILENAME),
-                    'ruta'       => $filePath,
-                    'tipo'       => 'cbct',
-                    'extension'  => $extension,
-                    'etapa_id'   => $etapaId,
-                    'carpeta_id' => $carpetaCBCT->id,
-                    'paciente_id' => $this->paciente->id,
-                ]);
-            }
-        }else {
-            return session()->flash('error', 'No se han seleccionado archivos.');
-        }
-
-        $this->modalArchivo = false;
-        $this->dispatch('archivo');
-    }
+    //     $this->modalArchivo = false;
+    //     $this->dispatch('archivo');
+    // }
 
     public function closeModal(){
         if($this->documents) {
@@ -547,8 +543,6 @@ class HistorialPaciente extends Component
             $this->reset(['revision']);
         }elseif($this->modalImg){
             $this->modalImg = false;
-        }elseif($this->modalArchivo){
-            $this->modalArchivo = false;
         }else {
             $this->showTratamientoModal = false;
             // $this->reset(['selectedNewTratamiento']);

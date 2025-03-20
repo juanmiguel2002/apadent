@@ -12,6 +12,7 @@ use App\Http\Controllers\Pacientes\PacienteShowController;
 
 use App\Http\Controllers\PacientesAdmin;
 use App\Http\Controllers\TratamientoController;
+use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UsersController;
 use App\Livewire\ClinicaShow;
 use Illuminate\Support\Facades\Route;
@@ -45,11 +46,16 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ->where('ruta', '.*') // Permite rutas con subcarpetas
     ->name('ver.pdf');
 
+    Route::get('/subir', [UploadController::class,'index'])->name('upload.index');
+    Route::post('/upload', [UploadController::class,'upload'])->name('upload');
+
     // Rutas del administrador
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/clinicas', [DashboardController::class, 'show'])->name('admin.clinica');
         Route::get('/admin/clinica/{id}', [ClinicaController::class, 'index'])->name('admin.clinica.view');
         Route::get('/admin/pacientes',[PacientesAdmin::class, 'index'])->name('admin.pacientes');
+        Route::post('/admin/paciente/{id}', [PacientesAdmin::class, 'destroy'])->name('admin.pacientes.delete');
+
         Route::get('/admin/tratamientos', [TratamientoController::class, 'index'])->name('admin.tratamientos');
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
