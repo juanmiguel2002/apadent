@@ -1,13 +1,12 @@
 @component('mail::message')
-# Hola, {{ $nombre }}
+    # Hola, {{ $nombre }}
 
-Se ha registrado un nuevo paciente con la siguiente información:
+    Se ha registrado un nuevo paciente con la siguiente información:
 
-- **Nombre:** {{ $paciente->name . " ". $paciente->apellidos }}
-- **Diagnóstico:** {{ $paciente->tratamientos[0]->name }}
-- **Registrado:** {{ $fechaRegistro }}
-
-@if(auth()->user()->hasRole('admin'))
+    - **Nombre:** {{ $paciente->name . " ". $paciente->apellidos }}
+    - **Diagnóstico:** {{ $paciente->tratamientos[0]->name }}
+    - **Registrado:** {{ $fechaRegistro }}
+    - **Clínica:** {{ $clinicaName }}
 
     La clínica {{ $clinicaName }} ha asignado un nuevo paciente al laboratorio.
     Haz clic en el botón de abajo para ver su perfil.
@@ -16,8 +15,6 @@ Se ha registrado un nuevo paciente con la siguiente información:
         Ver Perfil del Paciente
     @endcomponent
 
-@endif
-
-Gracias,
-{{ config('app.name') }}
+    Gracias,
+    {{ config('app.name') }}
 @endcomponent
