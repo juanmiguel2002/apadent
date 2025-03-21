@@ -70,6 +70,7 @@ class HistorialPaciente extends Component
         //     ->get();
         $this->documentos = $this->tieneDocumentos();
 
+
         // Cargar archivos relacionados con las etapas del paciente
         $this->archivo = Archivo::whereHas('etapas', function ($query) {
             $query->where('paciente_id', $this->pacienteId);
@@ -77,7 +78,8 @@ class HistorialPaciente extends Component
 
         // Archivos
         $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
-        $this->pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
+        $primerApellido = strtok($paciente->apellidos, " ");
+        $this->pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $primerApellido . ' ' . $this->paciente->num_paciente));
         $this->pacienteFolder = "{$clinicaName}/pacientes/{$this->pacienteName}";
     }
 
@@ -334,6 +336,8 @@ class HistorialPaciente extends Component
     public function saveDocumentacion() {
 
         $etapa = Etapa::findOrFail($this->selectedEtapa);
+        $tratamiento = Tratamiento::findOrFail($etapa->trat_id);
+        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
 
         // Buscar la carpeta del paciente dentro de la clínica
         $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
@@ -344,10 +348,16 @@ class HistorialPaciente extends Component
             return session()->flash('error', 'Carpeta del paciente no encontrada.');
         }
 
-        // Buscar o crear la carpeta CBCT dentro del paciente
+        // Buscar o crear la carpeta del tratamiento dentro del paciente
+        $carpetaTratamiento = Carpeta::firstOrCreate([
+            'nombre'      => $tratName,
+            'carpeta_id'  => $carpetaPaciente->id
+        ]);
+
+        // Buscar o crear la carpeta "archivoComplementarios" dentro del tratamiento
         $carpeta = Carpeta::firstOrCreate([
             'nombre'      => 'archivoComplementarios',
-            'carpeta_id'  => $carpetaPaciente->id
+            'carpeta_id'  => $carpetaTratamiento->id
         ]);
 
         // Subir imágenes y guardarlas en la base de datos
@@ -355,7 +365,7 @@ class HistorialPaciente extends Component
             // Obtener el número más alto de clave (key) en la BD para esta etapa
             $maxKey = Archivo::where('etapa_id', $etapa->id)
                 ->where('tipo', 'archivocomplementarios')
-                ->where('ruta', 'LIKE', "{$this->pacienteFolder}/archivoComplementarios/%")
+                ->where('ruta', 'LIKE', "{$this->pacienteFolder}/{$tratName}/archivoComplementarios/%")
                 ->get()
                 ->map(function ($archivo) {
                     preg_match('/_archivoComplementarios_(\d+)\./', $archivo->ruta, $matches);
@@ -367,7 +377,7 @@ class HistorialPaciente extends Component
                 $extension = $imagen->getClientOriginalExtension();
                 $maxKey++; // Aumentamos el índice para evitar duplicados
                 $fileName = Str::slug($etapa->name) . "_archivoComplementarios_{$maxKey}.{$extension}";
-                $filePath = "{$this->pacienteFolder}/archivoComplementarios/{$fileName}";
+                $filePath = "{$this->pacienteFolder}/{$tratName}/archivoComplementarios/{$fileName}";
 
                 // Comprobar si el archivo ya existe
                 $archivoExistente = Archivo::where('ruta', $filePath)
@@ -376,7 +386,8 @@ class HistorialPaciente extends Component
 
                 if (!$archivoExistente) {
                     // Guardar archivo en almacenamiento
-                    Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/archivoComplementarios", $imagen, $fileName);
+                    Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/{$tratName}/archivoComplementarios", $imagen, $fileName);
+
                     // Crear registro en la base de datos
                     Archivo::create([
                         'name'       => pathinfo($fileName, PATHINFO_FILENAME),
@@ -387,6 +398,7 @@ class HistorialPaciente extends Component
                         'carpeta_id' => $carpeta->id,
                         'paciente_id' => $this->paciente->id,
                     ]);
+
                     if (file_exists($imagen->getPathname())) {
                         unlink($imagen->getPathname());
                     }
