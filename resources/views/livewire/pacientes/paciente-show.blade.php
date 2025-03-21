@@ -282,11 +282,7 @@
                 </div>
             </x-slot>
             <x-slot name="content">
-                @if (session()->has('error'))
-                    <div class="bg-red-500 text-white p-3 rounded-md mb-4">
-                        {{ session('error') }}
-                    </div>
-                @endif
+                @include('components.alert-message');
                 <form wire:submit.prevent="saveStripping" enctype="multipart/form-data">
                     <x-label class="block text-md text-azul capitalize" value="Stripping" />
                     <x-input type="file" wire:model="stripping" multiple class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
@@ -319,16 +315,21 @@
                 </x-slot>
 
                 <x-slot name="content">
-                    <form wire:submit.prevent="save">
+                    <form wire:submit.prevent="savePaciente">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 sm:col-span-1 mb-4">
-                                <x-label for="name" value="Nombre*" class="text-azul text-base"/>
-                                <x-input type="text" id="name" class="w-full rounded-md" disabled wire:model.defer="name"  />
+                                <x-label for="name" value="Nombre*" class="text-azul text-base" />
+                                <x-input type="text" id="name" class="w-full rounded-md
+                                    @unless(auth()->user()->hasRole('admin')) bg-gray-100 text-gray-500 cursor-not-allowed @endunless"
+                                    wire:model.defer="name" />
                                 <x-input-error for="name" />
                             </div>
+
                             <div class="col-span-2 sm:col-span-1 mb-4">
                                 <x-label for="apellidos" value="Apellidos*" class="text-azul text-base" />
-                                <x-input type="text" id="apellidos" class="w-full rounded-md disabled:" disabled wire:model.defer="apellidos"/>
+                                <x-input type="text" id="apellidos" class="w-full rounded-md
+                                    @unless(auth()->user()->hasRole('admin')) bg-gray-100 text-gray-500 cursor-not-allowed @endunless"
+                                    wire:model.defer="apellidos" />
                                 <x-input-error for="apellidos" />
                             </div>
 

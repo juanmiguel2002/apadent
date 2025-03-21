@@ -81,6 +81,7 @@ class HistorialPaciente extends Component
         $primerApellido = strtok($paciente->apellidos, " ");
         $this->pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $primerApellido . ' ' . $this->paciente->num_paciente));
         $this->pacienteFolder = "{$clinicaName}/pacientes/{$this->pacienteName}";
+
     }
 
     public function updatedTratamientoId($value)
@@ -279,14 +280,52 @@ class HistorialPaciente extends Component
             return redirect()->back()->with('error', 'Este tratamiento ya está asignado a este paciente.');
         }
 
-        try {
+        // try {
             DB::transaction(function () {
+                // Obtener el tratamiento seleccionado
+                $tratamiento = Tratamiento::findOrFail($this->selectedNewTratamiento);
+                $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
+                $tratCarpeta = "{$this->pacienteFolder}/{$tratName}";
+
                 // Asociar el tratamiento al paciente
                 PacienteTrat::create([
                     'paciente_id' => $this->pacienteId,
                     'trat_id' => $this->selectedNewTratamiento,
                 ]);
 
+                // Buscar la carpeta del paciente dentro de la clínica
+                $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
+                    ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
+                    ->first();
+
+                if (!$carpetaPaciente) {
+                    throw new \Exception('Carpeta del paciente no encontrada.');
+                }
+
+                // Crear la carpeta del tratamiento dentro del paciente
+                $carpetaTratamiento = Carpeta::firstOrCreate([
+                    'nombre'      => $tratName,
+                    'carpeta_id'  => $carpetaPaciente->id,
+                    'clinica_id' => $this->clinica->id
+                ]);
+
+                // Crear carpeta en sistema de archivos si no existe
+                if (!Storage::disk('clinicas')->exists($tratCarpeta)) {
+                    Storage::disk('clinicas')->makeDirectory($tratCarpeta);
+                }
+
+                $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
+                foreach ($subFolders as $subFolder) {
+                    $subFolderPath = "{$tratCarpeta}/{$subFolder}";
+                    if (!Storage::disk('clinicas')->exists($subFolderPath)) {
+                        Storage::disk('clinicas')->makeDirectory($subFolderPath);
+                    }
+                    Carpeta::firstOrCreate([
+                        'nombre' => $subFolder,
+                        'carpeta_id' => $carpetaTratamiento->id,
+                        'clinica_id' => $this->clinica->id
+                    ]);
+                }
                 // Obtener todas las fases del tratamiento seleccionado
                 $fases = Fase::where('trat_id', $this->selectedNewTratamiento)->get();
 
@@ -309,12 +348,11 @@ class HistorialPaciente extends Component
 
             // Emitir un evento para actualizar la lista de tratamientos en la vista
             $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
-
             $this->dispatch('recargar-pagina');
 
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Ocurrió un error al asignar el tratamiento.');
-        }
+        // } catch (\Exception $e) {
+        //     return redirect()->back()->with('error', 'Ocurrió un error al asignar el tratamiento.');
+        // }
     }
 
     // Nueva Documentación
@@ -338,6 +376,15 @@ class HistorialPaciente extends Component
         $etapa = Etapa::findOrFail($this->selectedEtapa);
         $tratamiento = Tratamiento::findOrFail($etapa->trat_id);
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
+
+        // Buscar si ya existen archivos subidos en esta etapa
+        $existeArchivo = Archivo::where('etapa_id', $etapa->id)
+            ->where('tipo', 'archivocomplementarios')
+            ->exists();
+
+        if ($existeArchivo) {
+            return session()->flash('error', 'Ya existen archivos en esta etapa. No se pueden subir más.');
+        }
 
         // Buscar la carpeta del paciente dentro de la clínica
         $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
@@ -418,6 +465,11 @@ class HistorialPaciente extends Component
         $this->documents = false;
         $this->documentos = true;
         $this->dispatch('archivoComple', 'Archivos complementarios añadidos');
+        return redirect()->route('imagenes.ver', [
+            'paciente' => $this->pacienteId,
+            'etapa' => $etapa->id,
+            'tipo' => $this->tipo
+        ]);
     }
 
     // GESTIONAR IMÁGENES ETAPA PACIENTE TRATAMIENTO
@@ -430,15 +482,16 @@ class HistorialPaciente extends Component
     public function saveImg()
     {
         $this->validate([
-            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:15360', //15MB
+            'imagenes.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:15360', // 15MB
         ], [
-            'imagenes.*' => 'Solo se admiten imágenes válidas',
             'imagenes.*.image' => 'El archivo debe ser una imagen',
-            'imagenes.*.mimes' => 'El archivo debe tener un formato válido (jpeg, png, jpg, gif, svg)',
+            'imagenes.*.mimes' => 'Formato inválido (jpeg, png, jpg, gif, svg)',
             'imagenes.*.max' => 'El archivo debe pesar menos de 15MB'
         ]);
 
         $etapa = Etapa::findOrFail($this->etapaId);
+        $tratamiento = Tratamiento::findOrFail($etapa->trat_id);
+        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
 
         // Buscar la carpeta del paciente dentro de la clínica
         $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
@@ -449,37 +502,50 @@ class HistorialPaciente extends Component
             return session()->flash('error', 'Carpeta del paciente no encontrada.');
         }
 
-        // Determinar la carpeta de destino según el tipo de imagen
+        // Buscar o crear la carpeta del tratamiento dentro del paciente
+        $carpetaTratamiento = Carpeta::firstOrCreate([
+            'nombre'      => $tratName,
+            'carpeta_id'  => $carpetaPaciente->id
+        ]);
+
+        // Determinar la carpeta según el tipo de imagen
         $tipoCarpeta = $this->tipo === 'rayos' ? 'Rayos' : 'imgEtapa';
 
-        $carpeta = Carpeta::where('nombre', $tipoCarpeta)
-            ->where('carpeta_id', $carpetaPaciente->id)->first();
+        // Buscar o crear la carpeta de destino
+        $carpeta = Carpeta::firstOrCreate([
+            'nombre'      => $tipoCarpeta,
+            'carpeta_id'  => $carpetaTratamiento->id
+        ]);
 
-        if (!$carpeta) {
-            return session()->flash('error', 'Carpeta de almacenamiento no encontrada.');
-        }
+        // if (!$this->imagenes || !is_array($this->imagenes)) {
+        //     return session()->flash('error', 'No se han seleccionado imágenes válidas.');
+        // }
 
         // Subir imágenes y guardarlas en la base de datos
-        if ($this->imagenes != null) {
-            foreach ($this->imagenes as $key => $imagen) {
-                $extension = $imagen->getClientOriginalExtension();
-                $fileName = Str::slug($etapa->name) . "_{$key}_{$tipoCarpeta}.{$extension}";
-                $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
+        foreach ($this->imagenes as $key => $imagen) {
+            $extension = $imagen->getClientOriginalExtension();
+            $fileName = Str::slug($etapa->name) . "_{$key}_{$tipoCarpeta}.{$extension}";
+            $fileName = preg_replace('/[^\w.-]/', '_', $fileName); // Limpieza del nombre
 
-                $path = $imagen->storeAs("{$this->pacienteFolder}/{$tipoCarpeta}", $fileName, 'clinicas');
+            $filePath = "{$this->pacienteFolder}/{$tratName}/{$tipoCarpeta}/{$fileName}";
 
+            // Subir el archivo
+            if (Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/{$tratName}/{$tipoCarpeta}", $imagen, $fileName)) {
+                // Guardar en la base de datos solo si se subió correctamente
                 Archivo::create([
                     'name'       => pathinfo($fileName, PATHINFO_FILENAME),
-                    'ruta'       => $path,
+                    'ruta'       => $filePath,
                     'tipo'       => strtolower($tipoCarpeta),
                     'extension'  => $extension,
                     'etapa_id'   => $this->etapaId,
                     'carpeta_id' => $carpeta->id,
                     'paciente_id' => $this->paciente->id,
                 ]);
+
+                if (file_exists($imagen->getPathname())) {
+                    unlink($imagen->getPathname());
+                }
             }
-        }else {
-            return session()->flash('error', 'No se ha seleccionado nada.');
         }
 
         $this->modalImg = false;
@@ -491,60 +557,6 @@ class HistorialPaciente extends Component
             'tipo' => $this->tipo
         ]);
     }
-
-    // GESTIONAR ARCHIVOS ETAPA PACIENTE TRATAMIENTO
-    // public function saveArchivos($etapaId){
-    //     $this->validate([
-    //         'archivos.*' => 'required|file|mimes:zip|max:4194304',//4GB
-    //     ], [
-    //         'archivos.*' => 'Solo se admiten Archivos .zip',
-    //         'archivos.*.max' => 'El archivo debe pesar menos de 4GB'
-    //     ]);
-
-    //     $etapa = Etapa::findOrFail($etapaId);
-
-    //     // Buscar la carpeta del paciente dentro de la clínica
-    //     $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
-    //         ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
-    //         ->first();
-
-    //     if (!$carpetaPaciente) {
-    //         return session()->flash('error', 'Carpeta del paciente no encontrada.');
-    //     }
-
-    //     // Buscar o crear la carpeta CBCT dentro del paciente
-    //     $carpetaCBCT = Carpeta::firstOrCreate([
-    //         'nombre'      => 'CBCT',
-    //         'carpeta_id'  => $carpetaPaciente->id
-    //     ]);
-
-    //     // Subir imágenes y guardarlas en la base de datos
-    //     if ($this->archivos != null) {
-    //         foreach ($this->archivos as $key => $imagen) {
-    //             $extension = $imagen->getClientOriginalExtension();
-    //             $fileName = Str::slug($etapa->name) . "_CBCT_{$key}.{$extension}";
-    //             $filePath = "{$this->pacienteFolder}/CBCT/{$fileName}";
-
-    //             Storage::disk('clinicas')->putFileAs("{$this->pacienteFolder}/CBCT", $imagen, $fileName);
-    //             Storage::delete($imagen->getRealPath());
-
-    //             Archivo::create([
-    //                 'name'       => pathinfo($fileName, PATHINFO_FILENAME),
-    //                 'ruta'       => $filePath,
-    //                 'tipo'       => 'cbct',
-    //                 'extension'  => $extension,
-    //                 'etapa_id'   => $etapaId,
-    //                 'carpeta_id' => $carpetaCBCT->id,
-    //                 'paciente_id' => $this->paciente->id,
-    //             ]);
-    //         }
-    //     }else {
-    //         return session()->flash('error', 'No se han seleccionado archivos.');
-    //     }
-
-    //     $this->modalArchivo = false;
-    //     $this->dispatch('archivo');
-    // }
 
     public function closeModal(){
         if($this->documents) {

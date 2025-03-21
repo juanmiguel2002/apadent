@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 @section('pageTitle', 'Perfil de '. $paciente->name)
 @section('header')
