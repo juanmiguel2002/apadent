@@ -54,19 +54,32 @@ class Pacientes extends Component
         'Set Up' => 'bg-yellow-600'
     ];
 
-    protected $rules = [
-        'num_paciente' => 'required|integer|unique:pacientes,num_paciente',
-        'name' => 'required|string|max:255',
-        'apellidos' => 'required|string|max:255',
-        'fecha_nacimiento' => 'required|date',
-        'email' => 'required|email|max:255',
-        'telefono' => 'required|string|max:20',
-        'observacion' => 'nullable|string|max:255',
-        'obser_cbct' => 'nullable|string',
-        'selectedTratamiento' => 'required|exists:tratamientos,id',
-        'img_paciente' => 'nullable|image',
-        'rayos.*' => 'nullable|image',
-    ];
+    protected function rules(){
+        return [
+            'clinica_id' => 'required|exists:clinicas,id',
+            'num_paciente' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    $exists = Paciente::where('clinica_id', $this->clinica_id)
+                                    ->where('num_paciente', $value)
+                                    ->exists();
+                    if ($exists) {
+                        $fail('El número de paciente ya está registrado en esta clínica.');
+                    }
+                },
+            ],
+            'name' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'fecha_nacimiento' => 'required|date',
+            'email' => 'required|email|max:50',
+            'telefono' => 'required|string|max:20',
+            'observacion' => 'nullable|string|max:255',
+            'obser_cbct' => 'nullable|string|max:255',
+            'selectedTratamiento' => 'required|exists:tratamientos,id',
+            'img_paciente' => 'nullable|image',
+            'rayos.*' => 'nullable|image',
+        ];
+    }
 
     public function updatingSearch()
     {
@@ -157,8 +170,10 @@ class Pacientes extends Component
         $this->validate();
 
         DB::transaction(function () {
+            // Determinar la clínica del paciente
+            $clinicaId = $this->clinica_id ? $this->clinica_id : Auth::user()->clinicas->first()->id;
 
-            // 1. Crear el paciente
+            // 1. Crear el paciente con el número validado o generado
             $paciente = Paciente::create([
                 'num_paciente' => $this->num_paciente,
                 'name' => $this->name,
@@ -168,7 +183,7 @@ class Pacientes extends Component
                 'telefono' => $this->telefono,
                 'observacion' => $this->observacion,
                 'obser_cbct' => $this->obser_cbct,
-                'clinica_id' => $this->clinica_id ? $this->clinica_id : Auth::user()->clinicas->first()->id,
+                'clinica_id' => $clinicaId,
             ]);
 
             // 2. Asociar tratamiento al paciente
@@ -195,12 +210,12 @@ class Pacientes extends Component
             }
 
             // 4. Crear carpetas para el paciente
-            $pacienteFolder = $this->createPacienteFolders($paciente);
+            $pacienteFolder = $this->createPacienteFolders($paciente, $this->selectedTratamiento);
 
             // 5. Subir la foto del paciente (si existe)
             if ($this->img_paciente) {
                 $extension = $this->img_paciente->getClientOriginalExtension();
-                $fileName = 'foto_'.$paciente->name.'.' . $extension;
+                $fileName = 'foto_' . $paciente->name . '.' . $extension;
                 $path = $this->img_paciente->storeAs($pacienteFolder . '/fotoPaciente', $fileName, 'public');
 
                 $paciente->url_img = $path;
@@ -209,7 +224,7 @@ class Pacientes extends Component
             }
 
             // 6. Subir archivos y asociarlos
-            $this->updatedArchivos($paciente, $pacienteFolder, $etapa);
+            $this->updatedArchivos($paciente, $pacienteFolder, $etapa, $this->selectedTratamiento);
 
             // 7. Disparar evento y resetear formulario
             $this->showModal = false;
@@ -219,7 +234,7 @@ class Pacientes extends Component
             // 8. Enviar email de notificación a la clínica y al admin
             $clinica = Clinica::find($paciente->clinica_id);
             if ($clinica && $clinica->email) {
-                Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente, null, route('pacientes-show', $paciente->id)));
+                Mail::to($clinica->email)->send(new NotificacionNuevoPaciente($clinica, $paciente, $clinica, route('pacientes-show', $paciente->id)));
             }
         });
     }
@@ -227,25 +242,29 @@ class Pacientes extends Component
     /**
      * Crea la carpeta del paciente dentro de la clínica y sus subcarpetas.
      */
-    public function createPacienteFolders($paciente)
+    public function createPacienteFolders($paciente, $tratId)
     {
-        if($this->clinica_id){
-            $clinica = Clinica::find($this->clinica_id);
-        }else {
-            $clinica = Clinica::find(Auth::user()->clinicas->first()->id);
-        }
-        if (!$clinica && !$this->clinica_id) {
+        // Obtener clínica
+        $clinica = $this->clinica_id
+        ? Clinica::find($this->clinica_id)
+        : Clinica::find(Auth::user()->clinicas->first()->id);
+
+        if (!$clinica) {
             $this->dispatch('error', "No se encontró ninguna clínica asociada.");
+            return null;
         }
+
+        $tratamiento = Tratamiento::find($tratId);
 
         // Normalizar nombres
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $primerApellido = strtok($paciente->apellidos, " ");
+        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
 
         $this->nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
 
         // Ruta de la carpeta del paciente
-        $pacienteFolder = "{$nombreClinica}/pacientes/{$this->nombrePaciente}";
+        $pacienteFolder = "{$nombreClinica}/pacientes/{$this->nombrePaciente}/{$tratName}";
 
         // Crear carpeta en sistema de archivos si no existe
         if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
@@ -256,6 +275,7 @@ class Pacientes extends Component
         $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $nombreClinica, 'carpeta_id' => null]);
         $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id, 'clinica_id' => $clinica->id]);
         $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $this->nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
+        $carpetaTratamiento = Carpeta::firstOrCreate(['nombre' => $tratName, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
 
         // Subcarpetas
         $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
@@ -264,7 +284,7 @@ class Pacientes extends Component
             if (!Storage::disk('clinicas')->exists($subFolderPath)) {
                 Storage::disk('clinicas')->makeDirectory($subFolderPath);
             }
-            Carpeta::firstOrCreate(['nombre' => $subFolder, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
+            Carpeta::firstOrCreate(['nombre' => $subFolder, 'carpeta_id' => $carpetaTratamiento->id, 'clinica_id' => $clinica->id]);
         }
 
         return $pacienteFolder;
@@ -273,8 +293,13 @@ class Pacientes extends Component
     /**
      * Guarda los archivos subidos en la base de datos y en el almacenamiento.
      */
-    public function updatedArchivos($paciente, $pacienteFolder, $etapa)
+    public function updatedArchivos($paciente, $pacienteFolder, $etapa, $trat)
     {
+
+        $tratamiento = Tratamiento::find($trat);
+        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
+
+        // Buscar la carpeta del paciente dentro de 'pacientes'
         $carpetaPaciente = Carpeta::where('nombre', $this->nombrePaciente)
             ->whereHas('parent', function ($query) {
                 $query->where('nombre', 'pacientes');
@@ -285,6 +310,13 @@ class Pacientes extends Component
             return;
         }
 
+        // Buscar o crear la carpeta del tratamiento dentro del paciente
+        $carpetaTratamiento = Carpeta::firstOrCreate([
+            'nombre'      => $tratName,
+            'carpeta_id'  => $carpetaPaciente->id
+        ]);
+
+        // Subcarpetas y archivos a almacenar
         $subCarpetas = [
             'imgEtapa' => $this->imagenes,
             'CBCT' => $this->cbct,
@@ -292,37 +324,39 @@ class Pacientes extends Component
         ];
 
         foreach ($subCarpetas as $nombreCarpeta => $archivos) {
-            if ($archivos && is_array($archivos)) {
-                $carpeta = Carpeta::where('nombre', $nombreCarpeta)
-                    ->where('carpeta_id', $carpetaPaciente->id)
-                    ->first();
+            // Buscar carpeta en la BD
+            $carpeta = Carpeta::where('nombre', $nombreCarpeta)
+                ->where('carpeta_id', $carpetaTratamiento->id)
+                ->first();
 
-                if (!$carpeta) {
-                    session()->flash('error', "Carpeta {$nombreCarpeta} no encontrada.");
-                    continue;
-                }
+            if (!$carpeta) {
+                return session()->flash('error', "Carpeta {$nombreCarpeta} no encontrada.");
+            }
 
-                foreach ($archivos as $key => $archivo) {
-                    $extension = $archivo->getClientOriginalExtension();
+            foreach ($archivos as $key => $archivo) {
+                $extension = $archivo->getClientOriginalExtension();
 
-                    // Generar el nombre del archivo de manera segura
-                    $fileName = "{$etapa->name}_" . ($key + 1) ."_{$nombreCarpeta}". '.' . $extension;
+                // Generar nombre seguro para el archivo
+                $fileName = "{$etapa->name}_" . ($key + 1) . "_{$nombreCarpeta}." . $extension;
+                $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
 
-                    // Asegurar que el nombre no tenga caracteres extraños
-                    $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
+                // Ruta final de almacenamiento bbddxzx
+                $path = "{$pacienteFolder}/{$nombreCarpeta}/{$fileName}";
 
-                    // Guardar el archivo en la carpeta del paciente
-                    $path = $archivo->storeAs("{$pacienteFolder}/{$nombreCarpeta}", $fileName, 'clinicas');
-                    // Guardar en la base de datos solo el nombre sin extensión
-                    Archivo::create([
-                        'name' => pathinfo($fileName, PATHINFO_FILENAME),
-                        'ruta' => $path,
-                        'tipo' => strtolower($nombreCarpeta),
-                        'extension' => $extension,
-                        'etapa_id' => $etapa->id,
-                        'carpeta_id' => $carpeta->id,
-                        'paciente_id' => $paciente->id,
-                    ]);
+                Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/{$nombreCarpeta}", $archivo, $fileName);
+
+                // Registrar en la base de datos
+                Archivo::create([
+                    'name' => pathinfo($fileName, PATHINFO_FILENAME),
+                    'ruta' => $path,
+                    'tipo' => strtolower($nombreCarpeta),
+                    'extension' => $extension,
+                    'etapa_id' => $etapa->id,
+                    'carpeta_id' => $carpeta->id,
+                    'paciente_id' => $paciente->id,
+                ]);
+
+                if (file_exists($archivo->getPathname())) {
                     unlink($archivo->getPathname());
                 }
             }
