@@ -28,7 +28,7 @@ class NotificacionNuevoPaciente extends Mailable
         return $this->markdown('emails.nuevoPaciente')
                     ->with([
                         'nombre' => $this->nombre,
-                        'clinicaName' => $this->clinica,
+                        'clinicaName' => $this->clinica->name,
                         'perfilPacienteUrl' => $this->perfilPacienteUrl,
                         'paciente' => $this->paciente,
                         'fechaRegistro' => now()->format('d/m/Y H:i'),
