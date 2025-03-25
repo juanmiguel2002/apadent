@@ -14,13 +14,14 @@ class PacienteShow extends Component
 {
     use WithFileUploads;
 
-    public $paciente, $tratamientos, $pacienteId;
+    public $paciente, $pacienteId;
+    public $tratamientos, $etapas = [];
     public $showModal = false, $showModalPaciente = false;
 
     public $num_paciente, $name, $apellidos, $email, $fecha_nacimiento, $telefono;
     public $observacion, $obser_cbct, $odontograma;
 
-    public $etapas, $stripping = [], $verStripping = false;
+    public $stripping = [], $verStripping = false;
     public $clinica;
 
     public $maxFileSize = 15; // Tamaño máximo en MB
@@ -29,24 +30,21 @@ class PacienteShow extends Component
     {
         $this->pacienteId = $id;
 
-        // Cargar paciente con sus clínicas y tratamientos, incluyendo sus etapas con mensajes y archivos
-        $this->paciente = Paciente::with([
-            'clinicas',
-            'tratamientos.etapas' => function ($query) {
-                $query->where('paciente_id', $this->pacienteId) // Filtrar por paciente
-                    ->with(['mensajes.user', 'archivos']);
-            }
-        ])->findOrFail($this->pacienteId);
-
-        // $this->clinica = $this->paciente->clinicas->first();
+        // Cargar paciente con sus clínicas y tratamientos, optimizando la carga de datos
+        $this->paciente = Paciente::with('clinicas')->findOrFail($this->pacienteId);
         $this->clinica = $this->paciente->clinicas;
 
-        // Obtener tratamientos del paciente
-        $this->tratamientos = $this->paciente->tratamientos;
+        // Obtener tratamientos con sus etapas, mensajes y archivos de manera optimizada
+        $this->tratamientos = $this->paciente->tratamientos()->with([
+            'etapas' => function ($query) {
+                $query->with(['mensajes.user', 'archivos']);
+            }
+        ])->get();
 
-        // Obtener etapas directamente de los tratamientos ya cargados (evitando una consulta extra)
-        $this->etapas = $this->tratamientos->flatMap->etapas;
+        // Obtener todas las etapas en una colección para evitar `flatMap`
+        $this->etapas = $this->tratamientos->pluck('etapas')->flatten();
 
+        // Verificar si hay archivos "stripping"
         $this->verStripping = Archivo::where('paciente_id', $this->pacienteId)
             ->where('tipo', 'stripping')
             ->exists();

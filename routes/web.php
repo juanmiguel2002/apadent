@@ -11,6 +11,7 @@ use App\Http\Controllers\Pacientes\PacienteHistorial;
 use App\Http\Controllers\Pacientes\PacienteShowController;
 
 use App\Http\Controllers\PacientesAdmin;
+use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UsersController;
@@ -59,6 +60,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/admin/tratamientos', [TratamientoController::class, 'index'])->name('admin.tratamientos');
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
+        Route::get('/admin/permisos', [PermissionsController::class, 'index'])->name('permisos');
     });
 
     // Rutas del doctor Administrador

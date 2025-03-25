@@ -517,10 +517,6 @@ class HistorialPaciente extends Component
             'carpeta_id'  => $carpetaTratamiento->id
         ]);
 
-        // if (!$this->imagenes || !is_array($this->imagenes)) {
-        //     return session()->flash('error', 'No se han seleccionado imágenes válidas.');
-        // }
-
         // Subir imágenes y guardarlas en la base de datos
         foreach ($this->imagenes as $key => $imagen) {
             $extension = $imagen->getClientOriginalExtension();

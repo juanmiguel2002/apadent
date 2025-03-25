@@ -32,7 +32,7 @@ class Pacientes extends Component
     public $showModal = false;
     public $menuVisible = null;
 
-    public $imagenes = [], $cbct = [], $rayos = []; //archivos que del paciente
+    public $imagenes = [], $rayos = []; //archivos que del paciente
     public $selectedTratamiento, $status = "Set Up", $activo = false;
 
     public $search = '';
@@ -41,6 +41,9 @@ class Pacientes extends Component
     public $clinicas, $clinicaSelected;
 
     public $pacienteFolder, $nombrePaciente;
+    public $cbctSubido = false; // Estado de la subida
+    protected $listeners = ['cbctSubido' => 'habilitarFormulario'];
+
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -133,7 +136,8 @@ class Pacientes extends Component
         ->where(function ($query) { // Búsqueda
             $query->where('name', 'like', '%' . $this->search . '%')
                 ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                ->orWhere('telefono', 'like', '%' . $this->search . '%');
+                ->orWhere('telefono', 'like', '%' . $this->search . '%')
+                ->orWhere('num_paciente', 'like', '%' . $this->search . '%');
         })
         ->where('activo', $this->activo ? 0 : 1); // Filtrar por pacientes activos o inactivos
 
@@ -156,6 +160,11 @@ class Pacientes extends Component
         return view('livewire.pacientes.index', [
             'pacientes' => $pacientes,
         ]);
+    }
+
+    public function habilitarFormulario()
+    {
+        $this->cbctSubido = true;
     }
 
     // CREAR PACIENTE
@@ -319,7 +328,7 @@ class Pacientes extends Component
         // Subcarpetas y archivos a almacenar
         $subCarpetas = [
             'imgEtapa' => $this->imagenes,
-            'CBCT' => $this->cbct,
+            // 'CBCT' => $this->cbct,
             'Rayos' => $this->rayos,
         ];
 
@@ -415,7 +424,7 @@ class Pacientes extends Component
                 'fecha_nacimiento',
                 'selectedTratamiento',
                 'observacion','obser_cbct',
-                'imagenes', 'cbct', 'img_paciente'
+                'imagenes', 'img_paciente'
             ]);
     }
 
