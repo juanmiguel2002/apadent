@@ -228,9 +228,9 @@ class UsersManagement extends Component
             // Sincroniza los permisos
             $this->role->permissions()->sync($permissionsToSync);
 
-            session()->flash('message', 'Permisos actualizados correctamente.');
         }
         $this->close();
+        return redirect()->back()->with('success', 'Permisos actualizados correctamente.');
     }
 
     public function close()
