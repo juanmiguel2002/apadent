@@ -35,7 +35,7 @@ class UsersManagement extends Component
     protected function rules()
     {
         return [
-            'name' => 'required|string|max:50',
+            'name' => 'required|string|max:250',
             'colegiado' => 'required|string|max:50|unique:users,colegiado,' . ($this->isEditing ? $this->userId : 'NULL') . ',id',
             'email' => 'required|email|max:255|unique:users,email,' . ($this->isEditing ? $this->userId : 'NULL') . 'id',
             'password' => !$this->isEditing ? 'required|string|min:8|confirmed' : 'nullable|string|min:8|confirmed',
@@ -43,6 +43,7 @@ class UsersManagement extends Component
             'selectedClinica' => $this->selectedClinica ? 'required|exists:clinicas,id' : '',
         ];
     }
+
     protected function messages()
     {
         return [
@@ -50,10 +51,8 @@ class UsersManagement extends Component
             'name.required' => 'El nombre es obligatorio.',
             'email.unique' => 'El correo electrónico ya está en uso.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
-            // Agrega otros mensajes personalizados según sea necesario.
         ];
     }
-
 
     /*Para mantener persistente los filtros y la búsqueda */
     protected $queryString = [
@@ -87,7 +86,6 @@ class UsersManagement extends Component
             $this->roles = Role::whereIn('name', ['doctor', 'clinica'])->get();
         }
         $this->permissions = Permission::all();
-        // dd($this->clinica_id);
     }
 
     public function render()

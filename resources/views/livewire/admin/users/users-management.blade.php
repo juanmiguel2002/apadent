@@ -41,26 +41,20 @@
         <table class="min-w-full">
             <thead class="text-white">
                 <tr class="bg-azul">
-                    <th scope="col"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
+                    <th scope="col" wire:click="sortable('id')"
+                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
                         ID
-                        <button wire:click="sortable('id')">
-                            <span class="fa fa{{ $camp === 'id' ? $icon : '-sort' }}"></span>
-                        </button>
+                        <span class="fa fa{{ $camp === 'id' ? $icon : '-sort' }}"></span>
                     </th>
-                    <th scope="col"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 ">
+                    <th scope="col" wire:click="sortable('name')"
+                        class="px-4 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
                         Nombre
-                        <button wire:click="sortable('name')">
-                            <span class="fa fa{{ $camp === 'name' ? $icon : '-sort' }}"></span>
-                        </button>
+                        <span class="fa fa{{ $camp === 'name' ? $icon : '-sort' }}"></span>
                     </th>
-                    <th scope="col"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
+                    <th scope="col" wire:click="sortable('email')"
+                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
                         Correo electrónico
-                        <button wire:click="sortable('email')">
-                            <span class="fa fa{{ $camp === 'email' ? $icon : '-sort' }}"></span>
-                        </button>
+                        <span class="fa fa{{ $camp === 'email' ? $icon : '-sort' }}"></span>
                     </th>
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
@@ -70,12 +64,10 @@
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
                         Clínica
                     </th>
-                    <th scope="col"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
+                    <th scope="col" wire:click="sortable('created_at')"
+                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
                         Creado
-                        <button wire:click="sortable('created_at')">
-                            <span class="fa fa{{ $camp === 'created_at' ? $icon : '-sort' }}"></span>
-                        </button>
+                        <span class="fa fa{{ $camp === 'created_at' ? $icon : '-sort' }}"></span>
                     </th>
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-center text-white uppercase bg-azul border-b border-gray-200"
