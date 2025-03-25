@@ -3,6 +3,7 @@
 /public/build
 /public/hot
 /public/storage
+/public/plupload-3.1.5
 /storage/*.key
 /vendor
 .env
