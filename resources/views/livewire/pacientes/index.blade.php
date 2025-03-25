@@ -1,4 +1,4 @@
-<div>
+    <div>
     @include('components.alert-message')
     @role('admin')
         <x-input-select-clinicas  :options="$clinicas" label="Selecciona una clínica" name="clinicaSelected"/>
@@ -47,6 +47,7 @@
             @endcan
         </div>
     </div>
+
     <x-tabla>
         <table class="min-w-full divide-y table-fixed">
             <thead class="text-white">
@@ -199,7 +200,7 @@
                                                 <option value="{{ $clinica->id }}">{{ $clinica->name }}</option>
                                             @endforeach
                                         </select>
-                                        <x-input-error for="selectedClinica" />
+                                        <x-input-error for="clinica_id" />
                                     </div>
                                 @endrole
                                 <div class="col-span-2 mb-4">
@@ -244,7 +245,7 @@
                                             <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }} - {{ $tratamiento->descripcion}}</option>
                                         @endforeach
                                     </select>
-                                    <x-input-error for="tratamiento_id" />
+                                    <x-input-error for="selectedTratamiento" />
                                 </div>
 
                                 <div class="col-span-2 mb-4">
@@ -253,7 +254,7 @@
                                     <x-input-error for="observacion" />
                                 </div>
                                 <div class="col-span-2 mb-3">
-                                    <x-label for="img_paciente" class="block text-md text-azul capitalize">Foto paciente*</x-label>
+                                    <x-label for="img_paciente" class="block text-md text-azul capitalize">Foto paciente</x-label>
                                     <x-input wire:model="img_paciente" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                     <x-input-error for="img_paciente" />
                                 </div>
@@ -263,21 +264,10 @@
                                     <x-input-error for="imagenes.*" />
                                 </div>
 
-                                {{-- <div class="col-span-2 mb-4">
+                                <div class="col-span-2 mb-4">
                                     <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT <i>(comprimidos .zip)</i></x-label>
-                                    <x-input multiple wire:model="cbct" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
-                                    <x-input-error for="cbcts.*" />
-                                </div> --}}
-                                {{-- <div> --}}
-                                    <div class="col-span-2 mb-4">
-                                        <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT (ZIP)</x-label>
-                                        <div id="dropZone" class="border-2 border-dashed p-6 text-center cursor-pointer">
-                                            Arrastra o selecciona un archivo ZIP
-                                        </div>
-                                        <progress id="uploadProgress" value="0" max="100" class="w-full mt-2 hidden"></progress>
-                                        <p id="uploadStatus" class="text-gray-500 mt-2"></p>
-                                    </div>
-                                {{-- </div> --}}
+                                    <div id="file-uploader"></div>
+                                </div>
 
                                 <div class="col-span-2 mb-3">
                                     <x-label for="rayos" class="block text-md text-azul capitalize">Archivos RX</x-label>
@@ -304,45 +294,102 @@
             </x-dialog-modal>
         @endif
     @endcan
-    {{-- <script type="text/javascript">
-        // document.addEventListener("DOMContentLoaded", function () {
-            let dropZone = document.getElementById("dropZone");
-            let progressBar = document.getElementById("uploadProgress");
-            let statusText = document.getElementById("uploadStatus");
+    @push('scripts')
+        {{-- <script type="text/javascript">
+            // document.addEventListener("DOMContentLoaded", function () {
+                let dropZone = document.getElementById("dropZone");
+                let fileInput = document.getElementById("fileInput");
+                let progressBar = document.getElementById("uploadProgress");
+                let statusText = document.getElementById("uploadStatus");
+                // let submitButton = document.getElementById("submitButton");
 
-            let resumable = new Resumable({
-                target: "/upload-cbct",
-                query: { _token: "{{ csrf_token() }}" },
-                fileType: ["zip"],
-                chunkSize: 2 * 1024 * 1024, // 2MB por chunk
-                simultaneousUploads: 1,
-                testChunks: true,
-                throttleProgressCallbacks: 1
+                let resumable = new Resumable({
+                    target: "{{ route('upload') }}",
+                    query: { _token: "{{ csrf_token() }}" },
+                    fileType: ["zip"],
+                    chunkSize: 5 * 1024 * 1024,
+                    simultaneousUploads: 3,
+                    testChunks: true,
+                    throttleProgressCallbacks: 1,
+                    forceChunkSize: true
+                });
+
+                resumable.assignBrowse(fileInput);
+                resumable.assignDrop(dropZone);
+
+                // ⬇️ Ahora el clic en el dropZone abre el selector de archivos ⬇️
+                dropZone.addEventListener("click", function () {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener("change", function (event) {
+                    let files = event.target.files;
+                    if (files.length > 0) {
+                        resumable.addFile(files[0]);
+                    }
+                });
+
+                resumable.on("fileAdded", function (file) {
+                    progressBar.classList.remove("hidden");
+                    statusText.textContent = "Preparando subida...";
+                    submitButton.disabled = true;
+                    resumable.upload();
+                });
+
+                resumable.on("fileProgress", function (file) {
+                    let progress = Math.floor(file.progress() * 100);
+                    progressBar.value = progress;
+                    statusText.textContent = `Subiendo... ${progress}%`;
+                });
+
+                resumable.on("fileSuccess", function (file, response) {
+                    statusText.textContent = "Subida completada.";
+                    progressBar.classList.add("hidden");
+
+                    Livewire.emit('actualizarEstadoCBCT', JSON.parse(response).filename);
+
+                    submitButton.disabled = false;
+                });
+
+                resumable.on("fileError", function (file, message) {
+                    statusText.textContent = "Error en la subida. Verifica tu conexión.";
+                    progressBar.classList.add("hidden");
+                    submitButton.disabled = true;
+                });
+
+                resumable.on("complete", function () {
+                    statusText.textContent = "Archivo subido correctamente.";
+                });
+            // });
+        </script> --}}
+        <script type="text/javascript">
+            var uploader = new plupload.Uploader({
+                browse_button: 'file-uploader',  // ID del botón para seleccionar archivos
+                url: '/upload',  // URL de tu endpoint en Laravel para manejar la subida
+                chunk_size: '10mb',  // Tamaño de cada fragmento del archivo
+                filters: {
+                    mime_types: [
+                        {title: "ZIP files", extensions: "zip"}
+                    ]
+                },
+                multi_selection: false,  // No permitir selección múltiple
+                flash_swf_url: "{{asset('js/Moxie.swf')}}",
+                silverlight_xap_url: "{{asset('js/Moxie.xap')}}",
+                init: {
+                    FilesAdded: function(up, files) {
+                        // Pasar los datos adicionales (paciente_id, tratamiento_id) en la carga
+                        for (var i in files) {
+                            files[i].url = '/upload?paciente_id={{$paciente->id}}&trat_id={{$selectedTratamiento}}';  // Agregar los parámetros
+                        }
+                    },
+                    UploadComplete: function(up, files) {
+                        // Callback cuando todos los fragmentos han sido subidos
+                        console.log('Subida completada');
+                    }
+                }
             });
 
-            // resumable.assignBrowse(dropZone[0]);
-            resumable.assignDrop(dropZone);
-
-            resumable.on("fileAdded", function (file) {
-                progressBar.classList.remove("hidden");
-                resumable.upload();
-            });
-
-            resumable.on("fileProgress", function (file) {
-                let progress = Math.floor(file.progress() * 100);
-                progressBar.value = progress;
-                statusText.textContent = `Subiendo... ${progress}%`;
-            });
-
-            resumable.on("fileSuccess", function (file, message) {
-                statusText.textContent = "Subida completada.";
-                progressBar.classList.add("hidden");
-            });
-
-            resumable.on("fileError", function (file, message) {
-                statusText.textContent = "Error en la subida.";
-                progressBar.classList.add("hidden");
-            });
-        // });
-    </script> --}}
+            uploader.init();
+        </script>
+    @endpush
 </div>

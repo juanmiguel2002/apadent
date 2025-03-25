@@ -29,10 +29,7 @@ window.onload = function() {
             confirmButtonText: 'Aceptar'
         });
     });
-    Livewire.on('pathChanged', (currentPath) => {
-        console.log('Current Path:', currentPath);
-    });
-
+    
     Livewire.on('cli_edit',() => {
         Swal.fire({
             position: 'top-end',
@@ -212,4 +209,6 @@ window.onload = function() {
 window.addEventListener('recargar-pagina', event => {
     window.location.reload(); // Recargar la página completa
 });
+
+
 
