@@ -6,5 +6,5 @@
     </h2>
 @endsection
 @section('content')
-    @livewire('admin.clinicascomponent')
+    @livewire('admin.ClinicasComponent')
 @endsection
