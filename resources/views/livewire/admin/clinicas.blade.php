@@ -16,22 +16,20 @@
                 </div>
             </div>
         </div>
-
         <x-tabla>
-            @if ($clinicas->count())
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="text-white">
-                        <tr class="bg-azul">
-                            <th scope="col" class="p-3 text-center uppercase">ID</th>
-                            <th scope="col" class="p-3 text-center uppercase">Nombre</th>
-                            <th scope="col" class="p-3 text-center uppercase">Teléfono</th>
-                            <th scope="col" class="p-3 text-center uppercase">Usuarios</th>
-                            <th scope="col" class="p-3 text-center uppercase">Clientes</th>
-                            <th scope="col" class="p-3 text-center uppercase">Dirección</th>
-                            <th scope="col" class="p-3 text-center uppercase">Acción</th>
-                        </tr>
-                    </thead>
-
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="text-white">
+                    <tr class="bg-azul">
+                        <th scope="col" class="p-3 text-center uppercase">ID</th>
+                        <th scope="col" class="p-3 text-center uppercase">Nombre</th>
+                        <th scope="col" class="p-3 text-center uppercase">Teléfono</th>
+                        <th scope="col" class="p-3 text-center uppercase">Usuarios</th>
+                        <th scope="col" class="p-3 text-center uppercase">Clientes</th>
+                        <th scope="col" class="p-3 text-center uppercase">Dirección</th>
+                        <th scope="col" class="p-3 text-center uppercase">Acción</th>
+                    </tr>
+                </thead>
+                @if ($clinicas->count())
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach ($clinicas as $clinica)
                             <tr class="bg-gray-100 hover:bg-gray-200 transition">
@@ -67,16 +65,21 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            @else
-                <div class="px-6 py-4 mt-4 text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
-                    </svg>
-                    <span class="font-medium">No existe ningún registro.</span>
-                </div>
-            @endif
+                @else
+                    <tr class="text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-md shadow-sm">
+                        <td class="font-medium px-6 py-4 mt-4" colspan="{{auth()->user()->hasRole('admin') ? '8': '7' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+                            </svg>
+                            No existe ningún registro.
+                        </td>
+                    </tr>
+                @endif
+            </table>
         </x-tabla>
+        <div class="mt-4">
+            {{ $clinicas->links('vendor.pagination.paginacion') }}
+        </div>
     </div>
 
     @if($showModal)

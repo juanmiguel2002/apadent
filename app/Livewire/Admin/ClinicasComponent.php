@@ -9,11 +9,14 @@ use App\Models\ClinicaUser;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Livewire\WithPagination;
 
-class Clinicas extends Component
+class ClinicasComponent extends Component
 {
+    use WithPagination;
+
     public $showModal, $editable = false;
-    public $clinicas, $clinica_id;
+    public $clinica_id;
     public $ordenar = '';
     public $search = '';
     public $name, $direccion, $telefono, $email, $cif, $direccion_fac, $cuenta;
@@ -27,42 +30,35 @@ class Clinicas extends Component
         return  [
             'name' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
-            'telefono' => 'required',
+            'telefono' => 'required|string',
             'email' => 'required|email|max:255|unique:clinicas,email,' . ($this->editable ? $this->clinica_id : 'NULL') . ',id',
             'cif' => 'required|string|max:9',
             'direccion_fac' => 'required|string|max:255',
-            'cuenta' => 'required|string|max:255',
+            'cuenta' => 'required|string|max:18',
         ];
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingOrdenar()
+    {
+        $this->resetPage();
     }
 
     public function render()
     {
-        // Definir la columna y dirección de ordenación predeterminadas
-        $orderByColumn = 'id';
-        $orderByDirection = 'asc';
-        // Determinar la columna de ordenación basada en la selección del usuario
-        switch ($this->ordenar) {
-            case 'recientes':
-                $orderByColumn = 'created_at'; // Suponiendo que estás utilizando 'created_at' para ordenar por los más recientes
-                $orderByDirection = 'desc';
-                break;
-            case 'name':
-                $orderByColumn = 'name';
-                $orderByDirection = 'asc';
-                break;
-            default:
-                $orderByColumn = 'id';
-                $orderByDirection = 'asc';
-                break;
-        }
+        $orderByColumn = $this->ordenar === 'recientes' ? 'clinicas.created_at' : ($this->ordenar === 'name' ? 'clinicas.name' : 'clinicas.id');
+        $orderByDirection = $this->ordenar === 'recientes' ? 'desc' : 'asc';
 
-        // Realizar la consulta con los filtros y la ordenación seleccionada
-        $this->clinicas = Clinica::with('users')
-            ->where('name', 'LIKE', "%{$this->search}%")
+        $clinicas = Clinica::with('users','pacientes')
+            ->where('name', 'like', '%' . $this->search . '%')
             ->orderBy($orderByColumn, $orderByDirection)
-            ->get();
+            ->paginate(10); // Puedes cambiar 10 por la cantidad de elementos por página
 
-        return view('livewire.admin.clinicas');
+        return view('livewire.admin.clinicas', ['clinicas' => $clinicas]);
     }
 
     public function showCreateModal($id = null)
