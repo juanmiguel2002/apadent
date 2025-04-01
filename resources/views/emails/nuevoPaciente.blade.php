@@ -4,7 +4,7 @@
 Se ha registrado un nuevo paciente con la siguiente información:
 
 - **Nombre:** {{ $paciente->name . " ". $paciente->apellidos }}
-- **Diagnóstico:** {{ $paciente->tratamientos[0]->name }}
+- **Diagnóstico:** {{ $paciente->tratamientos[0]->name }} - {{ $paciente->tratamientos[0]->descripcion }}
 - **Registrado:** {{ $fechaRegistro }}
 - **Clínica:** {{ $clinicaName }}
 
