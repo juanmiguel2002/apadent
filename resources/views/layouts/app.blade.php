@@ -13,8 +13,6 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/resumable.js/1.1.0/resumable.min.js"></script>
-        <script type="text/javascript" src="{{ asset('js/plupload.full.min.js') }}"></script>
-
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
