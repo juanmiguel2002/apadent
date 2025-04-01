@@ -113,7 +113,7 @@
                                 <div class="grid grid-cols-2">
                                     <div class="px-4 py-2 font-semibold">Email</div>
                                     <div class="px-4 py-2">
-                                        <a class="text-azul" href="mailto:{{$paciente->email}}">{{ $paciente->email }}</a>
+                                        <a class="text-azul">{{ $paciente->email }}</a>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2">
@@ -282,7 +282,7 @@
                 </div>
             </x-slot>
             <x-slot name="content">
-                @include('components.alert-message');
+                @include('components.alert-message')
                 <form wire:submit.prevent="saveStripping" enctype="multipart/form-data">
                     <x-label class="block text-md text-azul capitalize" value="Stripping" />
                     <x-input type="file" wire:model="stripping" multiple class="block w-full px-3 py-2 mt-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
@@ -317,21 +317,21 @@
                 <x-slot name="content">
                     <form wire:submit.prevent="savePaciente">
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2 sm:col-span-1 mb-4">
-                                <x-label for="name" value="Nombre*" class="text-azul text-base" />
-                                <x-input type="text" id="name" class="w-full rounded-md
-                                    @unless(auth()->user()->hasRole('admin')) bg-gray-100 text-gray-500 cursor-not-allowed @endunless"
-                                    wire:model.defer="name" />
-                                <x-input-error for="name" />
-                            </div>
+                            @role('admin')
+                                <div class="col-span-2 sm:col-span-1 mb-4">
+                                    <x-label for="name" value="Nombre*" class="text-azul text-base" />
+                                    <x-input type="text" id="name" class="w-full rounded-md"
+                                        wire:model.defer="name" />
+                                    <x-input-error for="name" />
+                                </div>
 
-                            <div class="col-span-2 sm:col-span-1 mb-4">
-                                <x-label for="apellidos" value="Apellidos*" class="text-azul text-base" />
-                                <x-input type="text" id="apellidos" class="w-full rounded-md
-                                    @unless(auth()->user()->hasRole('admin')) bg-gray-100 text-gray-500 cursor-not-allowed @endunless"
-                                    wire:model.defer="apellidos" />
-                                <x-input-error for="apellidos" />
-                            </div>
+                                <div class="col-span-2 sm:col-span-1 mb-4">
+                                    <x-label for="apellidos" value="Apellidos*" class="text-azul text-base" />
+                                    <x-input type="text" id="apellidos" class="w-full rounded-md"
+                                        wire:model.defer="apellidos" />
+                                    <x-input-error for="apellidos" />
+                                </div>
+                            @endrole
 
                             <div class="col-span-2 sm:col-span-1 mb-4">
                                 <x-label for="email" value="Email*" class="text-azul text-base"/>
