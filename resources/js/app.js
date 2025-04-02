@@ -29,7 +29,7 @@ window.onload = function() {
             confirmButtonText: 'Aceptar'
         });
     });
-    
+
     Livewire.on('cli_edit',() => {
         Swal.fire({
             position: 'top-end',
