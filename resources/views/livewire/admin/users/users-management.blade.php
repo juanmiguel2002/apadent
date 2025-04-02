@@ -144,6 +144,99 @@
             {!! $users->links() !!}
         </div>
     </div>
+    @if ($showModal)
+        <x-dialog-modal maxWidth="lg" wire:model="showModal">
+            <div class="relative">
+                <x-slot name="title">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            <svg class="h-6 w-6 text-azul" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold">
+                            {{ $isEditing ? 'Editar Usuario' : 'Añadir Usuario' }}
+                        </h2>
+                        <button wire:click='close' class="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </x-slot>
+
+                <x-slot name="content">
+                    <form wire:submit.prevent="save">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2 mb-4 sm:col-span-1">
+                                <x-label for="name" value="Nombre*" class="text-azul text-base"/>
+                                <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" placeholder="Nombre" />
+                                <x-input-error for="name" />
+                            </div>
+
+                            <div class="col-span-2 mb-4 sm:col-span-1">
+                                <x-label for="colegiado" value="Núm Colegiado*" class="text-azul text-base"/>
+                                <x-input type="text" id="colegiado" class="w-full rounded-md" wire:model.defer="colegiado" placeholder="Núm Colegiado" />
+                                <x-input-error for="colegiado" />
+                            </div>
+
+                            <div class="col-span-2 mb-4">
+                                <x-label for="email" value="Email*" class="text-azul text-base"/>
+                                <x-input type="email" id="email" class="w-full rounded-md" wire:model.defer="email" placeholder="Email" />
+                                <x-input-error for="email" />
+                            </div>
+
+                            @if (!$isEditing)
+                                <div class="col-span-2 mb-4">
+                                    <x-label for="password" value="Contraseña*" class="text-azul text-base"/>
+                                    <x-input id="password" class="w-full rounded-md" wire:model.defer="password" type="password" placeholder="Contraseña" />
+                                    <x-input-error for="password" />
+                                </div>
+
+                                <div class="col-span-2 mb-4">
+                                    <x-label for="password_confirmation" value="Confirma Contraseña*" class="text-azul text-base"/>
+                                    <x-input id="password_confirmation" class="w-full rounded-md" wire:model.defer="password_confirmation" type="password" placeholder="Confirmar contraseña" />
+                                    <x-input-error for="password_confirmation" />
+                                </div>
+                            @endif
+
+                            @if ($clinicas)
+                                <div class="col-span-2 mb-4">
+                                    <x-label for="clinica_id" value="Asigna una Clínica*" class="text-azul text-base"/>
+                                    <select id="clinica_id" wire:model.defer="selectedClinica" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                        <option value="">Selecciona una Clínica</option>
+                                        @foreach($clinicas as $clinica)
+                                            <option value="{{ $clinica->id }}">{{ $clinica->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error for="selectedClinica" />
+                                </div>
+                            @endif
+
+                            <div class="col-span-2 mb-4">
+                                <x-label for="role_id" value="Asigna un Role*" class="text-azul text-base"/>
+                                <select id="role_id" wire:model.defer="selectedRole" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                    <option value="">Seleccione un Role</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error for="selectedRole" />
+                            </div>
+                        </div>
+                    </form>
+                </x-slot>
+
+                <x-slot name="footer">
+                    <span class="px-4 py-2 text-center">Campos obligatorios (*)</span>
+                    <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
+                    <button type="submit" wire:click="save" class="bg-blue-500 text-white px-4 py-2 rounded">
+                        {{ $isEditing ? 'Actualizar' : 'Crear' }}
+                    </button>
+                </x-slot>
+            </div>
+        </x-dialog-modal>
+    @endif
 
     @if ($showPermisos)
         <x-dialog-modal maxWidth="lg" wire:model='showPermisos'>
