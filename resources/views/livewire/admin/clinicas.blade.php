@@ -1,4 +1,5 @@
 <div>
+    @include('components.alert-message')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex justify-start items-center">
@@ -16,6 +17,7 @@
                 </div>
             </div>
         </div>
+
         <x-tabla>
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="text-white">
@@ -57,10 +59,20 @@
                                 <td class="px-6 py-4 text-center border-b">
                                     <div class="text-sm text-gray-900">{{ $clinica->direccion }}</div>
                                 </td>
-                                <td class="px-6 py-4 text-center font-medium flex">
-                                    <a class="text-azul px-4 py-2 hover:bg-gray-200 rounded cursor-pointer" wire:click="showCreateModal({{ $clinica->id }})" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                <td class="px-6 py-4 text-center font-medium">
+                                    <div class="flex justify-center space-x-2">
+                                        <a class="text-azul hover:bg-gray-200 rounded cursor-pointer" wire:click="showCreateModal({{ $clinica->id }})" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        @role('admin')
+                                            <form action="{{ route('admin.clinica.delete', $clinica->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta clínica?')">
+                                                @csrf
+                                                <button type="submit">
+                                                    <img src="{{ asset('storage/recursos/icons/papelera.png') }}" class="w-5 cursor-pointer">
+                                                </button>
+                                            </form>
+                                        @endrole
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

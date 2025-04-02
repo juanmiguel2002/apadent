@@ -54,6 +54,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/clinicas', [DashboardController::class, 'show'])->name('admin.clinica');
         Route::get('/admin/clinica/{id}', [ClinicaController::class, 'index'])->name('admin.clinica.view');
+        Route::post('/admin/clinica/{id}', [ClinicaController::class, 'destroy'])->name('admin.clinica.delete');
+
         Route::get('/admin/pacientes',[PacientesAdmin::class, 'index'])->name('admin.pacientes');
         Route::post('/admin/paciente/{id}', [PacientesAdmin::class, 'destroy'])->name('admin.pacientes.delete');
 

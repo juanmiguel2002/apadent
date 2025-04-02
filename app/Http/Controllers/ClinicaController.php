@@ -30,6 +30,7 @@ class ClinicaController extends Controller
     {
         return view('ver_pdf', compact('ruta'));
     }
+    
     public function verPdfPrivado($ruta)
     {
         // Asegurar que el archivo existe
@@ -85,7 +86,7 @@ class ClinicaController extends Controller
             // Eliminar carpetas físicas del paciente
             Storage::disk('public')->deleteDirectory($rutaClinica);
         }
-        
+
         // Eliminar la carpeta de la clínica
         Storage::disk('clinicas')->deleteDirectory($rutaClinica);
         // Eliminar facturas de la clínica (si aplica)
