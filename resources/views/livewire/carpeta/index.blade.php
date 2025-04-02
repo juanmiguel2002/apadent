@@ -30,7 +30,7 @@
                 </div>
 
                 <!-- Botones de Acción -->
-                {{-- <div class="mt-4 flex justify-between w-full">
+                <div class="mt-4 flex justify-between w-full">
                     <button
                         wire:click="showEditModal('{{ $carpeta->id }}')"
                         class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center">
@@ -39,15 +39,17 @@
                         </svg>
                         Editar
                     </button>
-                    <button
-                        wire:click="delete('{{ basename($carpeta['name']) }}')"
-                        class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Eliminar
-                    </button>
-                </div> --}}
+                    @role('admin')
+                        <form action="{{ route('admin.archivos.delete', $carpeta->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta clínica?')">
+                            @csrf
+                            <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Eliminar
+                        </form>
+                    @endrole
+                </div>
             </div>
         @empty
             <div class="flex items-center justify-center text-gray-500 text-xl mt-4 text-center">
@@ -56,7 +58,7 @@
         @endforelse
     </div>
 
-    {{-- @if ($showModal)
+    @if ($showModal)
         <x-dialog-modal maxWidth="lg">
             <div class="relative">
                 <x-slot name="title">
@@ -73,13 +75,13 @@
                 </x-slot>
 
                 <x-slot name="content">
+                    @include('components.alert-message')
                     <form wire:submit.prevent="save">
                         <div class="grid grid-cols-1 gap-4">
                             <div class="col-span-2 mb-4 sm:col-span-1">
                                 <x-label value="Nombre*" class="text-azul text-base"/>
                                 <x-input type="text" class="w-full rounded-md" wire:model="nombre" placeholder="Nombre" />
-                                <x-input-error for="nombre" />
-                            </div>
+                                <x-input-error for="nombre" />                            </div>
                         </div>
                     </form>
                 </x-slot>
@@ -92,5 +94,5 @@
                 </x-slot>
             </div>
         </x-dialog-modal>
-    @endif --}}
+    @endif
 </div>

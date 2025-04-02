@@ -16,6 +16,7 @@ use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UsersController;
 use App\Livewire\ClinicaShow;
+use App\Livewire\Pacientes\Pacientes as PacientesPacientes;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -49,6 +50,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::get('/subir', [UploadController::class,'index'])->name('upload.index');
     Route::post('/upload', [UploadController::class,'upload'])->name('upload');
+    Route::post('/upload-cbct', [PacientesPacientes::class,'guardarCBCT'])->name('upload-cbct');
 
     // Rutas del administrador
     Route::middleware(['role:admin'])->group(function () {
@@ -60,8 +62,11 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('/admin/paciente/{id}', [PacientesAdmin::class, 'destroy'])->name('admin.pacientes.delete');
 
         Route::get('/admin/tratamientos', [TratamientoController::class, 'index'])->name('admin.tratamientos');
+
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
+        Route::post('/admin/mi-unidad/{id}', [CarpetaController::class, 'destroy'])->name('admin.archivos.delete');
+
         Route::get('/admin/permisos', [PermissionsController::class, 'index'])->name('permisos');
     });
 
