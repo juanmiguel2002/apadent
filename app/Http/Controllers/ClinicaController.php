@@ -9,6 +9,7 @@ use App\Models\Factura;
 use App\Models\Paciente;
 use App\Models\User;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ClinicaController extends Controller
@@ -30,7 +31,7 @@ class ClinicaController extends Controller
     {
         return view('ver_pdf', compact('ruta'));
     }
-    
+
     public function verPdfPrivado($ruta)
     {
         // Asegurar que el archivo existe
@@ -92,17 +93,22 @@ class ClinicaController extends Controller
         // Eliminar facturas de la clínica (si aplica)
         Factura::where('clinica_id', $clinica->id)->delete();
 
+        // Obtener y eliminar todos los usuarios de la clínica
+        $usuariosIds = DB::table('clinica_user')->where('clinica_id', $clinica->id)->pluck('user_id');
+
+        if ($usuariosIds->isNotEmpty()) {
+            // Eliminar relaciones de la tabla intermedia clinica_user
+            DB::table('clinica_user')->where('clinica_id', $clinica->id)->delete();
+
+            // Eliminar roles y permisos de los usuarios
+            DB::table('model_has_roles')->whereIn('model_id', $usuariosIds)->delete();
+
+            // Eliminar los usuarios completamente de la tabla users
+            User::whereIn('id', $usuariosIds)->delete();
+        }
+
         // Eliminar la clínica
         $clinica->delete();
-        // Obtener y eliminar todos los usuarios de la clínica
-        $usuarios = User::whereHas('clinicas', function ($query) use ($clinica) {
-            $query->where('clinica_id', $clinica->id);
-        })->get();
-
-        foreach ($usuarios as $usuario) {
-            $usuario->roles()->detach(); // Elimina roles de Spatie
-            $usuario->delete(); // Elimina el usuario
-        }
 
         return redirect()->route('admin.clinica')->with('success', 'Clínica y todos sus datos eliminados correctamente.');
     }
