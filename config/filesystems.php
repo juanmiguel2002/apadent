@@ -46,7 +46,7 @@ return [
         'clinicas' => [
             'driver' => 'local',
             'root' => storage_path('app/clinicas'),
-            // 'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL').'/storage',
             'visibility' => 'private',
         ],
 
