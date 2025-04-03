@@ -31,69 +31,73 @@ class CarpetaController extends Controller
         return view('admin.carpeta.show', compact( 'carpeta', 'id'));
     }
 
-    public function destroy($id)
+    public function destroy($id, $subcarpeta = null)
     {
-        // Buscar la clínica
+        // Buscar la carpeta principal
         $carpeta = Carpeta::findOrFail($id);
         $clinica = Clinica::findOrFail($carpeta->clinica_id);
 
+        // Normalizar nombres para rutas
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $rutaClinica = "{$nombreClinica}";
 
-        // Obtener todos los pacientes de la clínica
-        $pacientes = Paciente::where('clinica_id', $clinica->id)->get();
+        if ($subcarpeta) {
+            // Buscar la subcarpeta específica
+            $subcarpetaObj = Carpeta::findOrFail($subcarpeta);
 
-        foreach ($pacientes as $paciente) {
-            // Normalizar nombres
+            // Eliminar archivos dentro de la subcarpeta
+            Archivo::where('carpeta_id', $subcarpeta)->delete();
 
-            $primerApellido = strtok($paciente->apellidos, " ");
-            $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
+            // Eliminar la subcarpeta de la base de datos
+            $subcarpetaObj->delete();
 
-            // Construir la ruta de la carpeta del paciente en almacenamiento
-            $rutaPaciente = "{$nombreClinica}/pacientes/{$nombrePaciente}";
+            // Construir la ruta de la subcarpeta en almacenamiento
+            $rutaSubcarpeta = "{$rutaClinica}/{$subcarpetaObj->nombre}";
 
+            // Eliminar la carpeta física en el almacenamiento
+            Storage::disk('clinicas')->deleteDirectory($rutaSubcarpeta);
 
-            // Obtener carpetas del paciente en la clínica
-            $carpetasPaciente = Carpeta::where('clinica_id', $clinica->id)
-                                    ->where('nombre', $nombrePaciente)
-                                    ->pluck('id');
+            return redirect()->route('admin.archivos')->with('success', 'Subcarpeta eliminada correctamente.');
 
-            // Eliminar archivos relacionados con el paciente
-            Archivo::whereIn('carpeta_id', $carpetasPaciente)->delete();
+        }else {
+            // Si no se pasa subcarpeta, eliminar toda la clínica
+            $pacientes = Paciente::where('clinica_id', $clinica->id)->get();
 
-            // Eliminar carpetas del paciente
-            Carpeta::whereIn('id', $carpetasPaciente)->delete();
+            foreach ($pacientes as $paciente) {
+                $primerApellido = strtok($paciente->apellidos, " ");
+                $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
 
-            // Eliminar al paciente de la base de datos
-            $paciente->delete();
+                // Construir la ruta del paciente
+                $rutaPaciente = "{$nombreClinica}/pacientes/{$nombrePaciente}";
 
-            // Eliminar carpetas físicas del paciente
-            Storage::disk('public')->deleteDirectory($rutaClinica);
+                // Obtener carpetas del paciente y eliminar archivos
+                $carpetasPaciente = Carpeta::where('clinica_id', $clinica->id)->where('nombre', $nombrePaciente)->pluck('id');
+                Archivo::whereIn('carpeta_id', $carpetasPaciente)->delete();
+
+                // Eliminar carpetas del paciente y su registro
+                Carpeta::whereIn('id', $carpetasPaciente)->delete();
+                $paciente->delete();
+
+                // Eliminar carpetas físicas
+                Storage::disk('clinicas')->deleteDirectory($rutaPaciente);
+            }
+
+            // Eliminar carpetas y archivos relacionados con la clínica
+            Storage::disk('clinicas')->deleteDirectory($rutaClinica);
+            Factura::where('clinica_id', $clinica->id)->delete();
+
+            // Eliminar usuarios de la clínica
+            $usuariosIds = DB::table('clinica_user')->where('clinica_id', $clinica->id)->pluck('user_id');
+            if ($usuariosIds->isNotEmpty()) {
+                DB::table('clinica_user')->where('clinica_id', $clinica->id)->delete();
+                DB::table('model_has_roles')->whereIn('model_id', $usuariosIds)->delete();
+                User::whereIn('id', $usuariosIds)->delete();
+            }
+
+            // Eliminar la clínica de la base de datos
+            $clinica->delete();
+
+            return redirect()->route('admin.archivos')->with('success', 'Clínica y todos sus datos eliminados correctamente.');
         }
-
-        // Eliminar la carpeta de la clínica
-        Storage::disk('clinicas')->deleteDirectory($rutaClinica);
-        // Eliminar facturas de la clínica (si aplica)
-        Factura::where('clinica_id', $clinica->id)->delete();
-
-        // Obtener y eliminar todos los usuarios de la clínica
-        $usuariosIds = DB::table('clinica_user')->where('clinica_id', $clinica->id)->pluck('user_id');
-
-        if ($usuariosIds->isNotEmpty()) {
-            // Eliminar relaciones de la tabla intermedia clinica_user
-            DB::table('clinica_user')->where('clinica_id', $clinica->id)->delete();
-
-            // Eliminar roles y permisos de los usuarios
-            DB::table('model_has_roles')->whereIn('model_id', $usuariosIds)->delete();
-
-            // Eliminar los usuarios completamente de la tabla users
-            User::whereIn('id', $usuariosIds)->delete();
-        }
-
-        // Eliminar la clínica
-        $clinica->delete();
-
-        return redirect()->route('admin.archivos')->with('success', 'Clínica y todos sus datos eliminados correctamente.');
     }
-
 }

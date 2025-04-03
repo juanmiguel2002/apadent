@@ -5,6 +5,7 @@
                 Nueva carpeta
             </button>
         </div> --}}
+        @include('components.alert-message')
     </div>
     <hr>
     <br>
@@ -39,16 +40,14 @@
                         </svg>
                         Editar
                     </button>
-                    @role('admin')
-                        <form action="{{ route('admin.archivos.delete', $carpeta->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta clínica?')">
-                            @csrf
-                            <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Eliminar
-                        </form>
-                    @endrole
+                    <form action="{{ route('admin.archivos.delete', $carpeta->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta clínica?')">
+                        @csrf
+                        <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Eliminar
+                    </form>
                 </div>
             </div>
         @empty
@@ -80,8 +79,9 @@
                         <div class="grid grid-cols-1 gap-4">
                             <div class="col-span-2 mb-4 sm:col-span-1">
                                 <x-label value="Nombre*" class="text-azul text-base"/>
-                                <x-input type="text" class="w-full rounded-md" wire:model="nombre" placeholder="Nombre" />
-                                <x-input-error for="nombre" />                            </div>
+                                <x-input type="text" class="w-full rounded-md" wire:model="newName" placeholder="Nombre" />
+                                <x-input-error for="nombre" />
+                            </div>
                         </div>
                     </form>
                 </x-slot>

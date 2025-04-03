@@ -65,7 +65,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
-        Route::post('/admin/mi-unidad/{id}', [CarpetaController::class, 'destroy'])->name('admin.archivos.delete');
+        Route::post('/admin/mi-unidad/{id}/subcarpeta/{subcarpetaId?}', [CarpetaController::class, 'destroy'])->name('admin.archivos.delete');
 
         Route::get('/admin/permisos', [PermissionsController::class, 'index'])->name('permisos');
     });
