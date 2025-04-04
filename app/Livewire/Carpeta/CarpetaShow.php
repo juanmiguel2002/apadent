@@ -25,6 +25,16 @@ class CarpetaShow extends Component
     public $facturas;
     public $tratamientos;
     public $paciente;
+    public $search = '';
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+    ];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
 
     public function mount($id)
     {
@@ -37,7 +47,6 @@ class CarpetaShow extends Component
         })->firstOrFail();
 
         // Cargar subcarpetas de la carpeta actual
-        $this->subcarpetas = $this->carpeta->carpetasHija;
 
         // Obtener facturas dentro de la carpeta "facturas" de la clínica
         $this->facturas = Factura::where('clinica_id', $clinica->id)
@@ -53,6 +62,11 @@ class CarpetaShow extends Component
 
     public function render()
     {
+        $this->subcarpetas = $this->carpeta->carpetasHija()
+            ->when($this->search, function ($query) {
+                $query->where('nombre', 'like', "%{$this->search}%"); // Filtrar por nombre de carpeta
+            })->get();
+
         return view('livewire.carpeta.carpeta-show',[
             'archivos' => $this->archivos // Livewire lo detecta automáticamente
         ]);
