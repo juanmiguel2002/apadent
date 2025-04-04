@@ -47,13 +47,6 @@ class ClinicaShow extends Component
         $this->validate([
             'name' => 'required|string|max:50',
             'factura' => 'required|file|mimes:pdf', // Cambia los tipos mime según necesites
-        ],[
-            'name.required' => 'El campo nombre es obligatorio.',
-            'name.string' => 'El campo nombre debe ser una cadena de texto.',
-            'name.max' => 'El campo nombre no debe exceder los 50 caracteres.',
-            'factura.required' => 'El campo factura es obligatorio.',
-            'factura.file' => 'El campo factura debe ser un archivo.',
-            'factura.mimes' => 'El archivo debe ser un PDF.',
         ]);
 
         // Obtener la extensión original del archivo
@@ -101,8 +94,6 @@ class ClinicaShow extends Component
         // Si el usuario no tiene acceso, devolver una respuesta de error
         return abort(403, 'No tienes permiso para ver este archivo.');
     }
-
-    
 
     public function close()
     {
