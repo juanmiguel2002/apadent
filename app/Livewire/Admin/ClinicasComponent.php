@@ -4,10 +4,14 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Mail\CredencialesClinica;
+use App\Models\Archivo;
+use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\ClinicaUser;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\WithPagination;
 
@@ -85,6 +89,7 @@ class ClinicasComponent extends Component
         $this->validate();
 
         if($this->editable){
+            // Actualizar la clínica existente
             $clinica = Clinica::find($this->clinica_id);
             $clinica->name = $this->name;
             $clinica->direccion = $this->direccion;
@@ -95,6 +100,14 @@ class ClinicasComponent extends Component
             $clinica->cuenta = $this->cuenta;
 
             $clinica->save();
+            // Actualizar carpeta
+            $carpeta = Carpeta::where('clinica_id', $this->clinica_id)->first();
+            if($carpeta){
+                $carpetaName = preg_replace('/\s+/', '_', trim($this->name));
+
+                $carpeta->nombre = $carpetaName;
+                $carpeta->save();
+            }
             $this->dispatch('clinicaSaved', 'Clínica Actualizada');  // Emite un evento para que otros componentes puedan escuchar
         }else{
             $clinica = Clinica::create([
@@ -135,7 +148,6 @@ class ClinicasComponent extends Component
         }
         $this->close();
         $this->dispatch('recargar-pagina');  // Emite un evento para que otros componentes puedan escuchar
-
     }
 
     public function showClinica($clinicaId){
