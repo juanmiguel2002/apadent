@@ -65,7 +65,7 @@ class Clinica extends Model
 
             // Guardar en la base de datos la carpeta principal
             $clinicaFolder = Carpeta::create([
-                'nombre' => $clinicaName,
+                'nombre' => $this->name,
                 'carpeta_id' => null, // Es la carpeta raíz
                 'clinica_id' => $this->id
             ]);

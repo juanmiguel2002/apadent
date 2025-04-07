@@ -19,6 +19,9 @@ use App\Models\Fase;
 use App\Models\Paciente;
 use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
+use Illuminate\Http\Request;
+use Pion\Laravel\ChunkUpload\Handler\ResumableJSUploadHandler;
+use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
 
 class Pacientes extends Component
 {
@@ -41,9 +44,7 @@ class Pacientes extends Component
     public $clinicas, $clinicaSelected;
 
     public $pacienteFolder, $nombrePaciente;
-    public $cbctSubido = false; // Estado de la subida
-    protected $listeners = ['cbctSubido' => 'habilitarFormulario'];
-
+    public $cbct; // Estado de la subida
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -162,11 +163,6 @@ class Pacientes extends Component
         ]);
     }
 
-    public function habilitarFormulario()
-    {
-        $this->cbctSubido = true;
-    }
-
     // CREAR PACIENTE
     public function showCreateModal()
     {
@@ -269,8 +265,10 @@ class Pacientes extends Component
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $primerApellido = strtok($paciente->apellidos, " ");
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
+        $tratBbdd = $tratamiento->name . ' ' . $tratamiento->descripcion;
 
         $this->nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
+        $nombrePaciente = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
 
         // Ruta de la carpeta del paciente
         $pacienteFolder = "{$nombreClinica}/pacientes/{$this->nombrePaciente}/{$tratName}";
@@ -281,10 +279,10 @@ class Pacientes extends Component
         }
 
         // Guardar estructura en la base de datos
-        $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $nombreClinica, 'carpeta_id' => null]);
+        $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $clinica->name, 'carpeta_id' => null]);
         $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id, 'clinica_id' => $clinica->id]);
-        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $this->nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
-        $carpetaTratamiento = Carpeta::firstOrCreate(['nombre' => $tratName, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
+        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
+        $carpetaTratamiento = Carpeta::firstOrCreate(['nombre' => $tratBbdd, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
 
         // Subcarpetas
         $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
@@ -369,6 +367,53 @@ class Pacientes extends Component
                     unlink($archivo->getPathname());
                 }
             }
+        }
+    }
+
+    public function guardarCBCT(Request $request)
+    {
+        $receiver = new FileReceiver("file", $request, ResumableJSUploadHandler::class);
+        if (!$receiver->isUploaded()) {
+            return response()->json(['error' => 'Error en la subida del archivo'], 400);
+        }
+
+        $save = $receiver->receive();
+        if ($save->isFinished()) {
+            $file = $save->getFile();
+            $paciente = Paciente::find($this->pacienteId);
+            $clinica = $paciente->clinica;
+            $etapa = Etapa::find($this->etapaId);
+            $tratamiento = $etapa->tratamiento;
+
+            $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
+            $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . strtok($paciente->apellidos, ' ') . ' ' . $paciente->num_paciente));
+            $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
+
+            $pacienteFolder = "$nombreClinica/pacientes/$nombrePaciente/$tratName";
+
+            $carpetaCBCT = Carpeta::firstOrCreate([
+                'nombre' => 'CBCT',
+                'carpeta_id' => Carpeta::where('nombre', $nombrePaciente)->whereHas('parent', fn($q) => $q->where('nombre', 'pacientes'))->value('id'),
+                'clinica_id' => $clinica->id
+            ]);
+
+            $filename = $etapa->name . '_' . $file->getClientOriginalName();
+            $filePath = "$pacienteFolder/CBCT/$filename";
+
+            Storage::disk('clinicas')->putFileAs("$pacienteFolder/CBCT", $file, $filename);
+            unlink($file->getPathname());
+
+            Archivo::create([
+                'name' => pathinfo($filename, PATHINFO_FILENAME),
+                'ruta' => $filePath,
+                'tipo' => 'cbct',
+                'extension' => $file->getClientOriginalExtension(),
+                'etapa_id' => $etapa->id,
+                'carpeta_id' => $carpetaCBCT->id,
+                'paciente_id' => $paciente->id,
+            ]);
+
+            return response()->json(['message' => 'CBCT guardado con éxito', 'path' => $filePath]);
         }
     }
 
