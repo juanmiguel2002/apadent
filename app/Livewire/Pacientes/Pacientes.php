@@ -264,14 +264,16 @@ class Pacientes extends Component
         // Normalizar nombres
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $primerApellido = strtok($paciente->apellidos, " ");
+
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
         $tratBbdd = $tratamiento->name . ' ' . $tratamiento->descripcion;
 
-        $this->nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
-        $nombrePaciente = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
+
+        $nombreP = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
+        $this->nombrePaciente = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
 
         // Ruta de la carpeta del paciente
-        $pacienteFolder = "{$nombreClinica}/pacientes/{$this->nombrePaciente}/{$tratName}";
+        $pacienteFolder = "{$nombreClinica}/pacientes/{$nombreP}/{$tratName}";
 
         // Crear carpeta en sistema de archivos si no existe
         if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
@@ -281,7 +283,7 @@ class Pacientes extends Component
         // Guardar estructura en la base de datos
         $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $clinica->name, 'carpeta_id' => null]);
         $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id, 'clinica_id' => $clinica->id]);
-        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
+        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $this->nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
         $carpetaTratamiento = Carpeta::firstOrCreate(['nombre' => $tratBbdd, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
 
         // Subcarpetas
@@ -304,7 +306,7 @@ class Pacientes extends Component
     {
 
         $tratamiento = Tratamiento::find($trat);
-        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
+        $tratBbdd = $tratamiento->name . ' ' . $tratamiento->descripcion;
 
         // Buscar la carpeta del paciente dentro de 'pacientes'
         $carpetaPaciente = Carpeta::where('nombre', $this->nombrePaciente)
@@ -319,14 +321,13 @@ class Pacientes extends Component
 
         // Buscar o crear la carpeta del tratamiento dentro del paciente
         $carpetaTratamiento = Carpeta::firstOrCreate([
-            'nombre'      => $tratName,
+            'nombre'      => $tratBbdd,
             'carpeta_id'  => $carpetaPaciente->id
         ]);
 
         // Subcarpetas y archivos a almacenar
         $subCarpetas = [
             'imgEtapa' => $this->imagenes,
-            // 'CBCT' => $this->cbct,
             'Rayos' => $this->rayos,
         ];
 
@@ -347,7 +348,7 @@ class Pacientes extends Component
                 $fileName = "{$etapa->name}_" . ($key + 1) . "_{$nombreCarpeta}." . $extension;
                 $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
 
-                // Ruta final de almacenamiento bbddxzx
+                // Ruta final de almacenamiento, se pasa ruta paciente + trat
                 $path = "{$pacienteFolder}/{$nombreCarpeta}/{$fileName}";
 
                 Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/{$nombreCarpeta}", $archivo, $fileName);
