@@ -7,9 +7,11 @@
             </a>
 
             <!-- Buscador en el Centro -->
-            <div class="flex-grow flex justify-end">
-                <x-input class="text-azul w-1/4" type="text" wire:model.live="search" placeholder="Buscar carpeta" />
-            </div>
+            @if ($archivos->isEmpty() && $facturas->isEmpty())
+                <div class="flex-grow flex justify-end">
+                    <x-input class="text-azul w-1/4" type="text" wire:model.live="search" placeholder="Buscar carpeta" />
+                </div>
+            @endif
 
             <!-- Último botón alineado a la Derecha -->
             @if ($archivos->isNotEmpty() || $facturas->isNotEmpty())
@@ -21,8 +23,7 @@
     </div>
 
     <hr>
-    <br>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
         @forelse ($subcarpetas as $subcarpeta)
             <div class="bg-white shadow-md rounded-lg p-5 flex flex-col space-y-4">
                 <!-- Ícono y Nombre -->
@@ -66,9 +67,9 @@
                 </div>
             </div>
         @empty
-            <div class="bg-white shadow-md rounded-lg p-5 flex flex-col space-y-4">
+            <div class="bg-white shadow-md rounded-lg p-5 flex flex-col">
                 <!-- Ícono y Nombre -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 48 48">
                         <linearGradient id="folderGradient1" x1="24" x2="24" y1="6.708" y2="14.977" gradientUnits="userSpaceOnUse">
                             <stop offset="0" stop-color="#eba600"></stop>
@@ -81,7 +82,7 @@
                         </linearGradient>
                         <path fill="url(#folderGradient2)" d="M21.586,14.414l3.268-3.268C24.947,11.053,25.074,11,25.207,11H43c1.105,0,2,0.895,2,2v26c0,1.105-0.895,2-2,2H5c-1.105,0-2-0.895-2-2V15.5C3,15.224,3.224,15,3.5,15h16.672C20.702,15,21.211,14.789,21.586,14.414z"></path>
                     </svg>
-                    No hay archivos
+                    No hay carpetas
                 </div>
             </div>
         @endforelse
@@ -196,6 +197,7 @@
                     <form wire:submit.prevent="save">
                         <div class="grid grid-cols-1 gap-4">
                             <div class="col-span-2 mb-4 sm:col-span-1">
+                                {{var_dump($subcarpeta->id)}}
                                 <x-label value="Nombre*" class="text-azul text-base"/>
                                 <x-input type="text" class="w-full rounded-md" wire:model="nombre" placeholder="Nombre" />
                                 <x-input-error for="nombre" />

@@ -14,7 +14,7 @@ class CarpetaShow extends Component
     use WithFileUploads, WithPagination;
 
     public $files = [];
-    public $tipo;
+    public $clinica;
     public $nombre, $carpeta, $carpeta_id;
     public $showModal = false;
     public $isEditing = false;
@@ -42,14 +42,12 @@ class CarpetaShow extends Component
         $this->carpeta = Carpeta::findOrFail($id);
 
         // Obtener la clínica a la que pertenece la carpeta
-        $clinica = Clinica::whereHas('carpetas', function ($query) use ($id) {
+        $this->clinica = Clinica::whereHas('carpetas', function ($query) use ($id) {
             $query->where('id', $id);
         })->firstOrFail();
 
-        // Cargar subcarpetas de la carpeta actual
-
         // Obtener facturas dentro de la carpeta "facturas" de la clínica
-        $this->facturas = Factura::where('clinica_id', $clinica->id)
+        $this->facturas = Factura::where('clinica_id', $this->clinica->id)
                                 ->where('carpeta_id', $this->carpeta->id)
                                 ->get();
     }
@@ -72,32 +70,34 @@ class CarpetaShow extends Component
         ]);
     }
 
-    public function showCreateModal() {
-        $this->showModal = true;
-        $this->isEditing = false;
-    }
+    // public function showCreateModal() {
+    //     $this->showModal = true;
+    //     $this->isEditing = false;
+    // }
 
     public function showEditModal($id) {
-
+        $this->carpeta_id = $id;
         $this->showModal = true;
         $this->isEditing = true;
-        $this->nombre = Carpeta::findOrFail($id)->nombre;
+        $this->nombre = Carpeta::findOrFail($this->carpeta_id)->nombre;
     }
 
     public function save() {
-        // Aquí se guarda la información en la base de datos
+        // Validar que el nombre sea obligatorio
         $this->validate([
             'nombre' => 'required'
         ]);
+        $subcarpeta = Carpeta::findOrFail($this->carpeta_id);
 
-        Carpeta::updateOrCreate(['id' => $this->carpeta_id],[
+        // Actualizar solo el nombre de la carpeta
+        $subcarpeta->update([
             'nombre' => $this->nombre,
-            'carpeta_id' => $this->carpeta->id
         ]);
 
+        // Cerrar el modal y emitir un mensaje de éxito
         $this->close();
-        $this->dispatch('carpetaCreated', $this->carpeta_id ? 'Subcarpeta Actualizada.' : 'Subcarpeta Creada');
-        $this->mount($this->carpeta->id);
+        $this->dispatch('carpetaUpdated', 'Nombre de la carpeta actualizado correctamente.');
+        $this->mount($subcarpeta->id);
     }
 
     public function showCreateArchivos() {
