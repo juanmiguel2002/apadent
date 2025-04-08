@@ -160,72 +160,68 @@
 
                                     <!-- Etapas del tratamiento -->
                                     <div class="space-y-6">
-                                        @if ($tratamiento->etapas->isNotEmpty())
-                                            <h3 class="text-lg font-semibold text-teal-700">Fase 1</h3>
-                                            <ul class="space-y-4 mt-4">
-                                                @foreach ($tratamiento->etapas as $etapa)
-                                                    <li class="p-4 rounded-lg shadow-md border
-                                                        {{ $etapa->status === 'Finalizado' ? 'bg-red-100 border-red-300' :
-                                                            ($etapa->status === 'Pausado' ? 'bg-blue-100 border-blue-300' :
-                                                            ($etapa->status === 'En proceso' ? 'bg-green-100 border-green-300' :
-                                                            ($etapa->status === 'Set Up' ? 'bg-yellow-100 border-yellow-300' : 'bg-gray-100 border-gray-200'))) }}">
+                                        <h3 class="text-lg font-semibold text-teal-700">Fase 1</h3>
+                                        <ul class="space-y-4 mt-4">
+                                            @foreach ($tratamiento->etapas as $etapa)
+                                                <li class="p-4 rounded-lg shadow-md border
+                                                    {{ $etapa->status === 'Finalizado' ? 'bg-red-100 border-red-300' :
+                                                        ($etapa->status === 'Pausado' ? 'bg-blue-100 border-blue-300' :
+                                                        ($etapa->status === 'En proceso' ? 'bg-green-100 border-green-300' :
+                                                        ($etapa->status === 'Set Up' ? 'bg-yellow-100 border-yellow-300' : 'bg-gray-100 border-gray-200'))) }}">
 
-                                                        <div class="flex justify-between items-center">
-                                                            <span class="font-semibold text-md">{{ $etapa->name }}</span>
-                                                            @if ($etapa->status === 'Finalizado')
-                                                                <span class="text-sm text-gray-800">
-                                                                    Finalizado el: {{ \Carbon\Carbon::parse($etapa->fecha_fin)->format('d/m/Y') }}
-                                                                </span>
-                                                            @else
-                                                                <span class="text-sm text-gray-600">
-                                                                    Próxima revisión: {{ $etapa->revision ? \Carbon\Carbon::parse($etapa->revision)->format('d/m/Y') : 'No asignada' }}
-                                                                </span>
-                                                            @endif
+                                                    <div class="flex justify-between items-center">
+                                                        <span class="font-semibold text-md">{{ $etapa->name }}</span>
+                                                        @if ($etapa->status === 'Finalizado')
+                                                            <span class="text-sm text-gray-800">
+                                                                Finalizado el: {{ \Carbon\Carbon::parse($etapa->fecha_fin)->format('d/m/Y') }}
+                                                            </span>
+                                                        @else
+                                                            <span class="text-sm text-gray-600">
+                                                                Próxima revisión: {{ $etapa->revision ? \Carbon\Carbon::parse($etapa->revision)->format('d/m/Y') : 'No asignada' }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="mt-2 text-xs text-gray-500">
+                                                        <!-- Estado de la etapa -->
+                                                        <div class="mt-2">
+                                                            <strong>Estado:</strong>
+                                                            <span class="text-sm {{
+                                                                $etapa->status === 'Finalizado' ? 'text-red-600' :
+                                                                ($etapa->status === 'Pausado' ? 'text-blue-600' :
+                                                                ($etapa->status === 'En proceso' ? 'text-green-600' :
+                                                                ($etapa->status === 'Set Up' ? 'text-yellow-600' : 'text-gray-600'))) }}">
+                                                                {{ $etapa->status }}
+                                                            </span>
                                                         </div>
 
-                                                        <div class="mt-2 text-xs text-gray-500">
-                                                            <!-- Estado de la etapa -->
-                                                            <div class="mt-2">
-                                                                <strong>Estado:</strong>
-                                                                <span class="text-sm {{
-                                                                    $etapa->status === 'Finalizado' ? 'text-red-600' :
-                                                                    ($etapa->status === 'Pausado' ? 'text-blue-600' :
-                                                                    ($etapa->status === 'En proceso' ? 'text-green-600' :
-                                                                    ($etapa->status === 'Set Up' ? 'text-yellow-600' : 'text-gray-600'))) }}">
-                                                                    {{ $etapa->status }}
-                                                                </span>
+                                                        <!-- Detalles adicionales de la etapa -->
+                                                        @if($etapa->mensajes->count() > 0)
+                                                            <div class="mt-4">
+                                                                <h4 class="text-sm font-semibold text-gray-700">Mensajes:</h4>
+                                                                <ul class="space-y-2 mt-2">
+                                                                    @foreach ($etapa->mensajes as $mensaje)
+                                                                        <li class="bg-gray-50 p-3 rounded-md border-l-4 border-teal-500 shadow-sm">
+                                                                            <div class="flex justify-between items-center">
+                                                                                <span class="text-sm text-gray-800">{{ $mensaje->mensaje }}</span>
+                                                                                <span class="text-xs text-gray-500">
+                                                                                    {{ \Carbon\Carbon::parse($mensaje->created_at)->format('d/m/Y H:i') }}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="text-xs text-gray-600 mt-2">
+                                                                                <span class="font-semibold">Usuario:</span> {{ $mensaje->user->name }}
+                                                                            </div>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
                                                             </div>
-
-                                                            <!-- Detalles adicionales de la etapa -->
-                                                            @if($etapa->mensajes->count() > 0)
-                                                                <div class="mt-4">
-                                                                    <h4 class="text-sm font-semibold text-gray-700">Mensajes:</h4>
-                                                                    <ul class="space-y-2 mt-2">
-                                                                        @foreach ($etapa->mensajes as $mensaje)
-                                                                            <li class="bg-gray-50 p-3 rounded-md border-l-4 border-teal-500 shadow-sm">
-                                                                                <div class="flex justify-between items-center">
-                                                                                    <span class="text-sm text-gray-800">{{ $mensaje->mensaje }}</span>
-                                                                                    <span class="text-xs text-gray-500">
-                                                                                        {{ \Carbon\Carbon::parse($mensaje->created_at)->format('d/m/Y H:i') }}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div class="text-xs text-gray-600 mt-2">
-                                                                                    <span class="font-semibold">Usuario:</span> {{ $mensaje->user->name }}
-                                                                                </div>
-                                                                            </li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                </div>
-                                                            @else
-                                                                <div class="mt-4 text-sm text-gray-500">No hay mensajes para esta etapa.</div>
-                                                            @endif
-                                                        </div>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            <div class="text-gray-500">No hay etapas registradas para este tratamiento.</div>
-                                        @endif
+                                                        @else
+                                                            <div class="mt-4 text-sm text-gray-500">No hay mensajes para esta etapa.</div>
+                                                        @endif
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     </div>
                                 </div>
                             @endforeach

@@ -20,6 +20,14 @@ window.onload = function() {
             confirmButtonText: 'Aceptar'
         });
     });
+    Livewire.on('carpetaEdit', message => {
+        Swal.fire({
+            title: 'Éxito',
+            text: message,
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        });
+    });
 
     Livewire.on('usuarioSaved', message => {
         Swal.fire({
