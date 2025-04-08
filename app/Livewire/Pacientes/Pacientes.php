@@ -268,7 +268,6 @@ class Pacientes extends Component
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
         $tratBbdd = $tratamiento->name . ' ' . $tratamiento->descripcion;
 
-
         $nombreP = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
         $this->nombrePaciente = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
 

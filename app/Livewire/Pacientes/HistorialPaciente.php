@@ -492,9 +492,11 @@ class HistorialPaciente extends Component
         $etapa = Etapa::findOrFail($this->etapaId);
         $tratamiento = Tratamiento::findOrFail($etapa->trat_id);
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
+        $tratBBDD = $tratamiento->name . ' ' . $tratamiento->descripcion;
 
         // Buscar la carpeta del paciente dentro de la clínica
-        $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
+        $pacienteNameBBDD = $this->paciente->name . ' ' . strtok($this->paciente->apellidos, " ") . '_' . $this->paciente->num_paciente;
+        $carpetaPaciente = Carpeta::where('nombre', $pacienteNameBBDD)
             ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
             ->first();
 
@@ -504,7 +506,7 @@ class HistorialPaciente extends Component
 
         // Buscar o crear la carpeta del tratamiento dentro del paciente
         $carpetaTratamiento = Carpeta::firstOrCreate([
-            'nombre'      => $tratName,
+            'nombre'      => $tratBBDD,
             'carpeta_id'  => $carpetaPaciente->id
         ]);
 
@@ -545,6 +547,7 @@ class HistorialPaciente extends Component
         }
 
         $this->modalImg = false;
+        $tipoCarpeta = '';
         $this->dispatch('imagen');
 
         return redirect()->route('imagenes.ver', [
