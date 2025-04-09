@@ -27,20 +27,21 @@ class PacientesAdmin extends Controller
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $primerApellido = strtok($paciente->apellidos, " ");
         $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
+        $nombrePacienteBBDD = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
 
         // Construir la ruta de la carpeta del paciente en almacenamiento
         $rutaPaciente = "{$nombreClinica}/pacientes/{$nombrePaciente}";
 
         // Eliminar archivos dentro de carpetas que pertenecen a este paciente
         $carpetasPaciente = Carpeta::where('clinica_id', $clinica->id)
-                                ->where('nombre', $nombrePaciente)
+                                ->where('nombre', $nombrePacienteBBDD)
                                 ->pluck('id');
 
         Archivo::whereIn('carpeta_id', $carpetasPaciente)->delete();
 
         // Eliminar solo la carpeta del paciente en la base de datos, sin tocar otras carpetas de la clínica
         Carpeta::where('clinica_id', $clinica->id)
-            ->where('nombre', $nombrePaciente)
+            ->where('nombre', $nombrePacienteBBDD)
             ->delete();
 
         // Eliminar el paciente de la base de datos
