@@ -14,7 +14,7 @@
             </div>
 
             <div class="text-end">
-                <form class="flex flex-col md:flex-row md:space-x-3 md:space-y-0 space-y-3 w-full">
+                <div class="flex flex-col md:flex-row md:space-x-3 md:space-y-0 space-y-3 w-full">
                     <div class="relative flex-1">
                         <input type="text"
                             class="w-full px-4 py-2 text-base text-gray-700 placeholder-gray-400 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-purple-600"
@@ -33,7 +33,13 @@
                             </button>
                         </div>
                     @endcan
-                </form>
+                    <div class="flex-shrink-0" >
+                        <button type="button"
+                            class="px-4 py-2 text-base font-semibold text-white bg-azul rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                            <i class="fas fa-plus mr-2"></i> <a href="{{ route('permisos') }}">Permisos</a>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
