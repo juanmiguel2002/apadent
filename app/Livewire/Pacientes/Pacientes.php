@@ -44,7 +44,11 @@ class Pacientes extends Component
     public $clinicas, $clinicaSelected;
 
     public $pacienteFolder, $nombrePaciente;
-    public $cbct; // Estado de la subida
+    public $cbct, $cbct_path; // Estado de la subida
+
+    protected $listeners = [
+        'guardarCBCT' => 'guardarArchivoCBCT',
+    ];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -247,12 +251,12 @@ class Pacientes extends Component
     /**
      * Crea la carpeta del paciente dentro de la clínica y sus subcarpetas.
      */
-    public function createPacienteFolders($paciente, $tratId)
+    public function createPacienteFolders($paciente, $tratId, $subFolders = null)
     {
         // Obtener clínica
         $clinica = $this->clinica_id
-        ? Clinica::find($this->clinica_id)
-        : Clinica::find(Auth::user()->clinicas->first()->id);
+            ? Clinica::find($this->clinica_id)
+            : Clinica::find(Auth::user()->clinicas->first()->id);
 
         if (!$clinica) {
             $this->dispatch('error', "No se encontró ninguna clínica asociada.");
@@ -260,42 +264,78 @@ class Pacientes extends Component
         }
 
         $tratamiento = Tratamiento::find($tratId);
+        if (!$tratamiento) {
+            $this->dispatch('error', "Tratamiento no encontrado.");
+            return null;
+        }
 
         // Normalizar nombres
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $primerApellido = strtok($paciente->apellidos, " ");
-
-        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
+        
+        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
         $tratBbdd = $tratamiento->name . ' ' . $tratamiento->descripcion;
-
         $nombreP = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
         $this->nombrePaciente = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
 
-        // Ruta de la carpeta del paciente
-        $pacienteFolder = "{$nombreClinica}/pacientes/{$nombreP}/{$tratName}";
+        // Rutas
+        $pacienteBaseFolder = "{$nombreClinica}/pacientes/{$nombreP}";
+        $tratamientoFolder = "{$pacienteBaseFolder}/{$tratName}";
+        $strippingFolder = "{$pacienteBaseFolder}/Stripping";
 
-        // Crear carpeta en sistema de archivos si no existe
-        if (!Storage::disk('clinicas')->exists($pacienteFolder)) {
-            Storage::disk('clinicas')->makeDirectory($pacienteFolder);
+        // Crear carpetas físicas
+        if (!Storage::disk('clinicas')->exists($pacienteBaseFolder)) {
+            Storage::disk('clinicas')->makeDirectory($pacienteBaseFolder);
+        }
+        if (!Storage::disk('clinicas')->exists($tratamientoFolder)) {
+            Storage::disk('clinicas')->makeDirectory($tratamientoFolder);
+        }
+        if (!Storage::disk('clinicas')->exists($strippingFolder)) {
+            Storage::disk('clinicas')->makeDirectory($strippingFolder);
         }
 
-        // Guardar estructura en la base de datos
+        // Crear carpetas en BBDD
         $carpetaClinica = Carpeta::firstOrCreate(['nombre' => $clinica->name, 'carpeta_id' => null]);
-        $carpetaPacientes = Carpeta::firstOrCreate(['nombre' => 'pacientes', 'carpeta_id' => $carpetaClinica->id, 'clinica_id' => $clinica->id]);
-        $carpetaPaciente = Carpeta::firstOrCreate(['nombre' => $this->nombrePaciente, 'carpeta_id' => $carpetaPacientes->id, 'clinica_id' => $clinica->id]);
-        $carpetaTratamiento = Carpeta::firstOrCreate(['nombre' => $tratBbdd, 'carpeta_id' => $carpetaPaciente->id, 'clinica_id' => $clinica->id]);
+        $carpetaPacientes = Carpeta::firstOrCreate([
+            'nombre' => 'pacientes',
+            'carpeta_id' => $carpetaClinica->id,
+            'clinica_id' => $clinica->id,
+        ]);
+        $carpetaPaciente = Carpeta::firstOrCreate([
+            'nombre' => $this->nombrePaciente,
+            'carpeta_id' => $carpetaPacientes->id,
+            'clinica_id' => $clinica->id,
+        ]);
 
-        // Subcarpetas
-        $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
-        foreach ($subFolders as $subFolder) {
-            $subFolderPath = "{$pacienteFolder}/{$subFolder}";
-            if (!Storage::disk('clinicas')->exists($subFolderPath)) {
-                Storage::disk('clinicas')->makeDirectory($subFolderPath);
+        $carpetaTratamiento = Carpeta::firstOrCreate([
+            'nombre' => $tratBbdd,
+            'carpeta_id' => $carpetaPaciente->id,
+            'clinica_id' => $clinica->id,
+        ]);
+
+        // Subcarpetas del tratamiento
+        $subFoldersTratamiento = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos'];
+        foreach ($subFoldersTratamiento as $subFolder) {
+            $path = "{$tratamientoFolder}/{$subFolder}";
+            if (!Storage::disk('clinicas')->exists($path)) {
+                Storage::disk('clinicas')->makeDirectory($path);
             }
-            Carpeta::firstOrCreate(['nombre' => $subFolder, 'carpeta_id' => $carpetaTratamiento->id, 'clinica_id' => $clinica->id]);
+
+            Carpeta::firstOrCreate([
+                'nombre' => $subFolder,
+                'carpeta_id' => $carpetaTratamiento->id,
+                'clinica_id' => $clinica->id,
+            ]);
         }
 
-        return $pacienteFolder;
+        // Subcarpeta Stripping (directamente en carpetaPaciente)
+        Carpeta::firstOrCreate([
+            'nombre' => 'Stripping',
+            'carpeta_id' => $carpetaPaciente->id,
+            'clinica_id' => $clinica->id,
+        ]);
+
+        return $pacienteBaseFolder;
     }
 
     /**
@@ -368,6 +408,61 @@ class Pacientes extends Component
                 }
             }
         }
+    }
+
+     /**
+     * Guarda el archivo CBCT en la base de datos y en el almacenamiento.
+     */
+    protected function guardarArchivoCBCT($paciente, $pacienteFolder, $etapa)
+    {
+        $clinica = Clinica::find($paciente->clinica_id);
+        $tratamiento = Tratamiento::find($this->selectedTratamiento);
+        $tratBbdd = $tratamiento->name . ' ' . $tratamiento->descripcion;
+
+        // Buscar la carpeta del paciente
+        $carpetaPaciente = Carpeta::where('nombre', $this->nombrePaciente)
+            ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
+            ->first();
+
+        if (!$carpetaPaciente) {
+            session()->flash('error', 'Carpeta del paciente no encontrada.');
+            return;
+        }
+
+        $carpetaTratamiento = Carpeta::firstOrCreate([
+            'nombre'     => $tratBbdd,
+            'carpeta_id' => $carpetaPaciente->id
+        ]);
+
+        // Buscar o crear la carpeta CBCT
+        $carpetaCBCT = Carpeta::firstOrCreate([
+            'nombre'     => 'CBCT',
+            'carpeta_id' => $carpetaTratamiento->id,
+            'clinica_id' => $clinica->id
+        ]);
+
+        $filename = $etapa->name . '_cbct.zip'; // Puedes personalizar el nombre
+        $filePath = "{$pacienteFolder}/CBCT/{$filename}";
+
+        Storage::disk('clinicas')->move($this->cbct_path, $filePath);
+
+        // Guardar el archivo en la base de datos
+        Archivo::create([
+            'name'        => pathinfo($filename, PATHINFO_FILENAME),
+            'ruta'        => $filePath,
+            'tipo'        => 'cbct',
+            'extension'   => 'zip',
+            'etapa_id'    => $etapa->id,
+            'carpeta_id'  => $carpetaCBCT->id,
+            'paciente_id' => $paciente->id,
+        ]);
+
+        // Eliminar el archivo temporal
+        if (Storage::disk('local')->exists($this->cbct_path)) {
+            Storage::disk('local')->delete($this->cbct_path);
+        }
+
+        $this->cbct_path = null; // Resetear la ruta del archivo subido
     }
 
     public function guardarCBCT(Request $request)
