@@ -31,7 +31,7 @@ class CarpetaController extends Controller
         return view('admin.carpeta.show', compact( 'carpeta', 'id'));
     }
 
-    public function destroy($id, $subcarpeta = null)
+    public function destroy($id, $subcarpetaId = null)
     {
         // Buscar la carpeta principal
         $carpeta = Carpeta::findOrFail($id);
@@ -41,23 +41,24 @@ class CarpetaController extends Controller
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $rutaClinica = "{$nombreClinica}";
 
-        if ($subcarpeta) {
+        if ($subcarpetaId) {
             // Buscar la subcarpeta específica
-            $subcarpetaObj = Carpeta::findOrFail($subcarpeta);
+            $subcarpeta = Carpeta::findOrFail($subcarpetaId);
 
             // Eliminar archivos dentro de la subcarpeta
-            Archivo::where('carpeta_id', $subcarpeta)->delete();
+            Archivo::where('carpeta_id', $subcarpetaId)->delete();
 
             // Eliminar la subcarpeta de la base de datos
-            $subcarpetaObj->delete();
+            $subcarpeta->delete();
+            $nombreSubcarpeta = preg_replace('/\s+/', '_', trim($subcarpeta->nombre));
 
             // Construir la ruta de la subcarpeta en almacenamiento
-            $rutaSubcarpeta = "{$rutaClinica}/{$subcarpetaObj->nombre}";
+            $rutaSubcarpeta = "{$rutaClinica}/{$nombreSubcarpeta}";
 
             // Eliminar la carpeta física en el almacenamiento
             Storage::disk('clinicas')->deleteDirectory($rutaSubcarpeta);
 
-            return redirect()->route('admin.archivos')->with('success', 'Subcarpeta eliminada correctamente.');
+            return redirect()->route('admin.clinica')->with('success', 'Subcarpeta eliminada correctamente.');
 
         }else {
             // Si no se pasa subcarpeta, eliminar toda la clínica
