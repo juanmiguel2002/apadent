@@ -11,6 +11,24 @@ window.onload = function() {
         });
     });
 
+    Livewire.on('cli_edit',() => {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Clínica editada con éxito',
+            showConfirmButton: false,
+            timer: 2500
+        });
+    });
+
+    Livewire.on('clinicaEliminada', message => {
+        Swal.fire(
+            'Eliminado',
+            message,
+            'success'
+        );
+    });
+
     // GESTOR DE ARCHIVOS
     Livewire.on('carpetaCreated', message => {
         Swal.fire({
@@ -36,24 +54,6 @@ window.onload = function() {
             icon: 'success',
             confirmButtonText: 'Aceptar'
         });
-    });
-
-    Livewire.on('cli_edit',() => {
-        Swal.fire({
-            position: 'top-end',
-            icon: 'success',
-            title: 'Clínica editada con éxito',
-            showConfirmButton: false,
-            timer: 2500
-        });
-    });
-
-    Livewire.on('clinicaEliminada', message => {
-        Swal.fire(
-            'Eliminado',
-            message,
-            'success'
-        );
     });
 
     Livewire.on('error', message => {
@@ -204,6 +204,7 @@ window.onload = function() {
             timer: 2500
         });
     });
+
     Livewire.on('tratamientoAsignado', message=> {
         Swal.fire({
             position: 'top-end',
