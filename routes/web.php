@@ -65,25 +65,19 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/admin/mi-unidad', [CarpetaController::class, 'index'])->name('admin.archivos');
         Route::get('/admin/mi-unidad/{id}', [CarpetaController::class, 'show'])->name('admin.archivos.view');
         Route::post('/admin/mi-unidad/{id}/subcarpeta/{subcarpetaId?}', [CarpetaController::class, 'destroy'])->name('admin.archivos.delete');
-
-        Route::get('/admin/permisos', [PermissionsController::class, 'index'])->name('permisos');
     });
 
     // Rutas del doctor Administrador
     Route::middleware(['role:doctor_admin|admin'])->group(function(){
         Route::get('/users', [UsersController::class, 'index'])->name('users');
+        Route::get('/permisos', [PermissionsController::class, 'index'])->name('permisos');
+
     });
 
     Route::middleware(['role:doctor_admin|doctor'])->group(function () {
         Route::get('/pacientes', [DashboardController::class, 'show'])->name('doctor-admin.pacientes');
         Route::get('/tratamientos', [TratamientoController::class, 'index'])->name('doctor-admin.tratamientos');
     });
-
-    // Rutas del doctor
-    // Route::middleware(['role:doctor'])->group(function () {
-    //     Route::get('/doctor/pacientes', [Pacientes::class, 'index'])->name('doctor.pacientes');
-    //     Route::get('/doctor/tratamientos', [TratamientoController::class, 'index'])->name('doctor.tratamientos');
-    // });
 
     // Rutas de la clínica
     Route::middleware(['role:clinica'])->group(function () {
@@ -93,7 +87,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/paciente/{id}/perfil/', [PacienteShowController::class, 'show'])->name('pacientes-show');
     Route::get('/paciente/{id}/historial/{tratId?}', [PacienteHistorial::class, 'index'])->name('paciente-historial');
     Route::get('/clinica/{id}/', [ClinicaController::class, 'index'])->name('clinica');
-    
+
     Route::get('/pacientes/create', [Pacientes::class, 'show'])->name('pacientes.create');
     Route::post('/paciente/create', [Pacientes::class, 'store'])->name('paciente.create');
     Route::post('/paciente/upload', [Pacientes::class, 'upload'])->name('paciente.upload');
