@@ -20,11 +20,11 @@ class ClinicaController extends Controller
         $clinica = Clinica::findOrFail($id);
 
         // Obtener solo los usuarios relacionados con esta clínica que son doctores
-        $users = $clinica->users()->with('roles')->whereHas('roles', function($query) {
+        $user = $clinica->users()->with('roles')->whereHas('roles', function($query) {
             $query->where('name', 'doctor_admin'); // Filtrar por rol "doctor_admin"
-        })->get();
+        })->first();
 
-        return view('clinicas.clinica-show', compact('clinica', 'users'));
+        return view('clinicas.clinica-show', compact('clinica', 'user'));
     }
 
     public function mostrarVistaPdf($ruta)

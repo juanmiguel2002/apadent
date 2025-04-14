@@ -4,14 +4,11 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Mail\CredencialesClinica;
-use App\Models\Archivo;
 use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\ClinicaUser;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\WithPagination;
 
