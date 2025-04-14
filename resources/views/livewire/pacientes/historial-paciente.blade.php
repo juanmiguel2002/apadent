@@ -345,7 +345,7 @@
             <x-slot name="content">
                 @include('components.alert-message')
                 <form wire:submit.prevent="saveImg" enctype="multipart/form-data">
-                    <x-label for="img" value="Añadir {{$tipo =='rayos' ? 'Rayos' : 'Imágenes'}}" />
+                    <x-label for="img" value="Añadir {{ $tipo =='rayos' ? 'Rayos' : 'Imágenes' }}" />
                     <input type="file" multiple wire:model="imagenes"
                         class="block w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-4">
                     <p class="text-sm text-gray-500 mt-1">Tamaño máximo permitido: {{ $maxFileSize }} MB</p>
@@ -365,85 +365,7 @@
         </x-dialog-modal>
     @endif
 
-    {{-- Añadir CBCT Etapa --}}
-    {{-- @if ($modalArchivo)
-    <x-dialog-modal wire:model="modalArchivo">
-        <x-slot name="title">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900">Añadir CBCT (.zip)</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </x-slot>
-
-        <x-slot name="content">
-            <div id="upload-container" class="text-center">
-                <button id="browseFile"
-                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
-                    Seleccionar Archivo
-                </button>
-            </div>
-
-            <div id="progress-container" class="hidden mt-3 w-full bg-gray-200 rounded overflow-hidden">
-                <div id="progress-bar" class="h-6 bg-blue-500 text-white text-center text-sm font-semibold"
-                    style="width: 0%;">
-                    0%
-                </div>
-            </div>
-        </x-slot>
-
-        <x-slot name="footer">
-            <button type="button" wire:click="closeModal"
-                class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-        </x-slot>
-    </x-dialog-modal>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-                let browseButton = document.getElementById("browseFile");
-                let progressBar = document.getElementById("progress-bar");
-                let progressContainer = document.getElementById("progress-container");
-
-                let resumable = new Resumable({
-                    target: "/upload",
-                    query: { _token: "{{ csrf_token() }}" },
-                    fileType: ['zip'],
-                    chunkSize: 10 * 1024 * 1024, // 10MB por chunk
-                    simultaneousUploads: 3,
-                    testChunks: false,
-                    throttleProgressCallbacks: 1,
-                    maxFileSize: 4 * 1024 * 1024 * 1024, // 4GB
-                });
-
-                resumable.assignBrowse(browseButton);
-
-                resumable.on('fileAdded', function(file) {
-                    progressContainer.classList.remove("hidden");
-                    resumable.upload();
-                });
-
-                resumable.on('fileProgress', function(file) {
-                    let percentage = Math.floor(file.progress() * 100);
-                    progressBar.style.width = percentage + "%";
-                    progressBar.innerText = percentage + "%";
-                });
-
-                resumable.on('fileSuccess', function(file, response) {
-                    alert("Archivo subido con éxito: " + JSON.parse(response).path);
-                });
-
-                resumable.on('fileError', function(file, message) {
-                    alert("Error al subir el archivo: " + message);
-                });
-            });
-    </script>
-    @endif --}}
-
+    {{-- Añadir Documentación --}}
     @if ($documents)
         <x-dialog-modal wire:model="documents">
             <x-slot name="title">
