@@ -179,8 +179,8 @@ class UsersManagement extends Component
             }
 
             $user->save();
-
-            $user->assignRole($this->selectedRole);
+            // $user->syncRoles();
+            $user->syncRoles([$this->selectedRole]); // Sincroniza el rol
             $user->clinicas()->sync([$this->selectedClinica]);
             $this->dispatch('userSaved', 'Usuario Actualizado');  // Emite un evento para que otros componentes puedan escuchar
 
