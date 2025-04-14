@@ -7,5 +7,5 @@
     </h2>
 @endsection
 @section('content')
-    @livewire('clinica-show', [$clinica, $users])
+    <livewire:clinica-show :clinica="$clinica" :user="$user" />
 @endsection

@@ -58,6 +58,7 @@ class ClinicasComponent extends Component
             ->where('name', 'like', '%' . $this->search . '%')
             ->orderBy($orderByColumn, $orderByDirection)
             ->paginate(10); // Puedes cambiar 10 por la cantidad de elementos por página
+        
 
         return view('livewire.admin.clinicas', ['clinicas' => $clinicas]);
     }

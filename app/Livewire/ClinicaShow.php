@@ -6,6 +6,7 @@ use App\Mail\NuevaFactura;
 use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\Factura;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -17,24 +18,41 @@ class ClinicaShow extends Component
 {
     use WithFileUploads, WithPagination;
 
+    public Clinica $clinica;
+    public User $user;
+    public string $clinicaName = '';
     public $modalOpen = false;
-    public $clinica, $clinicaName;
-    public $users;
-    public $name;
-    public $factura;
     public $carpeta;
 
-    public function mount($clinica, $users){
+    public int $facturasPage = 1;
+    public int $usersPage = 1;
+
+    protected function queryString()
+    {
+        return [
+            'facturasPage' => ['except' => 1],
+            'usersPage' => ['except' => 1],
+        ];
+    }
+
+    public function mount(Clinica $clinica, User $user)
+    {
         $this->clinica = $clinica;
-        $this->users = $users;
-        // Sanitizar el nombre de la clínica para evitar problemas en la ruta
-        $this->clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
+        $this->user = $user;
+        $this->clinicaName = preg_replace('/\s+/', '_', trim($clinica->name));
     }
 
     public function render()
     {
-        $facturas = Factura::where('clinica_id', $this->clinica->id)->paginate(6);
-        return view('livewire.clinica-show', compact('facturas'));
+        $facturas = Factura::where('clinica_id', $this->clinica->id)
+            ->latest()
+            ->paginate(6, ['*'], 'facturasPage', $this->facturasPage);
+
+        $users = $this->clinica->users()
+            ->with('roles')
+            ->paginate(10, ['*'], 'usersPage', $this->usersPage);
+
+        return view('livewire.clinica-show', compact('facturas', 'users'));
     }
 
     public function openModal()

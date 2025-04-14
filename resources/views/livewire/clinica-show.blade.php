@@ -75,89 +75,92 @@
             </div>
         </div>
     </div>
-    <div class="my-4">
-        <hr class="border-gray-300">
-        <h2 class="text-xl font-semibold text-gray-800 mt-4">Usuarios de la Clínica</h2>
-    </div>
 
     {{-- Tabla usuarios Clínica --}}
-    <x-tabla>
-        <table class="min-w-full">
-            <thead class="text-white">
-                <tr class="bg-azul">
-                    <th scope="col" wire:click="sortable('id')"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
-                        ID
-                    </th>
-                    <th scope="col" wire:click="sortable('name')"
-                        class="px-4 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
-                        Nombre
-                    </th>
-                    <th scope="col" wire:click="sortable('name')"
-                        class="px-4 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
-                        Colegiado
-                    </th>
-                    <th scope="col" wire:click="sortable('email')"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
-                        Correo electrónico
-                    </th>
-                    <th scope="col"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
-                        Rol
-                    </th>
-                    <th scope="col" wire:click="sortable('created_at')"
-                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
-                        Creado
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($users as $user)
-                    <tr>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                            <div class="flex items-center">
-                                <div class="ml-3">
-                                    <p class="text-gray-900 whitespace-no-wrap">
-                                        {{ $user->id }}
-                                    </p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                            <p class="text-gray-900 whitespace-no-wrap">
-                                {{ $user->name }}
-                            </p>
-                        </td>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                            <p class="text-gray-900 whitespace-no-wrap">
-                                {{ $user->colegiado }}
-                            </p>
-                        </td>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                            <p class="text-gray-900 whitespace-no-wrap">
-                                {{ $user->email }}
-                            </p>
-                        </td>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                            <p class="text-gray-900 whitespace-no-wrap">
-                                {{ $user->roles()->first()->name ?? 'Sin rol' }}
-                            </p>
-                        </td>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
-                            <p class="text-gray-900 whitespace-no-wrap">
-                                {{ $user->created_at->format('d-m-Y') }}
-                            </p>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-        <div class="flex-col items-center px-5 py-5 bg-white xs:flex-row xs:justify-between">
-            <div class="items-center ">
-                {{ $users->links() }}
-            </div>
+    @can('usuario_read')
+        <div class="my-4">
+            <hr class="border-gray-300">
+            <h2 class="text-xl font-semibold text-gray-800 mt-4">Usuarios de la Clínica</h2>
         </div>
-    </x-tabla>
+        <x-tabla>
+            <table class="min-w-full">
+                <thead class="text-white">
+                    <tr class="bg-azul">
+                        <th scope="col" wire:click="sortable('id')"
+                            class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                            ID
+                        </th>
+                        <th scope="col" wire:click="sortable('name')"
+                            class="px-4 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                            Nombre
+                        </th>
+                        <th scope="col" wire:click="sortable('name')"
+                            class="px-4 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                            Colegiado
+                        </th>
+                        <th scope="col" wire:click="sortable('email')"
+                            class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                            Correo electrónico
+                        </th>
+                        <th scope="col"
+                            class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200">
+                            Rol
+                        </th>
+                        <th scope="col" wire:click="sortable('created_at')"
+                            class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                            Creado
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($users as $user)
+                        <tr>
+                            <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                                <div class="flex items-center">
+                                    <div class="ml-3">
+                                        <p class="text-gray-900 whitespace-no-wrap">
+                                            {{ $user->id }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                                <p class="text-gray-900 whitespace-no-wrap">
+                                    {{ $user->name }}
+                                </p>
+                            </td>
+                            <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                                <p class="text-gray-900 whitespace-no-wrap">
+                                    {{ $user->colegiado }}
+                                </p>
+                            </td>
+                            <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                                <p class="text-gray-900 whitespace-no-wrap">
+                                    {{ $user->email }}
+                                </p>
+                            </td>
+                            <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                                <p class="text-gray-900 whitespace-no-wrap">
+                                    {{ $user->roles()->first()->name ?? 'Sin rol' }}
+                                </p>
+                            </td>
+                            <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                                <p class="text-gray-900 whitespace-no-wrap">
+                                    {{ $user->created_at->format('d-m-Y') }}
+                                </p>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="flex-col items-center px-5 py-5 bg-white xs:flex-row xs:justify-between">
+                <div class="items-center ">
+                    {{ $users->links() }}
+                </div>
+            </div>
+        </x-tabla>
+    @endcan
+
 
     {{-- Modal para añadir factura --}}
     @if ($modalOpen)

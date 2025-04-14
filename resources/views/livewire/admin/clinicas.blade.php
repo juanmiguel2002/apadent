@@ -39,18 +39,24 @@
                                     <div class="text-sm text-gray-900">{{ $clinica->id }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">
-                                    <div class="text-lg text-gray-900 cursor-pointer" wire:click='showClinica({{ $clinica->id }})'>
+                                    <a href="{{ route('admin.clinica.view', ['id' => $clinica->id]) }}">
                                         {{ $clinica->name }}
+                                    </a>
+                                    <div class="text-lg text-gray-900 cursor-pointer" wire:click='showClinica({{ $clinica->id }})'>
+
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">{{ $clinica->telefono }}</td>
                                 <td class="px-6 py-4 text-center border-b">
+                                    @php
+                                        $user = $clinica->users()->with('roles')->whereHas('roles', function($query) {
+                                            $query->where('name', 'doctor_admin'); // Filtrar por rol "doctor_admin"
+                                        })->first();
+                                    @endphp
                                     @if($clinica->users->isEmpty())
                                         <p>No hay usuarios asignados a esta clínica.</p>
                                     @else
-                                        @foreach($clinica->users as $usuario)
-                                            <div>{{ $usuario->name }}</div>
-                                        @endforeach
+                                        <div title="Usuario admin">{{ $user->name }}</div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center border-b">
