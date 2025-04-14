@@ -8,7 +8,7 @@
 @section('content')
     <div class="max-w-lg mx-auto p-6 bg-white rounded shadow-lg">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Subir CBCT (.zip)</h3>
-        <p class="text-gray-600 mb-4">{{$paciente->name}} {{$paciente->apellidos}}</p>
+        <p class="text-gray-600 mb-4">{{ $paciente->name }} {{ $paciente->apellidos }}</p>
 
         <div id="upload-container" class="text-center">
             <button id="browseFile" class="bg-azul hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
@@ -23,26 +23,26 @@
         </div>
         <br>
         <div id="upload-error" class="hidden bg-red-500 text-white p-3 rounded-md mb-4"></div>
+        <div id="upload-success" class="hidden bg-green-500 text-white p-3 rounded-md mb-4"></div>
     </div>
 
-    <script type="text/javascript">
+    <script>
         let browseFile = $('#browseFile');
 
         let resumable = new Resumable({
-
-            target: '{{ route('upload') }}', // El endpoint para la subida
+            target: '{{ route('upload') }}',
             query: {
                 _token: '{{ csrf_token() }}',
-                paciente: '{{ $paciente->id }}',  // El ID del paciente
-                etapa: '{{ $etapa->id }}'  // El ID de la etapa
+                pacienteId: {{ $paciente->id }},
+                etapaId: {{ $etapa->id }}
             },
-            fileType: ['zip'], // Solo permite archivos .zip
-            chunkSize: 10 * 1024 * 1024, // Tamaño de chunk de 10MB (ajustable)
+            fileType: ['zip'],
+            chunkSize: 10 * 1024 * 1024,
             headers: {
                 'Accept': 'application/json'
             },
-            testChunks: false, // Desactiva la prueba de chunks
-            throttleProgressCallbacks: 1, // Para el progreso
+            testChunks: false,
+            throttleProgressCallbacks: 1,
         });
 
         let progressBar = document.getElementById("progress-bar");
@@ -52,7 +52,7 @@
 
         resumable.on('fileAdded', function (file) {
             progressContainer.classList.remove("hidden");
-            resumable.upload(); // Comienza la carga
+            resumable.upload();
         });
 
         resumable.on('fileProgress', function(file) {
@@ -60,15 +60,25 @@
             progressBar.style.width = percentage + "%";
             progressBar.innerText = percentage + "%";
         });
-        resumable.on('fileError', function (file, response) {
-            try {
-                let errorData = JSON.parse(response);
-                let errorDiv = document.getElementById("upload-error");
-                errorDiv.innerText = errorData.error;
-                errorDiv.classList.remove("hidden");
-            } catch (e) {
-                console.error("Error al procesar la respuesta:", e);
-            }
+
+        resumable.on('fileSuccess', function(file, response) {
+            let successDiv = document.getElementById("upload-success");
+            successDiv.innerText = "Archivo subido exitosamente.";
+            successDiv.classList.remove("hidden");
+
+            progressBar.style.width = "0%";
+            progressBar.innerText = "0%";
+            resumable.removeFile(file);
+            progressContainer.classList.add("hidden");
+
+            setTimeout(() => window.history.back(), 2000);
+        });
+
+        resumable.on('fileError', function (file, message) {
+            let errorData = JSON.parse(message);
+            let errorDiv = document.getElementById("upload-error");
+            errorDiv.innerText = errorData.message || "Error al subir el archivo.";
+            errorDiv.classList.remove("hidden");
         });
     </script>
 @endsection

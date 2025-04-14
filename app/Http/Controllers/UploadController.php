@@ -10,6 +10,7 @@ use App\Models\Paciente;
 use App\Models\Tratamiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
 use Pion\Laravel\ChunkUpload\Handler\ResumableJSUploadHandler;
 use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
@@ -30,8 +31,8 @@ class UploadController extends Controller
     public function upload(Request $request)
     {
         // Obtener IDs de la URL
-        $etapaId = $request->query('etapa');
-        $pacienteId = $request->query('paciente');
+        $etapaId = $request->query('etapaId');
+        $pacienteId = $request->query('pacienteId');
 
         if (!$pacienteId || !$etapaId) {
             return response()->json(['error' => 'Faltan datos de paciente o etapa'], 400);
@@ -51,13 +52,14 @@ class UploadController extends Controller
         $clinica = Clinica::find($paciente->clinica_id);
         $etapa = Etapa::find($etapaId);
         $tratamiento = Tratamiento::find($etapa->trat_id);
-        // $paciente = Paciente::with(['clinica', 'etapas.tratamiento'])->find($pacienteId);
 
         $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
         $primerApellido = strtok($paciente->apellidos, " ");
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
+        $tratBBDD = $tratamiento->name .' '. $tratamiento->descripcion;
 
         $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
+        $nombreP = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
 
         // Ruta de la carpeta del paciente
         $pacienteFolder = "{$nombreClinica}/pacientes/{$nombrePaciente}/{$tratName}";
@@ -67,7 +69,7 @@ class UploadController extends Controller
         }
 
         // Buscar la carpeta del paciente
-        $carpetaPaciente = Carpeta::where('nombre', $nombrePaciente)
+        $carpetaPaciente = Carpeta::where('nombre', $nombreP)
             ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
             ->first();
 
@@ -76,7 +78,7 @@ class UploadController extends Controller
         }
 
         $carpetaTratamiento = Carpeta::firstOrCreate([
-            'nombre'      => $tratName,
+            'nombre'      => $tratBBDD,
             'carpeta_id'  => $carpetaPaciente->id
         ]);
 
@@ -89,6 +91,7 @@ class UploadController extends Controller
 
         if ($save->isFinished()) {
             $file = $save->getFile();
+
             $filename = $etapa->name . '_' . $file->getClientOriginalName();
             $filePath = "{$pacienteFolder}/CBCT/{$filename}";
 
@@ -105,11 +108,12 @@ class UploadController extends Controller
                 'carpeta_id' => $carpetaCBCT->id,
                 'paciente_id' => $pacienteId,
             ]);
-            return redirect()->route('paciente-historial')->with('success', 'Archivo subido con éxito.');
+            // return redirect()->route('paciente-historial', ['id' => $pacienteId])->with('error', 'Error al subir CBCT.');
+
         }
 
-        // $handler = $save->handler();
-        return redirect()->route('paciente-historial')->with('error', 'Error al subir CBCT.');
+        $handler = $save->handler();
+        return redirect()->route('paciente-historial', ['id' => $pacienteId])->with('error', 'Error al subir CBCT.');
 
     }
 }
