@@ -375,8 +375,10 @@ class HistorialPaciente extends Component
 
         $etapa = Etapa::findOrFail($this->selectedEtapa);
         $tratamiento = Tratamiento::findOrFail($etapa->trat_id);
+        $tratNameBBDD = $tratamiento->name . ' ' . $tratamiento->descripcion;
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
-
+        $pacienteName = $this->paciente->name . ' ' . strtok($this->paciente->apellidos, " ") . '_' . $this->paciente->num_paciente;
+        
         // Buscar si ya existen archivos subidos en esta etapa
         $existeArchivo = Archivo::where('etapa_id', $etapa->id)
             ->where('tipo', 'archivocomplementarios')
@@ -387,7 +389,7 @@ class HistorialPaciente extends Component
         }
 
         // Buscar la carpeta del paciente dentro de la clínica
-        $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
+        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
             ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
             ->first();
 
@@ -397,14 +399,16 @@ class HistorialPaciente extends Component
 
         // Buscar o crear la carpeta del tratamiento dentro del paciente
         $carpetaTratamiento = Carpeta::firstOrCreate([
-            'nombre'      => $tratName,
-            'carpeta_id'  => $carpetaPaciente->id
+            'nombre'      => $tratNameBBDD,
+            'carpeta_id'  => $carpetaPaciente->id,
+            'clinica_id' => $this->clinica->id
         ]);
 
         // Buscar o crear la carpeta "archivoComplementarios" dentro del tratamiento
         $carpeta = Carpeta::firstOrCreate([
             'nombre'      => 'archivoComplementarios',
-            'carpeta_id'  => $carpetaTratamiento->id
+            'carpeta_id'  => $carpetaTratamiento->id,
+            'clinica_id' => $this->clinica->id
         ]);
 
         // Subir imágenes y guardarlas en la base de datos
