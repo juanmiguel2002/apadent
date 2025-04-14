@@ -28,11 +28,6 @@
                         <x-input-error for="clinica_id" />
                     </div>
                 @endrole
-                <!-- Campo oculto para paciente_id -->
-                {{-- <input type="hidden" id="paciente_id" name="paciente_id" value="{{ old('paciente_id', $pacienteId ?? '') }}"> --}}
-
-                <!-- Campo oculto p ara tratamiento_id -->
-                {{-- <input type="hidden" id="tratamiento_id" name="tratamiento_id" value="{{ old('tratamiento_id', $tratamientoId ?? '') }}"> --}}
 
                 <div class="col-span-2 mb-4">
                     <x-label for="num_paciente" value="Número Paciente*" class="text-azul text-base"/>
@@ -118,6 +113,8 @@
                     <br>
                     <div id="upload-error" class="hidden bg-red-500 text-white p-3 rounded-md mb-4"></div>
                     <div id="upload-success" class="hidden bg-green-500 text-white p-3 rounded-md mb-4"></div>
+                    <!-- Campo oculto para almacenar el path temporal -->
+                    <input type="hidden" id="cbct_temp_path" name="cbct_temp_path">
                 </div>
 
                 <div class="col-span-2 mb-4">
@@ -132,26 +129,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const submitButton = document.getElementById('submitButton');
             const progressBar = document.getElementById('progress-bar');
             const progressContainer = document.getElementById('progress-container');
             const uploadSuccess = document.getElementById('upload-success');
             const uploadError = document.getElementById('upload-error');
-
-            // Inicializa el botón como deshabilitado
-            submitButton.disabled = true;
+            const cbctTempPathInput = document.getElementById('cbct_temp_path');
 
             const r = new Resumable({
-                target: '{{route("paciente.upload")}}',
+                target: '{{ route("paciente.upload") }}',
                 chunkSize: 10 * 1024 * 1024, // 10MB
                 simultaneousUploads: 3,
                 testChunks: false,
                 fileType: ['zip'],
                 throttleProgressCallbacks: 1,
                 query: {
-                    _token: '{{ csrf_token() }}',
-                    paciente_id: document.getElementById('paciente_id').value,  // ID del paciente
-                    tratamiento_id: document.getElementById('tratamiento_id').value  // ID del tratamiento
+                    _token: '{{ csrf_token() }}'
                 }
             });
 
@@ -159,6 +151,10 @@
 
             r.on('fileAdded', function () {
                 progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressBar.innerText = '0%';
+                uploadSuccess.classList.add('hidden');
+                uploadError.classList.add('hidden');
                 r.upload();
             });
 
@@ -168,20 +164,32 @@
                 progressBar.innerText = percent + '%';
             });
 
-            r.on('fileSuccess', function () {
-                uploadSuccess.classList.remove('hidden');
-                uploadSuccess.innerText = "Archivo CBCT subido correctamente.";
-                uploadError.classList.add('hidden');
-                submitButton.disabled = false;
+            r.on('fileSuccess', function (file, response) {
+                try {
+                    const res = JSON.parse(response);
+
+                    if (res.success && res.temp_path) {
+                        uploadSuccess.classList.remove('hidden');
+                        uploadSuccess.innerText = "Archivo CBCT subido correctamente.";
+                        cbctTempPathInput.value = res.temp_path; // Guardamos el path en campo oculto
+                        uploadError.classList.add('hidden');
+                    } else {
+                        throw new Error("Respuesta inesperada del servidor.");
+                    }
+                } catch (err) {
+                    uploadError.classList.remove('hidden');
+                    uploadError.innerText = "Error al procesar la respuesta del servidor.";
+                    uploadSuccess.classList.add('hidden');
+                }
             });
 
             r.on('fileError', function () {
                 uploadError.classList.remove('hidden');
                 uploadError.innerText = "Error al subir el archivo. Inténtalo de nuevo.";
                 uploadSuccess.classList.add('hidden');
-                submitButton.disabled = true;
             });
         });
-    </script>
+        </script>
+
 
 @endsection

@@ -130,9 +130,10 @@ class Pacientes extends Controller
             }
             $rayos = $request->file('rayos');
             $imagenes = $request->file('imagenes');
-
+            $tempPath = $request->input('cbct_temp_path');
+            
             // 6. Subida de archivos adicionales
-            $this->guardarArchivosEtapa($imagenes, $rayos, $paciente, $etapa, $request->selectedTratamiento, $pacienteFolder);
+            $this->guardarArchivosEtapa($tempPath, $imagenes, $rayos, $paciente, $etapa, $request->selectedTratamiento, $pacienteFolder);
 
             // 7. Notificar por email
             $clinica = Clinica::find($paciente->clinica_id);
@@ -233,7 +234,7 @@ class Pacientes extends Controller
         return $pacienteBaseFolder;
     }
 
-    protected function guardarArchivosEtapa($imagenes, $rayos, $paciente, $etapa, $tratId, $pacienteFolder)
+    protected function guardarArchivosEtapa($tempPath, $imagenes, $rayos, $paciente, $etapa, $tratId, $pacienteFolder)
     {
         $tratamiento = Tratamiento::find($tratId);
         if (!$tratamiento) {
@@ -277,7 +278,9 @@ class Pacientes extends Controller
             if (!$carpeta) {
                 throw new \Exception("Carpeta {$nombreCarpeta} no encontrada.");
             }
-
+            if (!$archivos) {
+                continue; // Si no hay archivos, saltar a la siguiente carpeta
+            }
             foreach ($archivos as $key => $archivo) {
                 $fileName = "{$etapa->name}_" . ($key + 1) . "_{$nombreCarpeta}." . $archivo->getClientOriginalExtension();
                 $fileName = preg_replace('/[^\w.-]/', '_', $fileName);
@@ -301,19 +304,56 @@ class Pacientes extends Controller
                     unlink($archivo->getPathname());
                 }
             }
+
+        }
+
+        // Subida de CBCT
+        $clinica = Clinica::find($paciente->clinica_id);
+        if (!$clinica) {
+            throw new \Exception('Clinica no encontrada.');
+        }
+
+        if ($tempPath && Storage::disk('local')->exists($tempPath)) {
+
+            // Obtener el archivo desde la carpeta temporal
+            $tempFile = Storage::disk('local')->path($tempPath);
+
+            $filename = $etapa->name . '_' . basename($tempPath);
+
+            $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
+            $primerApellido = strtok($paciente->apellidos, " ");
+            $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
+            $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
+            $pacienteFolder = "{$nombreClinica}/pacientes/{$nombrePaciente}/{$tratName}";
+
+            // Crear carpeta CBCT
+            $carpetaCBCT = Carpeta::firstOrCreate([
+                'nombre'      => 'CBCT',
+                'carpeta_id'  => $carpetaTratamiento->id,
+                'clinica_id'  => $clinica->id
+            ]);
+
+            // Mover archivo
+            Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/CBCT", new \Illuminate\Http\File($tempFile), $filename);
+
+            // Eliminar archivo temporal
+            Storage::disk('local')->delete($tempPath);
+
+            // Guardar en BBDD
+            Archivo::create([
+                'name'        => pathinfo($filename, PATHINFO_FILENAME),
+                'ruta'        => "{$pacienteFolder}/CBCT/{$filename}",
+                'tipo'        => 'cbct',
+                'extension'   => pathinfo($filename, PATHINFO_EXTENSION),
+                'etapa_id'    => $etapa->id,
+                'carpeta_id'  => $carpetaCBCT->id,
+                'paciente_id' => $paciente->id,
+            ]);
         }
     }
+
     public function upload(Request $request)
     {
-        // Obtener IDs de la URL
-        $etapaId = $request->query('etapaId');
-        $pacienteId = $request->query('pacienteId');
-
-        if (!$pacienteId || !$etapaId) {
-            return response()->json(['error' => 'Faltan datos de paciente o etapa'], 400);
-        }
-
-        // Inicializar Resumable.js
         $receiver = new FileReceiver("file", $request, ResumableJSUploadHandler::class);
 
         if (!$receiver->isUploaded()) {
@@ -322,73 +362,31 @@ class Pacientes extends Controller
 
         $save = $receiver->receive();
 
-        // Obtener el paciente y la etapa desde la BD
-        $paciente = Paciente::find($pacienteId);
-        $clinica = Clinica::find($paciente->clinica_id);
-        $etapa = Etapa::find($etapaId);
-        $tratamiento = Tratamiento::find($etapa->trat_id);
-
-        $nombreClinica = preg_replace('/\s+/', '_', trim($clinica->name));
-        $primerApellido = strtok($paciente->apellidos, " ");
-        $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
-        $tratBBDD = $tratamiento->name .' '. $tratamiento->descripcion;
-
-        $nombrePaciente = preg_replace('/\s+/', '_', trim($paciente->name . ' ' . $primerApellido . ' ' . $paciente->num_paciente));
-        $nombreP = $paciente->name . ' ' . $primerApellido . '_' . $paciente->num_paciente;
-
-        // Ruta de la carpeta del paciente
-        $pacienteFolder = "{$nombreClinica}/pacientes/{$nombrePaciente}/{$tratName}";
-
-        if (!$paciente || !$etapa) {
-            return response()->json(['error' => 'Paciente o Etapa no encontrada'], 400);
-        }
-
-        // Buscar la carpeta del paciente
-        $carpetaPaciente = Carpeta::where('nombre', $nombreP)
-            ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
-            ->first();
-
-        if (!$carpetaPaciente) {
-            return response()->json(['error' => 'Carpeta del paciente no encontrada'], 400);
-        }
-
-        $carpetaTratamiento = Carpeta::firstOrCreate([
-            'nombre'      => $tratBBDD,
-            'carpeta_id'  => $carpetaPaciente->id
-        ]);
-
-        // Buscar o crear la carpeta CBCT dentro del paciente
-        $carpetaCBCT = Carpeta::firstOrCreate([
-            'nombre'      => 'CBCT',
-            'carpeta_id'  => $carpetaTratamiento->id,
-            'clinica_id' => $clinica->id
-        ]);
-
         if ($save->isFinished()) {
             $file = $save->getFile();
+            $filename = uniqid() . '_' . $file->getClientOriginalName(); // Evita colisiones
 
-            $filename = $etapa->name . '_' . $file->getClientOriginalName();
-            $filePath = "{$pacienteFolder}/CBCT/{$filename}";
+            // Carpeta temporal dentro de storage/app/tmp/cbct_uploads
+            $tempFolder = 'tmp/cbct_uploads';
 
-            Storage::disk('clinicas')->putFileAs("{$pacienteFolder}/CBCT", $file, $filename);
+            // Crear la carpeta si no existe
+            if (!Storage::disk('local')->exists($tempFolder)) {
+                Storage::disk('local')->makeDirectory($tempFolder);
+            }
+
+            // Guardar el archivo en la carpeta temporal
+            $tempPath = "{$tempFolder}/{$filename}";
+            Storage::disk('local')->putFileAs($tempFolder, $file, $filename);
             unlink($file->getPathname());
 
-            // Guardar el archivo en la base de datos
-            Archivo::create([
-                'name'       => pathinfo($filename, PATHINFO_FILENAME),
-                'ruta'       => $filePath,
-                'tipo'       => 'cbct',
-                'extension'  => $file->getClientOriginalExtension(),
-                'etapa_id'   => $etapaId,
-                'carpeta_id' => $carpetaCBCT->id,
-                'paciente_id' => $pacienteId,
+            return response()->json([
+                'success' => true,
+                'temp_path' => $tempPath,
+                'original_name' => $file->getClientOriginalName(),
+                'message' => 'Archivo temporal subido correctamente.'
             ]);
-            // return redirect()->route('paciente-historial', ['id' => $pacienteId])->with('error', 'Error al subir CBCT.');
-
         }
 
-        $handler = $save->handler();
-        return redirect()->route('paciente-historial', ['id' => $pacienteId])->with('error', 'Error al subir CBCT.');
-
+        return response()->json(['chunk_received' => true]);
     }
 }

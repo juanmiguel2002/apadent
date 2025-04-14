@@ -16,7 +16,6 @@ use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UsersController;
 use App\Livewire\ClinicaShow;
-use App\Livewire\Pacientes\Pacientes as PacientesPacientes;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -48,9 +47,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ->where('ruta', '.*') // Permite rutas con subcarpetas
     ->name('ver.pdf');
 
+    // Subida de CBCT desde Historial paciente
     Route::get('/subir', [UploadController::class,'index'])->name('upload.index');
     Route::post('/upload', [UploadController::class,'upload'])->name('upload');
-    Route::post('/upload-cbct', [PacientesPacientes::class,'guardarCBCT'])->name('upload-cbct');
 
     // Rutas del administrador
     Route::middleware(['role:admin'])->group(function () {
@@ -75,16 +74,16 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/users', [UsersController::class, 'index'])->name('users');
     });
 
-    Route::middleware(['role:doctor_admin'])->group(function () {
+    Route::middleware(['role:doctor_admin|doctor'])->group(function () {
         Route::get('/pacientes', [DashboardController::class, 'show'])->name('doctor-admin.pacientes');
         Route::get('/tratamientos', [TratamientoController::class, 'index'])->name('doctor-admin.tratamientos');
     });
 
     // Rutas del doctor
-    Route::middleware(['role:doctor'])->group(function () {
-        Route::get('/doctor/pacientes', [Pacientes::class, 'index'])->name('doctor.pacientes');
-        Route::get('/doctor/tratamientos', [TratamientoController::class, 'index'])->name('doctor.tratamientos');
-    });
+    // Route::middleware(['role:doctor'])->group(function () {
+    //     Route::get('/doctor/pacientes', [Pacientes::class, 'index'])->name('doctor.pacientes');
+    //     Route::get('/doctor/tratamientos', [TratamientoController::class, 'index'])->name('doctor.tratamientos');
+    // });
 
     // Rutas de la clínica
     Route::middleware(['role:clinica'])->group(function () {
@@ -94,4 +93,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/paciente/{id}/perfil/', [PacienteShowController::class, 'show'])->name('pacientes-show');
     Route::get('/paciente/{id}/historial/{tratId?}', [PacienteHistorial::class, 'index'])->name('paciente-historial');
     Route::get('/clinica/{id}/', [ClinicaController::class, 'index'])->name('clinica');
+    
+    Route::get('/pacientes/create', [Pacientes::class, 'show'])->name('pacientes.create');
+    Route::post('/paciente/create', [Pacientes::class, 'store'])->name('paciente.create');
+    Route::post('/paciente/upload', [Pacientes::class, 'upload'])->name('paciente.upload');
+
 });

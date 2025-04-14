@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         // Programar el comando para que se ejecute diariamente a la medianoche
         // $schedule->job(new SendReminderEmailToClinic($pacienteId))->daily('08:00');
         $schedule->command('archivos:limpiar-temp')->daily();
+        $schedule->command('cbct:clean-temp')->dailyAt('02:00');
     }
 
     /**
