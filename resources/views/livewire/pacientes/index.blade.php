@@ -1,4 +1,4 @@
-    <div>
+<div>
     @include('components.alert-message')
     @role('admin')
         <x-input-select-clinicas  :options="$clinicas" label="Selecciona una clínica" name="clinicaSelected"/>
@@ -26,10 +26,17 @@
         </div>
         <div class="flex justify-end items-center space-x-4">
             @can('paciente_create')
-                <button wire:click="showCreateModal"
-                        class="bg-azul hover:bg-azul-dark text-white font-semibold px-4 py-2 rounded shadow">
-                    Crear Paciente
-                </button>
+                @if($hayClinicas)
+                    <a href="{{ route('pacientes.create') }}" class="bg-azul hover:bg-azul-dark text-white font-semibold px-4 py-2 rounded shadow">
+                        Crear Paciente
+                    </a>
+                @else
+                    <button disabled
+                        class="bg-gray-400 text-white font-semibold px-4 py-2 rounded shadow opacity-60 cursor-not-allowed"
+                        title="Debe crear una clínica antes de añadir pacientes">
+                        Crear Paciente
+                    </button>
+                @endif
             @endcan
 
             <div class="flex items-center">
@@ -170,7 +177,7 @@
     </x-tabla>
 
     {{-- Añadir paciente --}}
-    @can('paciente_create')
+    {{-- @can('paciente_create')
         @if($showModal)
             <x-dialog-modal maxWidth="xl" wire:model="showModal">
                 <div class="relative">
@@ -179,7 +186,7 @@
                             <h2 class="text-xl font-bold">
                                 {{ 'Añadir Paciente' }}
                             </h2>
-                            <button wire:click='close' class="text-gray-400 hover:text-gray-600">
+                            <button wire:click="close" class="text-gray-400 hover:text-gray-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -188,24 +195,25 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        <form wire:submit.prevent="save" enctype="multipart/form-data">
+                        <form enctype="multipart/form-data">
                             @csrf
                             <div class="grid grid-cols-2 gap-4">
                                 @role('admin')
                                     <div class="col-span-2 mb-4">
                                         <x-label for="clinica_id" value="Clínica*" class="text-azul text-base"/>
-                                        <select name="clinica_id" wire:model="clinica_id" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                        <select name="clinica_id" wire:model.defer="clinica_id" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
                                             <option value="">Seleccione una Clínica</option>
                                             @foreach($clinicas as $clinica)
-                                                <option value="{{ $clinica->id }}">{{ $clinica->name }}</option>
+                                            <option value="{{ $clinica->id }}">{{ $clinica->name }}</option>
                                             @endforeach
                                         </select>
                                         <x-input-error for="clinica_id" />
                                     </div>
                                 @endrole
+
                                 <div class="col-span-2 mb-4">
                                     <x-label for="num_paciente" value="Número Paciente*" class="text-azul text-base"/>
-                                    <x-input type="text" id="num_paciente" class="w-full rounded-md" wire:model="num_paciente" placeholder="2002"/>
+                                    <x-input type="text" id="num_paciente" class="w-full rounded-md" wire:model.defer="num_paciente" placeholder="01"/>
                                     <x-input-error for="num_paciente" />
                                 </div>
 
@@ -214,35 +222,37 @@
                                     <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="name" placeholder="Nombre" />
                                     <x-input-error for="name" />
                                 </div>
+
                                 <div class="col-span-2 sm:col-span-1 mb-4">
-                                    <x-label for="name" value="Apellidos*" class="text-azul text-base"/>
-                                    <x-input type="text" id="name" class="w-full rounded-md" wire:model.defer="apellidos" placeholder="Apellidos" />
+                                    <x-label for="apellidos" value="Apellidos*" class="text-azul text-base"/>
+                                    <x-input type="text" id="apellidos" class="w-full rounded-md" wire:model.defer="apellidos" placeholder="Apellidos" />
                                     <x-input-error for="apellidos" />
                                 </div>
 
                                 <div class="col-span-2 sm:col-span-1 mb-4">
                                     <x-label for="email" value="Email*" class="text-azul text-base"/>
-                                    <x-input type="email" id="email" class="w-full rounded-md" wire:model="email" placeholder="strat@gmail.com" />
+                                    <x-input type="email" id="email" class="w-full rounded-md" wire:model.defer="email" placeholder="strat@gmail.com" />
                                     <x-input-error for="email" />
                                 </div>
 
                                 <div class="col-span-2 sm:col-span-1 mb-4">
                                     <x-label for="fecha_nacimiento" value="Fecha Nacimiento*" class="text-azul text-base"/>
-                                    <x-input type="date" id="fecha_nacimiento" class="w-full rounded-md" wire:model="fecha_nacimiento" />
+                                    <x-input type="date" id="fecha_nacimiento" class="w-full rounded-md" wire:model.defer="fecha_nacimiento" />
                                     <x-input-error for="fecha_nacimiento" />
                                 </div>
+
                                 <div class="col-span-2 sm:col-span-1 mb-4">
                                     <x-label for="telefono" value="Teléfono*" class="text-azul text-base"/>
-                                    <x-input type="text" id="telefono" class="w-full rounded-md" wire:model="telefono" placeholder="978456123"/>
+                                    <x-input type="text" id="telefono" class="w-full rounded-md" wire:model.defer="telefono" placeholder="978456123"/>
                                     <x-input-error for="telefono" />
                                 </div>
 
                                 <div class="col-span-2 sm:col-span-1 mb-4">
                                     <x-label for="tratamiento_id" value="Tratamiento*" class="text-azul text-base"/>
-                                    <select name="tratamiento_id" wire:model="selectedTratamiento" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
+                                    <select name="tratamiento_id" wire:model.defer="selectedTratamiento" class="form-input block w-full rounded-md border border-[rgb(224,224,224)]">
                                         <option value="">Seleccione un Tratamiento</option>
                                         @foreach($tratamientos as $tratamiento)
-                                            <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }} - {{ $tratamiento->descripcion}}</option>
+                                        <option value="{{ $tratamiento->id }}">{{ $tratamiento->name }} - {{ $tratamiento->descripcion}}</option>
                                         @endforeach
                                     </select>
                                     <x-input-error for="selectedTratamiento" />
@@ -250,23 +260,20 @@
 
                                 <div class="col-span-2 mb-4">
                                     <x-label for="observacion" value="Observaciones" class="text-azul text-md"/>
-                                    <textarea wire:model="observacion" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" ></textarea>
+                                    <textarea wire:model.defer="observacion" class="w-full rounded-md border border-[rgb(224,224,224)] resize-none" rows="4" ></textarea>
                                     <x-input-error for="observacion" />
                                 </div>
+
                                 <div class="col-span-2 mb-3">
                                     <x-label for="img_paciente" class="block text-md text-azul capitalize">Foto paciente</x-label>
                                     <x-input wire:model="img_paciente" type="file" class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                     <x-input-error for="img_paciente" />
                                 </div>
+
                                 <div class="col-span-2 mb-3">
                                     <x-label for="imagenes" class="block text-md text-azul capitalize">Fotografías</x-label>
                                     <x-input type="file" wire:model="imagenes" multiple class="block w-full px-3 py-2 text-gray-600 placeholder-gray-400 bg-white border border-gray-200 rounded-md focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" />
                                     <x-input-error for="imagenes.*" />
-                                </div>
-
-                                <div class="col-span-2 mb-4">
-                                    <x-label for="cbct" class="block text-md text-azul capitalize">Archivos CBCT <i>(comprimidos .zip)</i></x-label>
-                                    <div id="file-uploader"></div>
                                 </div>
 
                                 <div class="col-span-2 mb-3">
@@ -281,115 +288,80 @@
                                 </div>
                             </div>
                         </form>
+                        <div class="col-span-2 mb-3">
+                            <div id="upload-container" class="text-center">
+                                <button id="browseFile" class="bg-azul hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                                    Seleccionar Archivo
+                                </button>
+                            </div>
+                            <div id="progress-container" class="hidden mt-3 w-full bg-gray-200 rounded overflow-hidden">
+                                <div id="progress-bar" class="h-6 bg-azul text-white text-center text-sm font-semibold" style="width: 0%;">
+                                    0%
+                                </div>
+                            </div>
+                            <br>
+                            <div id="upload-error" class="hidden bg-red-500 text-white p-3 rounded-md mb-4"></div>
+                            <div id="upload-success" class="hidden bg-green-500 text-white p-3 rounded-md mb-4"></div>
+                        </div>
                     </x-slot>
 
                     <x-slot name="footer">
                         <span class="px-4 py-2 text-center">Campos obligatorios (*)</span>
                         <button type="button" wire:click="close" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Cancelar</button>
-                        <button type="submit" wire:click="save" class="bg-blue-500 text-white px-4 py-2 rounded">
-                            {{ 'Crear' }}
+                        <button id="enviar" type="submit" disabled wire:click="save" class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                            Guardar
                         </button>
                     </x-slot>
                 </div>
             </x-dialog-modal>
-        @endif
-    @endcan
-    @push('scripts')
-        {{-- <script type="text/javascript">
-            // document.addEventListener("DOMContentLoaded", function () {
-                let dropZone = document.getElementById("dropZone");
-                let fileInput = document.getElementById("fileInput");
-                let progressBar = document.getElementById("uploadProgress");
-                let statusText = document.getElementById("uploadStatus");
-                // let submitButton = document.getElementById("submitButton");
+            <script>
+                let browseFile = $('#browseFile');
+                let progressBar = document.getElementById("progress-bar");
+                let progressContainer = document.getElementById("progress-container");
+                let uploadSuccess = document.getElementById("upload-success");
+                let uploadError = document.getElementById("upload-error");
 
+                let uploadedFileName = null;
                 let resumable = new Resumable({
-                    target: "{{ route('upload') }}",
-                    query: { _token: "{{ csrf_token() }}" },
-                    fileType: ["zip"],
-                    chunkSize: 5 * 1024 * 1024,
-                    simultaneousUploads: 3,
-                    testChunks: true,
+                    target: 'route('upload-temporal')',
+                    query: { _token: '{{ csrf_token() }}' },
+                    fileType: ['zip'],
+                    chunkSize: 10 * 1024 * 1024,
+                    headers: { 'Accept': 'application/json' },
+                    testChunks: false,
                     throttleProgressCallbacks: 1,
-                    forceChunkSize: true
                 });
 
-                resumable.assignBrowse(fileInput);
-                resumable.assignDrop(dropZone);
+                resumable.assignBrowse(browseFile[0]);
 
-                // ⬇️ Ahora el clic en el dropZone abre el selector de archivos ⬇️
-                dropZone.addEventListener("click", function () {
-                    fileInput.click();
-                });
-
-                fileInput.addEventListener("change", function (event) {
-                    let files = event.target.files;
-                    if (files.length > 0) {
-                        resumable.addFile(files[0]);
-                    }
-                });
-
-                resumable.on("fileAdded", function (file) {
-                    progressBar.classList.remove("hidden");
-                    statusText.textContent = "Preparando subida...";
-                    submitButton.disabled = true;
+                resumable.on('fileAdded', function (file) {
+                    progressContainer.classList.remove("hidden");
                     resumable.upload();
+                    // setUploadState(true);
                 });
 
-                resumable.on("fileProgress", function (file) {
-                    let progress = Math.floor(file.progress() * 100);
-                    progressBar.value = progress;
-                    statusText.textContent = `Subiendo... ${progress}%`;
+                resumable.on('fileProgress', function (file) {
+                    let percentage = Math.floor(file.progress() * 100);
+                    progressBar.style.width = percentage + "%";
+                    progressBar.innerText = percentage + "%";
                 });
 
-                resumable.on("fileSuccess", function (file, response) {
-                    statusText.textContent = "Subida completada.";
-                    progressBar.classList.add("hidden");
+                resumable.on('fileSuccess', function (file, response) {
+                    uploadedFileName = JSON.parse(response).file_name;
+                    // setUploadState(false);
+                    uploadSuccess.innerText = "Archivo subido exitosamente.";
+                    uploadSuccess.classList.remove("hidden");
 
-                    Livewire.emit('actualizarEstadoCBCT', JSON.parse(response).filename);
-
-                    submitButton.disabled = false;
+                    // Almacenar en sessionStorage para pasarlo a Livewire luego
+                    sessionStorage.setItem('uploaded_file', uploadedFileName);
                 });
 
-                resumable.on("fileError", function (file, message) {
-                    statusText.textContent = "Error en la subida. Verifica tu conexión.";
-                    progressBar.classList.add("hidden");
-                    submitButton.disabled = true;
+                resumable.on('fileError', function (file, message) {
+                    uploadError.innerText = "Error al subir el archivo.";
+                    uploadError.classList.remove("hidden");
+                    // setUploadState(false);
                 });
-
-                resumable.on("complete", function () {
-                    statusText.textContent = "Archivo subido correctamente.";
-                });
-            // });
-        </script> --}}
-        <script type="text/javascript">
-            var uploader = new plupload.Uploader({
-                browse_button: 'file-uploader',  // ID del botón para seleccionar archivos
-                url: '/upload',  // URL de tu endpoint en Laravel para manejar la subida
-                chunk_size: '10mb',  // Tamaño de cada fragmento del archivo
-                filters: {
-                    mime_types: [
-                        {title: "ZIP files", extensions: "zip"}
-                    ]
-                },
-                multi_selection: false,  // No permitir selección múltiple
-                flash_swf_url: "{{asset('js/Moxie.swf')}}",
-                silverlight_xap_url: "{{asset('js/Moxie.xap')}}",
-                init: {
-                    FilesAdded: function(up, files) {
-                        // Pasar los datos adicionales (paciente_id, tratamiento_id) en la carga
-                        for (var i in files) {
-                            files[i].url = '/upload?paciente_id={{$paciente->id}}&trat_id={{$selectedTratamiento}}';  // Agregar los parámetros
-                        }
-                    },
-                    UploadComplete: function(up, files) {
-                        // Callback cuando todos los fragmentos han sido subidos
-                        console.log('Subida completada');
-                    }
-                }
-            });
-
-            uploader.init();
-        </script>
-    @endpush
+            </script>
+        @endif
+    @endcan --}}
 </div>
