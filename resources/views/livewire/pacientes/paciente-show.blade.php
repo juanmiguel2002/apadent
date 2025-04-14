@@ -311,6 +311,7 @@
                 </x-slot>
 
                 <x-slot name="content">
+                    @include('components.alert-message')
                     <form wire:submit.prevent="savePaciente">
                         <div class="grid grid-cols-2 gap-4">
                             @role('admin')
