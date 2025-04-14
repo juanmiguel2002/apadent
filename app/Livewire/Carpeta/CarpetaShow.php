@@ -70,11 +70,6 @@ class CarpetaShow extends Component
         ]);
     }
 
-    // public function showCreateModal() {
-    //     $this->showModal = true;
-    //     $this->isEditing = false;
-    // }
-
     public function showEditModal($id) {
         $this->carpeta_id = $id;
         $this->showModal = true;

@@ -5,9 +5,8 @@ namespace App\Livewire\Pacientes;
 use App\Models\Archivo;
 use App\Models\Carpeta;
 use App\Models\Etapa;
-use App\Models\Factura;
 use App\Models\Paciente;
-use App\Models\Tratamiento;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -23,7 +22,8 @@ class PacienteShow extends Component
     public $num_paciente, $name, $apellidos, $email, $fecha_nacimiento, $telefono;
     public $observacion, $obser_cbct, $odontograma;
 
-    public $stripping = [], $verStripping = false;
+    public $stripping = [];
+    public $verStripping = false;
     public $clinica;
 
     public $maxFileSize = 15; // Tamaño máximo en MB
@@ -116,89 +116,67 @@ class PacienteShow extends Component
     {
         // Backup del nombre actual de la carpeta
         $nombreAnterior = preg_replace('/\s+/', '_', trim(
-            "{$this->paciente->name} " . strtok($this->paciente->apellidos, ' ') . " {$this->paciente->num_paciente}"
+            "{$this->paciente->name} " . strtok($this->paciente->apellidos, ' ') . "{$this->paciente->num_paciente}"
         ));
-        $nombreAnteriorBBDD = "{$this->paciente->name} " . strtok($this->paciente->apellidos, ' ') . " {$this->paciente->num_paciente}";
+        $nombreAnteriorBBDD = "{$this->paciente->name} " . strtok($this->paciente->apellidos, ' ') . "_{$this->paciente->num_paciente}";
 
-        // Actualizar paciente
-        $this->paciente->update([
-            'name' => $this->name,
-            'apellidos' => $this->apellidos,
-            'email' => $this->email,
-            'fecha_nacimiento' => $this->fecha_nacimiento,
-            'telefono' => $this->telefono,
-            'observacion' => $this->observacion,
-            'obser_cbct' => $this->obser_cbct,
-            'odontograma_obser' => $this->odontograma,
-        ]);
+        if(Auth::user()->hasRole('admin')) {
+            // Crear nuevo nombre actualizado
+            $nuevoNombre = preg_replace('/\s+/', '_', trim(
+                "{$this->name} " . strtok($this->apellidos, ' ') . " {$this->paciente->num_paciente}"
+            ));
+            $nuevoNombreBBDD = "{$this->name} " . strtok($this->apellidos, ' ') . "_{$this->paciente->num_paciente}";
 
-        // Crear nuevo nombre actualizado
-        $nuevoNombre = preg_replace('/\s+/', '_', trim(
-            "{$this->name} " . strtok($this->apellidos, ' ') . " {$this->paciente->num_paciente}"
-        ));
-        $nuevoNombreBBDD = "{$this->name} " . strtok($this->apellidos, ' ') . "_{$this->paciente->num_paciente}";
+            // Nombre de clínica
+            $nombreClinica = preg_replace('/\s+/', '_', trim($this->clinica->name));
 
-        // Nombre de clínica
-        $nombreClinica = preg_replace('/\s+/', '_', trim($this->clinica->name));
+            // Rutas físicas
+            $rutaAnterior = "{$nombreClinica}/pacientes/{$nombreAnterior}";
+            $rutaNueva = "{$nombreClinica}/pacientes/{$nuevoNombre}";
 
-        // Rutas físicas
-        $rutaAnterior = "{$nombreClinica}/pacientes/{$nombreAnterior}";
-        $rutaNueva = "{$nombreClinica}/pacientes/{$nuevoNombre}";
-
-        // Renombrar carpeta en almacenamiento si existe
-        if (Storage::disk('clinicas')->exists($rutaAnterior)) {
-            Storage::disk('clinicas')->move($rutaAnterior, $rutaNueva);
-        }
-
-        // Estructura de carpetas en la base de datos
-        $carpetaClinica = Carpeta::firstOrCreate([
-            'nombre' => $this->clinica->name,
-            'carpeta_id' => null
-        ]);
-
-        $carpetaPacientes = Carpeta::firstOrCreate([
-            'nombre' => 'pacientes',
-            'carpeta_id' => $carpetaClinica->id,
-            'clinica_id' => $this->paciente->clinica_id
-        ]);
-
-        // Buscar carpeta del paciente con el nombre anterior
-        $carpetaPaciente = Carpeta::where([
-            'nombre' => $nombreAnteriorBBDD,
-            'carpeta_id' => $carpetaPacientes->id,
-            'clinica_id' => $this->paciente->clinica_id
-        ])->first();
-
-        if ($carpetaPaciente) {
-            // Actualizar nombre de la carpeta principal
-            $carpetaPaciente->update(['nombre' => $nuevoNombreBBDD]);
-
-            // Subcarpetas
-            $subcarpetas = Carpeta::where('carpeta_id', $carpetaPaciente->id)->get();
-
-            foreach ($subcarpetas as $subcarpeta) {
-                if (str_contains($subcarpeta->nombre, $nombreAnterior)) {
-                    $subcarpeta->update([
-                        'nombre' => str_replace($nombreAnterior, $nuevoNombre, $subcarpeta->nombre)
-                    ]);
-                }
+            // Renombrar carpeta en almacenamiento si existe
+            if (Storage::disk('clinicas')->exists($rutaAnterior)) {
+                Storage::disk('clinicas')->move($rutaAnterior, $rutaNueva);
             }
 
-            // Actualizar rutas en archivos si es necesario
-            Archivo::where('carpeta_id', $carpetaPaciente->id)
-                ->orWhereIn('carpeta_id', $subcarpetas->pluck('id'))
-                ->get()
-                ->each(function ($archivo) use ($nombreAnterior, $nuevoNombre) {
-                    if (str_contains($archivo->ruta, $nombreAnterior)) {
-                        $archivo->update([
-                            'ruta' => str_replace($nombreAnterior, $nuevoNombre, $archivo->ruta)
-                        ]);
-                    }
-                });
-        }else {
-            return session()->flash('error', 'No se encontró la carpeta del paciente.');
-        }
+            // Estructura de carpetas en la base de datos
+            $carpetaClinica = Carpeta::firstOrCreate([
+                'nombre' => $this->clinica->name,
+                'carpeta_id' => null
+            ]);
 
+            $carpetaPacientes = Carpeta::firstOrCreate([
+                'nombre' => 'pacientes',
+                'carpeta_id' => $carpetaClinica->id,
+                'clinica_id' => $this->paciente->clinica_id
+            ]);
+
+            // Buscar carpeta del paciente con el nombre anterior
+            $carpetaPaciente = Carpeta::where([
+                'nombre' => $nombreAnteriorBBDD,
+                'carpeta_id' => $carpetaPacientes->id,
+                'clinica_id' => $this->paciente->clinica_id
+            ])->first();
+
+            if ($carpetaPaciente) {
+                // Actualizar nombre de la carpeta principal
+                $carpetaPaciente->update(['nombre' => $nuevoNombreBBDD]);
+            }else {
+                return session()->flash('error', 'No se encontró la carpeta del paciente.');
+            }
+
+            // Actualizar paciente
+            $this->paciente->update([
+                'name' => $this->name,
+                'apellidos' => $this->apellidos,
+                'email' => $this->email,
+                'fecha_nacimiento' => $this->fecha_nacimiento,
+                'telefono' => $this->telefono,
+                'observacion' => $this->observacion,
+                'obser_cbct' => $this->obser_cbct,
+                'odontograma_obser' => $this->odontograma,
+            ]);
+        }
         // Emitir evento, cerrar modal y recargar
         $this->dispatch('pacienteEdit');
         $this->showModalPaciente = false;
@@ -215,17 +193,21 @@ class PacienteShow extends Component
     public function saveStripping()
     {
         $this->validate([
-            'stripping.*' => 'required|image|max:15360',
+            'stripping.*' => 'required|file|max:15360',
         ],[
             'stripping.*.required' => 'Debe seleccionar al menos un archivo para subir.',
-            'stripping.*.image' => 'El archivo debe ser una imagen.',
+            'stripping.*.file' => 'El archivo debe ser una imagen.',
         ]);
         // Generar nombres para las carpetas
         $clinicaName = preg_replace('/\s+/', '_', trim($this->clinica->name));
-        $pacienteName = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $this->paciente->apellidos));
-        $pacienteFolder = $clinicaName . '/pacientes/' . $pacienteName;
+        $primerApellido = strtok($this->paciente->apellidos, " ");
 
-        $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
+        $nombreP = preg_replace('/\s+/', '_', trim($this->paciente->name . ' ' . $primerApellido . ' ' . $this->paciente->num_paciente));
+        $nombrePaciente = $this->paciente->name . ' ' . $primerApellido . '_' . $this->paciente->num_paciente;
+
+        $pacienteFolder = $clinicaName . '/pacientes/' . $nombreP;
+
+        $carpetaPaciente = Carpeta::where('nombre', $nombrePaciente)
             ->whereHas('parent', function ($query) {
                 $query->where('nombre', 'pacientes');
             })->first();

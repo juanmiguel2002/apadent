@@ -280,79 +280,76 @@ class HistorialPaciente extends Component
             return redirect()->back()->with('error', 'Este tratamiento ya está asignado a este paciente.');
         }
 
-        // try {
-            DB::transaction(function () {
-                // Obtener el tratamiento seleccionado
-                $tratamiento = Tratamiento::findOrFail($this->selectedNewTratamiento);
-                $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
-                $tratCarpeta = "{$this->pacienteFolder}/{$tratName}";
+        DB::transaction(function () {
+            // Obtener el tratamiento seleccionado
+            $tratamiento = Tratamiento::findOrFail($this->selectedNewTratamiento);
+            $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name . ' ' . $tratamiento->descripcion));
+            $tratBBDD = $tratamiento->name . ' ' . $tratamiento->descripcion;
+            $tratCarpeta = "{$this->pacienteFolder}/{$tratName}";
+            $pacienteName = $this->paciente->name .' '. strtok($this->paciente->apellidos, " ") . '_' . $this->paciente->num_paciente;
 
-                // Asociar el tratamiento al paciente
-                PacienteTrat::create([
-                    'paciente_id' => $this->pacienteId,
-                    'trat_id' => $this->selectedNewTratamiento,
-                ]);
+            // Asociar el tratamiento al paciente
+            PacienteTrat::create([
+                'paciente_id' => $this->pacienteId,
+                'trat_id' => $this->selectedNewTratamiento,
+            ]);
 
-                // Buscar la carpeta del paciente dentro de la clínica
-                $carpetaPaciente = Carpeta::where('nombre', $this->pacienteName)
-                    ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
-                    ->first();
+            // Buscar la carpeta del paciente dentro de la clínica
+            $carpetaPaciente = Carpeta::where('nombre', $pacienteName)
+                ->whereHas('parent', fn($query) => $query->where('nombre', 'pacientes'))
+                ->first();
 
-                if (!$carpetaPaciente) {
-                    throw new \Exception('Carpeta del paciente no encontrada.');
+            if (!$carpetaPaciente) {
+                return redirect()->back()->with('error', 'Carpeta del paciente no encontrada.');
+            }
+
+            // Crear la carpeta del tratamiento dentro del paciente
+            $carpetaTratamiento = Carpeta::firstOrCreate([
+                'nombre'      => $tratBBDD,
+                'carpeta_id'  => $carpetaPaciente->id,
+                'clinica_id' => $this->clinica->id
+            ]);
+
+            // Crear carpeta en sistema de archivos si no existe
+            if (!Storage::disk('clinicas')->exists($tratCarpeta)) {
+                Storage::disk('clinicas')->makeDirectory($tratCarpeta);
+            }
+
+            $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos'];
+            foreach ($subFolders as $subFolder) {
+                $subFolderPath = "{$tratCarpeta}/{$subFolder}";
+                if (!Storage::disk('clinicas')->exists($subFolderPath)) {
+                    Storage::disk('clinicas')->makeDirectory($subFolderPath);
                 }
-
-                // Crear la carpeta del tratamiento dentro del paciente
-                $carpetaTratamiento = Carpeta::firstOrCreate([
-                    'nombre'      => $tratName,
-                    'carpeta_id'  => $carpetaPaciente->id,
+                Carpeta::firstOrCreate([
+                    'nombre' => $subFolder,
+                    'carpeta_id' => $carpetaTratamiento->id,
                     'clinica_id' => $this->clinica->id
                 ]);
+            }
+            // Obtener todas las fases del tratamiento seleccionado
+            $fases = Fase::where('trat_id', $this->selectedNewTratamiento)->get();
 
-                // Crear carpeta en sistema de archivos si no existe
-                if (!Storage::disk('clinicas')->exists($tratCarpeta)) {
-                    Storage::disk('clinicas')->makeDirectory($tratCarpeta);
-                }
+            foreach ($fases as $fase) {
+                // Crear una etapa inicial para cada fase
+                Etapa::create([
+                    'fase_id' => $fase->id,
+                    'paciente_id' => $this->pacienteId,
+                    'name' => 'Inicio',
+                    'status' => 'Set Up',
+                    'fecha_ini' => now(),
+                    'trat_id' => $this->selectedNewTratamiento,
+                ]);
+            }
+        });
 
-                $subFolders = ['imgEtapa', 'CBCT', 'archivoComplementarios', 'Rayos', 'Stripping'];
-                foreach ($subFolders as $subFolder) {
-                    $subFolderPath = "{$tratCarpeta}/{$subFolder}";
-                    if (!Storage::disk('clinicas')->exists($subFolderPath)) {
-                        Storage::disk('clinicas')->makeDirectory($subFolderPath);
-                    }
-                    Carpeta::firstOrCreate([
-                        'nombre' => $subFolder,
-                        'carpeta_id' => $carpetaTratamiento->id,
-                        'clinica_id' => $this->clinica->id
-                    ]);
-                }
-                // Obtener todas las fases del tratamiento seleccionado
-                $fases = Fase::where('trat_id', $this->selectedNewTratamiento)->get();
+        // Resetear el tratamiento seleccionado y cerrar el modal
+        $this->reset('selectedNewTratamiento');
+        $this->closeModal();
 
-                foreach ($fases as $fase) {
-                    // Crear una etapa inicial para cada fase
-                    Etapa::create([
-                        'fase_id' => $fase->id,
-                        'paciente_id' => $this->pacienteId,
-                        'name' => 'Inicio',
-                        'status' => 'Set Up',
-                        'fecha_ini' => now(),
-                        'trat_id' => $this->selectedNewTratamiento,
-                    ]);
-                }
-            });
-
-            // Resetear el tratamiento seleccionado y cerrar el modal
-            $this->reset('selectedNewTratamiento');
-            $this->closeModal();
-
-            // Emitir un evento para actualizar la lista de tratamientos en la vista
-            $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
-            $this->dispatch('recargar-pagina');
-
-        // } catch (\Exception $e) {
-        //     return redirect()->back()->with('error', 'Ocurrió un error al asignar el tratamiento.');
-        // }
+        // Emitir un evento para actualizar la lista de tratamientos en la vista
+        $this->dispatch('tratamientoAsignado', 'Tratamiento asignado exitosamente.');
+        $this->dispatch('recargar-pagina');
     }
 
     // Nueva Documentación
@@ -378,7 +375,7 @@ class HistorialPaciente extends Component
         $tratNameBBDD = $tratamiento->name . ' ' . $tratamiento->descripcion;
         $tratName = preg_replace('/\s+/', '_', trim($tratamiento->name .' '. $tratamiento->descripcion));
         $pacienteName = $this->paciente->name . ' ' . strtok($this->paciente->apellidos, " ") . '_' . $this->paciente->num_paciente;
-        
+
         // Buscar si ya existen archivos subidos en esta etapa
         $existeArchivo = Archivo::where('etapa_id', $etapa->id)
             ->where('tipo', 'archivocomplementarios')
