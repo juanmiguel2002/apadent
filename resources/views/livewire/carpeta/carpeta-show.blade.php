@@ -197,7 +197,6 @@
                     <form wire:submit.prevent="save">
                         <div class="grid grid-cols-1 gap-4">
                             <div class="col-span-2 mb-4 sm:col-span-1">
-                                {{var_dump($subcarpeta->id)}}
                                 <x-label value="Nombre*" class="text-azul text-base"/>
                                 <x-input type="text" class="w-full rounded-md" wire:model="nombre" placeholder="Nombre" />
                                 <x-input-error for="nombre" />
