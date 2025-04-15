@@ -3,49 +3,31 @@
 namespace App\Livewire\Pacientes;
 
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use App\Mail\CambioEstado;
-use App\Mail\NotificacionNuevoPaciente;
-use App\Models\Archivo;
-use App\Models\Carpeta;
 use App\Models\Clinica;
 use App\Models\Etapa;
-use App\Models\Fase;
 use App\Models\Paciente;
-use App\Models\PacienteTrat;
 use App\Models\Tratamiento;
-use Illuminate\Http\Request;
-use Pion\Laravel\ChunkUpload\Handler\ResumableJSUploadHandler;
-use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
 
 class Pacientes extends Component
 {
-    use WithFileUploads, WithPagination;
+    use WithPagination;
 
-    public $tratamientos, $clinica_id, $paciente, $paciente_id;
-    // añadir paciente
-    public $num_paciente, $name, $apellidos, $email, $telefono, $fecha_nacimiento;
-    public $observacion, $obser_cbct, $img_paciente;
+    public $tratamientos;
 
     public $showModal = false;
     public $menuVisible = null;
 
-    public $imagenes = [], $rayos = []; //archivos que del paciente
-    public $selectedTratamiento, $status = "Set Up", $activo = false;
+    public $status = "Set Up", $activo = false;
 
     public $search = '';
     public $ordenar = '';
     public $perPage = 25; //Para filtrar cuando se ve
     public $clinicas, $clinicaSelected; //filtro de clinica
     public $hayClinicas = false; //para saber si hay clinicas
-
-    public $pacienteFolder, $nombrePaciente;
-    public $cbct, $cbctPath; // Estado de la subida
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -178,5 +160,5 @@ class Pacientes extends Component
     public function toggleMenu($pacienteId)
     {
         $this->menuVisible = $this->menuVisible === $pacienteId ? null : $pacienteId;
-    }   
+    }
 }

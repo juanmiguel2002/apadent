@@ -10,7 +10,6 @@ use App\Models\Paciente;
 use App\Models\Tratamiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
 use Pion\Laravel\ChunkUpload\Handler\ResumableJSUploadHandler;
 use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
