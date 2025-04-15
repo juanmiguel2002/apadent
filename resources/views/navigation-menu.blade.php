@@ -13,12 +13,10 @@
                         if ($user->hasRole('admin')) {
                             $route = route('admin.clinica');
                         }
-                        elseif ($user->hasRole('doctor')) {
+                        elseif ($user->hasRole('doctor') || $user->hasRole('doctor_admin')) {
                             $route = route('doctor-admin.pacientes');
                         }
-                        elseif ($user->hasRole('doctor_admin')) {
-                            $route = route('doctor-admin.pacientes');
-                        } elseif ($user->hasRole('clinica')) {
+                        elseif ($user->hasRole('clinica')) {
                             $route = route('clinica.pacientes');
                         }
                     } else {
@@ -78,12 +76,12 @@
                             @endif
                         </div>
                         {{-- <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <x-nav-link href="{{ route('doctor-admin.pacientes') }}" :active="request()->routeIs('doctor.pacientes')">
+                            <x-nav-link href="{{ route('doctor-admin.pacientes') }}" :active="request()->routeIs('doctor-admin.pacientes')">
                                 {{ __('Pacientes') }}
                             </x-nav-link>
                         </div> --}}
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <x-nav-link href="{{ route('doctor-admin.tratamientos') }}" :active="request()->routeIs('doctor.tratamientos')">
+                            <x-nav-link href="{{ route('doctor-admin.tratamientos') }}" :active="request()->routeIs('doctor-admin.tratamientos')">
                                 {{ __('Tratamientos') }}
                             </x-nav-link>
                         </div>

@@ -22,6 +22,7 @@ class ClinicaShow extends Component
     public User $user;
     public string $clinicaName = '';
     public $modalOpen = false;
+    public $name, $factura;
     public $carpeta;
 
     public int $facturasPage = 1;
