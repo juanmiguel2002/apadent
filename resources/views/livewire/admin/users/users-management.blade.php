@@ -48,13 +48,13 @@
         <table class="min-w-full">
             <thead class="text-white">
                 <tr class="bg-azul">
-                    <th scope="col" wire:click="sortable('id')"
+                    {{-- <th scope="col" wire:click="sortable('id')"
                         class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
                         ID
                         <span class="fa fa{{ $camp === 'id' ? $icon : '-sort' }}"></span>
-                    </th>
+                    </th> --}}
                     <th scope="col" wire:click="sortable('name')"
-                        class="px-4 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
                         Nombre
                         <span class="fa fa{{ $camp === 'name' ? $icon : '-sort' }}"></span>
                     </th>
@@ -76,6 +76,11 @@
                         Creado
                         <span class="fa fa{{ $camp === 'created_at' ? $icon : '-sort' }}"></span>
                     </th>
+                    <th scope="col" wire:click="sortable('email_verified_at')"
+                        class="px-5 py-3 text-sm font-normal text-left text-white uppercase bg-azul border-b border-gray-200 cursor-pointer">
+                        Verificado
+                        <span class="fa fa{{ $camp === 'email_verified_at' ? $icon : '-sort' }}"></span>
+                    </th>
                     <th scope="col"
                         class="px-5 py-3 text-sm font-normal text-center text-white uppercase bg-azul border-b border-gray-200"
                         >Acciones
@@ -85,7 +90,7 @@
             <tbody>
                 @forelse($users as $user)
                     <tr>
-                        <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
+                        {{-- <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <div class="flex items-center">
                                 <div class="ml-3">
                                     <p class="text-gray-900 whitespace-no-wrap">
@@ -93,7 +98,7 @@
                                     </p>
                                 </div>
                             </div>
-                        </td>
+                        </td> --}}
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <p class="text-gray-900 whitespace-no-wrap">
                                 {{ $user->name }}
@@ -117,6 +122,11 @@
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
                             <p class="text-gray-900 whitespace-no-wrap">
                                 {{ $user->created_at->format('d-m-Y') }}
+                            </p>
+                        </td>
+                        <td class="px-5 py-4 text-sm bg-white border-b border-gray-200">
+                            <p class="text-gray-900 whitespace-no-wrap">
+                                {{ $user->email_verified_at ? 'Sí' : 'No' }}
                             </p>
                         </td>
                         <td class="px-5 py-5 text-sm bg-white border-b border-gray-200">
@@ -150,6 +160,7 @@
             {!! $users->links() !!}
         </div>
     </div>
+
     @if ($showModal)
         <x-dialog-modal maxWidth="lg" wire:model="showModal">
             <div class="relative">
