@@ -101,7 +101,8 @@
 
                 <div class="col-span-2 mb-3">
                     <div id="upload-container">
-                        <button id="browseFile" type="button" class="bg-azul hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                        <x-label for="cbct" value="Subida de CBCT" class="text-base"/>
+                        <button id="browseFile" type="button" class="bg-azul hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded mt-1">
                             Seleccionar Archivo
                         </button>
                     </div>
@@ -114,7 +115,7 @@
                     <div id="upload-error" class="hidden bg-red-500 text-white p-3 rounded-md mb-4"></div>
                     <div id="upload-success" class="hidden bg-green-500 text-white p-3 rounded-md mb-4"></div>
                     <!-- Campo oculto para almacenar el path temporal -->
-                    <input type="hidden" id="cbct_temp_path" name="cbct_temp_path">
+                    <input type="hidden" id="cbct_temp_path" name="cbct_temp_path" value="{{ old('cbct_temp_path') }}">
                 </div>
 
                 <div class="col-span-2 mb-4">
@@ -123,7 +124,7 @@
                     <x-input-error for="obser_cbct" />
                 </div>
             </div>
-            <button type="submit"  class="mt-6 bg-azul text-white px-4 py-2 rounded">Guardar Paciente</button>
+            <button type="submit" id="crearPacienteBtn" class="mt-6 bg-azul text-white px-4 py-2 rounded">Guardar Paciente</button>
         </form>
     </div>
 
@@ -134,6 +135,7 @@
             const uploadSuccess = document.getElementById('upload-success');
             const uploadError = document.getElementById('upload-error');
             const cbctTempPathInput = document.getElementById('cbct_temp_path');
+            const crearPacienteBtn = document.getElementById('crearPacienteBtn');
 
             const r = new Resumable({
                 target: '{{ route("paciente.upload") }}',
@@ -155,6 +157,7 @@
                 progressBar.innerText = '0%';
                 uploadSuccess.classList.add('hidden');
                 uploadError.classList.add('hidden');
+                crearPacienteBtn.disabled = true; // ❌ Deshabilitar botón
                 r.upload();
             });
 
@@ -171,8 +174,9 @@
                     if (res.success && res.temp_path) {
                         uploadSuccess.classList.remove('hidden');
                         uploadSuccess.innerText = "Archivo CBCT subido correctamente.";
-                        cbctTempPathInput.value = res.temp_path; // Guardamos el path en campo oculto
+                        cbctTempPathInput.value = res.temp_path;
                         uploadError.classList.add('hidden');
+                        crearPacienteBtn.disabled = false; // ✅ Habilitar botón
                     } else {
                         throw new Error("Respuesta inesperada del servidor.");
                     }
@@ -180,6 +184,7 @@
                     uploadError.classList.remove('hidden');
                     uploadError.innerText = "Error al procesar la respuesta del servidor.";
                     uploadSuccess.classList.add('hidden');
+                    crearPacienteBtn.disabled = false; // ✅ Habilitar aunque haya error
                 }
             });
 
@@ -187,9 +192,9 @@
                 uploadError.classList.remove('hidden');
                 uploadError.innerText = "Error al subir el archivo. Inténtalo de nuevo.";
                 uploadSuccess.classList.add('hidden');
+                crearPacienteBtn.disabled = false; // ✅ Habilitar en error
             });
         });
-        </script>
 
-
+    </script>
 @endsection

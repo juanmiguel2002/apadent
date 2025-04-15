@@ -7,10 +7,8 @@
                 $ruta = route('admin.pacientes');
             }elseif (Auth::user()->hasRole('clinica')) {
                 $ruta = route('clinica.pacientes');
-            }elseif (Auth::user()->hasRole('doctor_admin')) {
-                $ruta = route('doctor-admin.pacientes');
             }else {
-                $ruta = route('doctor.pacientes');
+                $ruta = route('doctor-admin.pacientes');
             }
         @endphp
         <a href="{{ $ruta }}" class="flex items-center mr-4">
