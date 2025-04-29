@@ -16,6 +16,7 @@
     <!-- Lista de permisos -->
     <div class="mb-6">
         <h2 class="text-xl font-semibold mb-4">Permisos</h2>
+        <small class="text-red-500 mb-4">Al darle al botón eliminar se elimina automáticamente.</small>
         <ul class="space-y-3">
             @foreach ($permissions as $permission)
                 <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm">

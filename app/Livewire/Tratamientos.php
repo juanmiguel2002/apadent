@@ -113,6 +113,17 @@ class Tratamientos extends Component
         $this->mount();
     }
 
+    public function delete($tratamientoId)
+    {
+        $tratamiento = Tratamiento::find($tratamientoId);
+        if ($tratamiento) {
+            $tratamiento->delete();
+            $this->dispatch('tratamiento', 'Tratamiento eliminado.');
+        } else {
+            $this->dispatch('error', 'Tratamiento no encontrado.');
+        }
+    }
+
     public function close()
     {
         $this->showModal = false;

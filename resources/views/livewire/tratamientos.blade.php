@@ -30,12 +30,18 @@
                         <td class="text-center px-4 py-3 whitespace-nowrap">{{ $tratamiento->descripcion }}</td>
                         <td class="text-center px-4 py-3 whitespace-nowrap">{{ $this->pacientesTrat($tratamiento->id) }}</td>
 
-                        <td class="px-6 py-4 text-sm text-center whitespace-nowrap">
+                        <td class="px-2 py-3 text-sm text-center whitespace-nowrap">
                             <div class="flex justify-center space-x-2">
                                 <a wire:click="showCreateModal({{ $tratamiento->id }})"
                                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                                     <i class="fas fa-edit mr-2"></i> Editar
                                 </a>
+                                @role('admin')
+                                    <button wire:click="delete({{ $tratamiento->id }})" title="Al hacer clic se eliminará el tratamiento"
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                                        <i class="fas fa-trash mr-2"></i> Eliminar
+                                    </button>
+                                @endrole
                             </div>
                         </td>
                     </tr>
